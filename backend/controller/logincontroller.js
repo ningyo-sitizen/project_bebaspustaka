@@ -35,7 +35,6 @@ exports.login = async (req, res) => {
   console.log('🟢 Running SQL:', sql, 'with value:', name);
 
   try {
-    // ✅ promise-based query
     const [results] = await bebaspustaka.query(sql, [name]);
 
     console.log('🟢 SQL result:', results);

@@ -19,6 +19,14 @@ exports.getYearlyVisitors = async (req, res) => {
   }
 };
 
+exports.getMonthlyForLandingPage = async (req,res) => {
+  try{
+    const sql = ""
+  }catch{
+
+  }
+}
+
 exports.getDashboardDatVisitor = async (req, res) => {
   try {
     const period = req.query.period || "daily";

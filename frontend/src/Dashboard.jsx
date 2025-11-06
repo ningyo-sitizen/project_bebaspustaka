@@ -13,7 +13,6 @@ import {
 } from 'chart.js';
 import { useState, useEffect } from 'react';
 
-// Register ChartJS components
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -38,7 +37,7 @@ function Dashboard() {
 
     const fetchChartData = async () => {
         try {
-            // aku bikin preview dulu, ntar ganti aja ini kalo mau connect
+            
             const mockData = {
                 monthlyVisits: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
@@ -63,7 +62,7 @@ function Dashboard() {
         } catch (error) {
             console.error('Error fetching chart data:', error);
 
-            // Fallback data jika API error
+           
             const fallbackData = {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
                 datasets: [
