@@ -26,18 +26,27 @@ ChartJS.register(
 );
 
 function Dashboard() {
-    // ini default line chart ya
     const [chartData, setChartData] = useState({
         lineChart: null
     });
 
+    const [user, setUser] = useState(null);
+    const [visitors, setVisitors] = useState([]);
+
+
     useEffect(() => {
+
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
+
         fetchChartData();
     }, []);
 
     const fetchChartData = async () => {
         try {
-            
+
             const mockData = {
                 monthlyVisits: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
@@ -62,7 +71,7 @@ function Dashboard() {
         } catch (error) {
             console.error('Error fetching chart data:', error);
 
-           
+
             const fallbackData = {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
                 datasets: [
@@ -85,8 +94,11 @@ function Dashboard() {
                 <div class="absolute inline-flex m-2 right-24">
                     <div className="inline-flex items-center">
                         <p>Hai,&nbsp;</p>
-                        {/* ini nanti terhubung sama database akun pustakawan */}
-                        <p class="mr-3">misal sini Zahra</p>
+                        {user ? (
+                            <p className="mr-3 font-semibold">{user.name}</p>
+                        ) : (
+                            <p className="mr-3 text-gray-500">Loading...</p>
+                        )}
                     </div>
                     <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/0b728be1-b553-4462-b4c9-41c894ee5f79.jpeg')] 
                    bg-cover bg-center rounded-full w-16 h-16">
