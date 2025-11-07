@@ -46,21 +46,38 @@ function Dashboard() {
 
     const fetchChartData = async () => {
         try {
+            const token = localStorage.getItem("token");
+            console.log("🔑 Token from localStorage:", token);
 
-            const mockData = {
-                monthlyVisits: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                    values: [65, 59, 80, 81, 56, 55]
-                }
-            };
+            if (!token) {
+                console.warn("⚠️ No token found in localStorage!");
+                return;
+            }
+
+            const response = await fetch("http://localhost:8080/api/landing/landingpagechart?year=2025", {
+                method: "GET",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+            });
+
+            console.log("Response status:", response.status);
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log("📊 Chart data fetched:", data);
 
             setChartData({
                 lineChart: {
-                    labels: mockData.monthlyVisits.labels,
+                    labels: data.labels,
                     datasets: [
                         {
                             label: 'Kunjungan per Bulan',
-                            data: mockData.monthlyVisits.values,
+                            data: data.data,
                             borderColor: 'rgb(75, 192, 192)',
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             tension: 0.1
@@ -68,23 +85,9 @@ function Dashboard() {
                     ],
                 }
             });
+
         } catch (error) {
-            console.error('Error fetching chart data:', error);
-
-
-            const fallbackData = {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                datasets: [
-                    {
-                        label: 'Kunjungan per Bulan',
-                        data: [65, 59, 80, 81, 56, 55],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    },
-                ],
-            };
-            setChartData({ lineChart: fallbackData });
+            console.error('❌ Error fetching chart data:', error);
         }
     };
     return (
@@ -105,7 +108,6 @@ function Dashboard() {
                     </div>
                 </div>
             </header>
-            {/* intinya ini sidebar */}
             <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
                 <div className="flex items-center ml-4">
                     <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] 

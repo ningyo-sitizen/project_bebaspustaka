@@ -56,7 +56,6 @@ exports.getSummaryReport = async (req, res) => {
 
     const params = [];
 
-    // Filter Tahun
     if (tahun) {
       sql += " AND tahun = ?";
       params.push(tahun);

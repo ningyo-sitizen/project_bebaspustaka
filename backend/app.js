@@ -12,7 +12,11 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 const app = express();
 const PORT = process.env.PORT || 8080;
 
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:5173", 
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"]
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -24,6 +28,8 @@ app.use('/api/dashboard', require('./routes/web'));
 app.use('/api', require('./routes/web')); 
 
 app.use('/api/loan',require('./routes/loanRouts'))
+
+app.use('/api/landing',require('./routes/landing'));
 
 
 app.listen(PORT, () => {

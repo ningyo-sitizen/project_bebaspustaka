@@ -19,13 +19,28 @@ exports.getYearlyVisitors = async (req, res) => {
   }
 };
 
-exports.getMonthlyForLandingPage = async (req,res) => {
-  try{
-    const sql = ""
-  }catch{
+exports.getMonthlyForLandingPage = async (req, res) => {
+  try {
+    const year = req.query.year || new Date().getFullYear();
 
+    const sql = `
+      SELECT month,visitor_count from bebaspustaka.summary_monthly_visitor where year = ?
+    `;
+
+    const [rows] = await bebaspustaka.query(sql, [year]);
+
+    const labels = rows.map(r => r.month);
+    const data = rows.map(r => r.visitor_count);
+
+    res.json({ labels, data });
+    
+  } catch (err) {
+    console.error('❌ Error fetching monthly visitors:', err);
+    res.status(500).json({ message: 'Server error' });
   }
-}
+};
+
+
 
 exports.getDashboardDatVisitor = async (req, res) => {
   try {
