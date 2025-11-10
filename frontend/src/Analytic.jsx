@@ -12,6 +12,7 @@ import {
     Legend
 } from 'chart.js';
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 // Register ChartJS components
 ChartJS.register(
@@ -370,7 +371,6 @@ function Dashboard() {
         } catch (error) {
             console.error('Error fetching chart data:', error);
 
-            // Fallback data jika API error
             const fallbackData = {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
                 datasets: [
@@ -434,10 +434,11 @@ function Dashboard() {
                                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                             </svg>
-
+                        <Link to="/dashboard">
                             <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                 Dashboard
                             </h2>
+                        </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -457,11 +458,11 @@ function Dashboard() {
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M4 20h14" />
                             </svg>
-
+                        <Link to="/analytic">
                             <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                 Data Analitik
                             </h2>
-
+                        </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -540,7 +541,6 @@ function Dashboard() {
 
                             <div className=" bg-white p-6">
                                 <div className="relative">
-                                    {/* filtering */}
                                     {showFilterL && (
                                         <div className="absolute top-0 right-0 p-4 bg-white border w-64 z-20">
                                             <p className="font-thin mb-2">Filter </p>
