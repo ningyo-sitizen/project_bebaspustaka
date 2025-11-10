@@ -28,6 +28,9 @@ ChartJS.register(
 
 function Dashboard() {
 
+    const [user, setUser] = useState(null);
+    const [visitors, setVisitors] = useState([]);
+
     const [chartData, setChartData] = useState({
         lineChart: null,
         pieChart: null,
@@ -308,6 +311,10 @@ function Dashboard() {
     };
 
     useEffect(() => {
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+            setUser(JSON.parse(savedUser));
+        }
         fetchChartData();
     }, []);
 
