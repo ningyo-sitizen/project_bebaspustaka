@@ -24,8 +24,8 @@ app.use('/api/auth', authRoutes);
 
 app.get('/yearly_visitor', verifyToken, getYearlyVisitors);
 
-app.use('/api/dashboard', require('./routes/web'));
-app.use('/api', require('./routes/web')); 
+app.use('/api/dashboard', require('./routes/web')); // untuk dashboard
+app.use('/api', require('./routes/web')); // untuk ambil tahun doang
 
 app.use('/api/loan',require('./routes/loanRouts'))
 

@@ -24,7 +24,7 @@ exports.getMonthlyForLandingPage = async (req, res) => {
     const year = req.query.year || new Date().getFullYear();
 
     const sql = `
-      SELECT month,visitor_count from bebaspustaka.summary_monthly_visitor where year = ?
+      SELECT month,total_visitor from bebaspustaka.summary_monthly_visitor where year = ?
     `;
 
     const [rows] = await bebaspustaka.query(sql, [year]);
@@ -54,7 +54,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
       sql = `
         SELECT DATE_FORMAT(hari, '%d-%m-%Y') as label, total_visitor 
         FROM summary_daily_visitor
-        WHERE YEAR(hari) = ?
+        WHERE YEAR(hari) IN (?)
         ORDER BY hari
       `;
       params = [year];
@@ -65,7 +65,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         SELECT CONCAT('Week ', week, ' (', DATE_FORMAT(start_date,'%d %b'),' - ', DATE_FORMAT(end_date,'%d %b'), ')') as label,
                total_visitor 
         FROM summary_weekly_visitor
-        WHERE year = ?
+        WHERE year IN (?)
         ORDER BY week
       `;
       params = [year];
@@ -77,6 +77,16 @@ exports.getDashboardDatVisitor = async (req, res) => {
         FROM summary_yearly_visitor
         ORDER BY year
       `;
+    }
+
+    if(period == "monthly"){
+      sql = `
+        SELECT month as label, total_visitor 
+        FROM summary_monthly_visitor
+        where year IN (?)
+        ORDER BY year
+      `;
+      params = [year]
     }
 
     const [rows] = await bebaspustaka.query(sql, params);

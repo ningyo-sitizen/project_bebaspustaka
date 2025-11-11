@@ -62,7 +62,76 @@ function Dashboard() {
     const [years, setYears] = useState([]);
     const [selectedYears, setSelectedYears] = useState([]);
     const [selectedType, setSelectedType] = useState("");
+    const [tempYears, setTempYears] = useState([]);
+    const [tempType, setTempType] = useState("");
 
+    const handleResetFilters = () => {
+  setSelectedYears([]);
+  setSelectedType("");
+};
+
+const handleCancelFilters = () => {
+  setSelectedYears(tempYears);
+  setSelectedType(tempType);
+  setShowFilterL(false);
+};
+
+const handleApplyFilters = async () => {
+  setTempYears(selectedYears);
+  setTempType(selectedType);
+  setShowFilterL(false);
+
+  try {
+    const token = localStorage.getItem("token");
+    const query = new URLSearchParams();
+    if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
+    if (selectedType) query.append("period", selectedType);
+
+    const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    const data = await res.json();
+
+    console.log(selectedYears,selectedType)
+    console.log(data)
+
+    setChartData({
+      lineChart: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: "Jumlah Pengunjung",
+            data: data.data,
+            borderColor: "rgb(75,192,192)",
+            backgroundColor: "rgba(75,192,192,0.2)",
+            tension: 0.2,
+          },
+        ],
+      },
+      barChart: {
+        labels: data.labels,
+        datasets: [
+          {
+            label: "Jumlah Pengunjung",
+            data: data.data,
+            backgroundColor: "rgba(75,192,192,0.5)",
+          },
+        ],
+      },
+      pieChart: {
+        labels: data.labels,
+        datasets: [
+          {
+            data: data.data,
+            backgroundColor: ["#537FF1", "#8979FF", "#A8B5CB", "#667790"],
+          },
+        ],
+      },
+    });
+  } catch (err) {
+    console.error("❌ Error applying filters:", err);
+  }
+};
 
 
     const renderChartL = () => {
@@ -604,10 +673,33 @@ function Dashboard() {
 
                                             </div>
 
-                                            <p className={`cursor-pointer text-black transition-all ${actJurusanL ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                }`}
-                                                onClick={() => setActJurusanL(!actJurusanL)}>Jurusan
-                                            </p>
+                                            <p className='font-normal text-[#023048] mt-4'>Tipe</p>
+                                            <div className="gap-4 flex flex-col mt-2">
+                                                {["daily", "weekly", "monthly", "yearly"].map((type) => (
+                                                    <label
+                                                        key={type}
+                                                        className="cursor-pointer flex items-center gap-2 font-thin"
+                                                    >
+                                                        <input
+                                                            type='radio'
+                                                            name='type'
+                                                            value={type}
+                                                            checked={selectedType === type}
+                                                            onChange={() => setSelectedType(type)}
+                                                            className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
+                                                        />
+                                                        <span
+                                                            className={
+                                                                selectedType === type
+                                                                    ? "underline text-[#023048]"
+                                                                    : "text-gray-600"
+                                                            }
+                                                        >
+                                                            {type}
+                                                        </span>
+                                                    </label>
+                                                ))}
+                                            </div>
                                             <p className="font-nomral text-[#023048] mt-3">Kategori Diagram</p>
                                             <div className='gap-4 mb-4 pb-4'>
                                                 <p className={`cursor-pointer text-black transition-all ${activeChartL === "circle" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
@@ -623,6 +715,28 @@ function Dashboard() {
                                                     onClick={() => setActiveChartL("Bar")}>Diagram Batang
                                                 </p>
                                             </div>
+
+                                            <div className="flex justify-between mt-6 border-t pt-3">
+                                                <button
+                                                    onClick={handleResetFilters}
+                                                    className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                >
+                                                    Reset
+                                                </button>
+                                                <button
+                                                    onClick={handleCancelFilters}
+                                                    className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                >
+                                                    Cancel
+                                                </button>
+                                                <button
+                                                    onClick={handleApplyFilters}
+                                                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                                                >
+                                                    Apply
+                                                </button>
+                                            </div>
+
 
                                         </div>
                                     )}
