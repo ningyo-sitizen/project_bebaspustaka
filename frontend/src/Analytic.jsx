@@ -59,6 +59,11 @@ function Dashboard() {
     const [cekB2, setCekB2] = useState(false);
     const [cekC2, setCekC2] = useState(false);
 
+    const [years, setYears] = useState([]);
+    const [selectedYears, setSelectedYears] = useState([]);
+    const [selectedType, setSelectedType] = useState("");
+
+
 
     const renderChartL = () => {
         if (!chartData.lineChart || !chartData.pieChart || !chartData.barChart) {
@@ -316,12 +321,24 @@ function Dashboard() {
         if (savedUser) {
             setUser(JSON.parse(savedUser));
         }
+        fetchYears();
         fetchChartData();
     }, []);
 
+    const fetchYears = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/api/dashboard/years", {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+            });
+            const data = await res.json();
+            setYears(data);
+        } catch (err) {
+            console.log("xd", err);
+        }
+    }
+
     const fetchChartData = async () => {
         try {
-            // aku bikin preview dulu, ntar ganti aja ini kalo mau connect
             const mockData = {
                 monthlyVisits: {
                     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
@@ -434,11 +451,11 @@ function Dashboard() {
                                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                             </svg>
-                        <Link to="/dashboard">
-                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                Dashboard
-                            </h2>
-                        </Link>
+                            <Link to="/dashboard">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    Dashboard
+                                </h2>
+                            </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -458,11 +475,11 @@ function Dashboard() {
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M4 20h14" />
                             </svg>
-                        <Link to="/analytic">
-                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                Data Analitik
-                            </h2>
-                        </Link>
+                            <Link to="/analytic">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    Data Analitik
+                                </h2>
+                            </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -516,7 +533,6 @@ function Dashboard() {
 
 
 
-                {/* nih baru dah visualisasinya */}
                 <main className="ml-64 flex-1 p-8">
 
                     <div className="w-full h-48 bg-[url('https://cdn.designfast.io/image/2025-10-30/db2f71c9-29cb-42eb-a2eb-47ec9e3bdb1c.png')] 
@@ -551,39 +567,41 @@ function Dashboard() {
                                                 onClick={() => setActiveL(!activeL)}>Tahun Masuk
                                             </p>
                                             <div className='gap-5'>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekA}
-                                                        onChange={() => setCekA(!cekA)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekA ? "underline" : "text-gray-600"}>
-                                                        2021
-                                                    </span>
-                                                </label>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekB}
-                                                        onChange={() => setCekB(!cekB)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekB ? "underline" : "text-gray-600"}>
-                                                        2022
-                                                    </span>
-                                                </label>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekC}
-                                                        onChange={() => setCekC(!cekC)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekC ? "underline" : "text-gray-600"}>
-                                                        2023
-                                                    </span>
-                                                </label>
+                                                {years.length > 0 ? (
+                                                    years.map((year) => (
+                                                        <label
+                                                            key={year}
+                                                            className="cursor-pointer flex items-center gap-2 font-thin"
+                                                        >
+                                                            <input
+                                                                type="checkbox"
+                                                                value={year}
+                                                                checked={selectedYears.includes(year)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedYears([...selectedYears, year]);
+                                                                    } else {
+                                                                        setSelectedYears(selectedYears.filter((y) => y !== year));
+                                                                    }
+                                                                }}
+                                                                className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
+                                                            />
+                                                            <span
+                                                                className={
+                                                                    selectedYears.includes(year)
+                                                                        ? "underline text-[#023048]"
+                                                                        : "text-gray-600"
+                                                                }
+                                                            >
+                                                                {year}
+                                                            </span>
+                                                        </label>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                )}
+
+
                                             </div>
 
                                             <p className={`cursor-pointer text-black transition-all ${actJurusanL ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
