@@ -30,10 +30,10 @@ exports.getMonthlyForLandingPage = async (req, res) => {
     const [rows] = await bebaspustaka.query(sql, [year]);
 
     const labels = rows.map(r => r.month);
-    const data = rows.map(r => r.visitor_count);
+    const data = rows.map(r => r.total_visitor);
 
     res.json({ labels, data });
-    
+
   } catch (err) {
     console.error('❌ Error fetching monthly visitors:', err);
     res.status(500).json({ message: 'Server error' });
@@ -45,56 +45,78 @@ exports.getMonthlyForLandingPage = async (req, res) => {
 exports.getDashboardDatVisitor = async (req, res) => {
   try {
     const period = req.query.period || "daily";
-    const year = req.query.year || new Date().getFullYear();
+    const yearParam = req.query.year || new Date().getFullYear().toString;
 
+    if (Array.isArray(yearParam)) {
+      yearParam = yearParam.join("");
+    }
+
+    const years = yearParam.split(",").map((y) => y.trim());
     let sql = "";
     let params = [];
 
+    console.log("year =", years);
+    console.log("period = ", period);
+
     if (period === "daily") {
       sql = `
-        SELECT DATE_FORMAT(hari, '%d-%m-%Y') as label, total_visitor 
+        SELECT year,DATE_FORMAT(hari, '%d-%m-%Y') as label, total_visitor 
         FROM summary_daily_visitor
         WHERE YEAR(hari) IN (?)
-        ORDER BY hari
+        ORDER BY hari,hari
       `;
-      params = [year];
+      params = [years];
     }
 
     if (period === "weekly") {
       sql = `
-        SELECT CONCAT('Week ', week, ' (', DATE_FORMAT(start_date,'%d %b'),' - ', DATE_FORMAT(end_date,'%d %b'), ')') as label,
+        SELECT year, week as label, start_date,end_date,
                total_visitor 
         FROM summary_weekly_visitor
         WHERE year IN (?)
         ORDER BY week
       `;
-      params = [year];
+      params = [years];
     }
 
     if (period === "yearly") {
       sql = `
-        SELECT year as label, total_visitor 
+        SELECT year,cast(year as CHAR) as label, total_visitor 
         FROM summary_yearly_visitor
-        ORDER BY year
+        where year IN (?)
+        ORDER BY year,year
       `;
+      params = [years]
     }
 
-    if(period == "monthly"){
+    if (period == "monthly") {
       sql = `
-        SELECT month as label, total_visitor 
+        SELECT year,month as label, total_visitor 
         FROM summary_monthly_visitor
         where year IN (?)
-        ORDER BY year
+        ORDER BY year, month
       `;
-      params = [year]
+      params = [years]
     }
 
     const [rows] = await bebaspustaka.query(sql, params);
 
     res.json({
-      labels: rows.map(r => r.label),
-      data: rows.map(r => r.total_visitor)
+      years: years,
+      data: rows.reduce((acc, r) => {
+        if (!acc[r.year]) acc[r.year] = [];
+        acc[r.year].push({
+          label: r.label,
+          total_visitor: r.total_visitor,
+          start_date: r.start_date,
+          end_date: r.end_date
+        });
+        return acc;
+      }, {})
     });
+
+    console.log(rows)
+
 
   } catch (err) {
     console.log(err);

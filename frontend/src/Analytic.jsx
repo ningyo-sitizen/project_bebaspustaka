@@ -12,9 +12,8 @@ import {
     Legend
 } from 'chart.js';
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { data, Link } from 'react-router-dom';
 
-// Register ChartJS components
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -66,72 +65,104 @@ function Dashboard() {
     const [tempType, setTempType] = useState("");
 
     const handleResetFilters = () => {
-  setSelectedYears([]);
-  setSelectedType("");
-};
+        setSelectedYears([]);
+        setSelectedType("");
+    };
 
-const handleCancelFilters = () => {
-  setSelectedYears(tempYears);
-  setSelectedType(tempType);
-  setShowFilterL(false);
-};
+    const handleCancelFilters = () => {
+        setSelectedYears(tempYears);
+        setSelectedType(tempType);
+        setShowFilterL(false);
+    };
+const autoBuildChartData = (data, selectedType) => {
+  const monthLabels = [
+    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+  ];
 
-const handleApplyFilters = async () => {
-  setTempYears(selectedYears);
-  setTempType(selectedType);
-  setShowFilterL(false);
+  const getRandomColor = () => {
+    const r = Math.floor(Math.random() * 255);
+    const g = Math.floor(Math.random() * 255);
+    const b = Math.floor(Math.random() * 255);
+    return `rgba(${r}, ${g}, ${b}, 0.8)`;
+  };
 
-  try {
-    const token = localStorage.getItem("token");
-    const query = new URLSearchParams();
-    if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
-    if (selectedType) query.append("period", selectedType);
-
-    const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    const data = await res.json();
-
-    console.log(selectedYears,selectedType)
-    console.log(data)
-
-    setChartData({
-      lineChart: {
-        labels: data.labels,
-        datasets: [
-          {
-            label: "Jumlah Pengunjung",
-            data: data.data,
-            borderColor: "rgb(75,192,192)",
-            backgroundColor: "rgba(75,192,192,0.2)",
-            tension: 0.2,
-          },
-        ],
-      },
-      barChart: {
-        labels: data.labels,
-        datasets: [
-          {
-            label: "Jumlah Pengunjung",
-            data: data.data,
-            backgroundColor: "rgba(75,192,192,0.5)",
-          },
-        ],
-      },
-      pieChart: {
-        labels: data.labels,
-        datasets: [
-          {
-            data: data.data,
-            backgroundColor: ["#537FF1", "#8979FF", "#A8B5CB", "#667790"],
-          },
-        ],
-      },
-    });
-  } catch (err) {
-    console.error("❌ Error applying filters:", err);
+  let baseLabels = [];
+  if (selectedType === "monthly") baseLabels = monthLabels;
+  else if (selectedType === "yearly") baseLabels = data.years;
+  else if (selectedType === "weekly") {
+    baseLabels = [...new Set(Object.values(data.data)
+      .flat()
+      .map(r => r.label))];
+  } else if (selectedType === "daily") {
+    baseLabels = [...new Set(Object.values(data.data)
+      .flat()
+      .map(r => r.label))];
   }
+
+  if (selectedType === "monthly") {
+    baseLabels = monthLabels.filter(m =>
+      Object.values(data.data)
+        .flat()
+        .some(r => String(r.label).startsWith(m))
+    );
+  }
+
+  const datasets = Object.keys(data.data).map((year) => {
+    const yearData = data.data[year];
+    const color = getRandomColor();
+
+    const values = baseLabels.map((label) => {
+      const found = yearData.find(r => String(r.label).startsWith(label));
+      return found ? found.total_visitor : 0;
+    });
+
+    return {
+      label: `Tahun ${year}`,
+      data: values,
+      borderColor: color,
+      backgroundColor: color.replace("0.8", "0.3"),
+      borderWidth: 2,
+      tension: 0.3
+    };
+  });
+
+  return { labels: baseLabels, datasets };
 };
+
+
+
+    const handleApplyFilters = async () => {
+        setTempYears(selectedYears);
+        setTempType(selectedType);
+        setShowFilterL(false);
+
+        try {
+            const token = localStorage.getItem("token");
+            const query = new URLSearchParams();
+            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
+            if (selectedType) query.append("period", selectedType);
+
+            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            console.log(selectedYears, selectedType)
+            console.log(data)
+
+            const chart = autoBuildChartData(data, selectedType)
+
+            setChartData({
+                lineChart: chart,
+                barChart:  chart,
+                pieChart: chart,
+            });
+
+        } catch (err) {
+            console.error("❌ Error applying filters:", err);
+        }
+    };
 
 
     const renderChartL = () => {
@@ -146,7 +177,7 @@ const handleApplyFilters = async () => {
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins: {
+                            plugins:{
                                 legend: {
                                     position: 'top',
                                     labels: {
@@ -173,6 +204,7 @@ const handleApplyFilters = async () => {
                                     },
                                     align: 'center',
                                 },
+                                
                             },
                             scales: {
                                 x: {
@@ -240,7 +272,7 @@ const handleApplyFilters = async () => {
                     <Bar data={chartData.barChart} options={{
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins: {
+                        plugins:{
                             legend: {
                                 position: 'top',
                                 labels: {
