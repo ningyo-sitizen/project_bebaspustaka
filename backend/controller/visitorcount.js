@@ -116,6 +116,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
     });
 
     console.log(rows)
+    
 
 
   } catch (err) {

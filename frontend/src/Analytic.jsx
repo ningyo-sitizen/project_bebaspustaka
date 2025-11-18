@@ -31,6 +31,9 @@ function Dashboard() {
     const [user, setUser] = useState(null);
     const [visitors, setVisitors] = useState([]);
 
+    const [tableData, setTableData] = useState(null);
+
+
     const [chartData, setChartData] = useState({
         lineChart: null,
         pieChart: null,
@@ -74,65 +77,67 @@ function Dashboard() {
         setSelectedType(tempType);
         setShowFilterL(false);
     };
-const autoBuildChartData = (data, selectedType) => {
-  const monthLabels = [
-    "Januari", "Februari", "Maret", "April", "Mei", "Juni",
-    "Juli", "Agustus", "September", "Oktober", "November", "Desember"
-  ];
 
-  const getRandomColor = () => {
-    const r = Math.floor(Math.random() * 255);
-    const g = Math.floor(Math.random() * 255);
-    const b = Math.floor(Math.random() * 255);
-    return `rgba(${r}, ${g}, ${b}, 0.8)`;
-  };
 
-  let baseLabels = [];
-  if (selectedType === "monthly") baseLabels = monthLabels;
-  else if (selectedType === "yearly") baseLabels = data.years;
-  else if (selectedType === "weekly") {
-    baseLabels = [...new Set(Object.values(data.data)
-      .flat()
-      .map(r => r.label))];
-  } else if (selectedType === "daily") {
-    baseLabels = [...new Set(Object.values(data.data)
-      .flat()
-      .map(r => r.label))];
-  }
+    const autoBuildChartData = (data, selectedType) => {
+        const monthLabels = [
+            "Januari", "Februari", "Maret", "April", "Mei", "Juni",
+            "Juli", "Agustus", "September", "Oktober", "November", "Desember"
+        ];
 
-  if (selectedType === "monthly") {
-    baseLabels = monthLabels.filter(m =>
-      Object.values(data.data)
-        .flat()
-        .some(r => String(r.label).startsWith(m))
-    );
-  }
+        const getRandomColor = () => {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            return `rgba(${r}, ${g}, ${b}, 0.8)`;
+        };
 
-  const datasets = Object.keys(data.data).map((year) => {
-    const yearData = data.data[year];
-    const color = getRandomColor();
+        let baseLabels = [];
+        if (selectedType === "monthly") baseLabels = monthLabels;
+        else if (selectedType === "yearly") baseLabels = data.years;
+        else if (selectedType === "weekly") {
+            baseLabels = [...new Set(Object.values(data.data)
+                .flat()
+                .map(r => r.label))];
+        } else if (selectedType === "daily") {
+            baseLabels = [...new Set(Object.values(data.data)
+                .flat()
+                .map(r => r.label))];
+        }
 
-    const values = baseLabels.map((label) => {
-      const found = yearData.find(r => String(r.label).startsWith(label));
-      return found ? found.total_visitor : 0;
-    });
+        if (selectedType === "monthly") {
+            baseLabels = monthLabels.filter(m =>
+                Object.values(data.data)
+                    .flat()
+                    .some(r => String(r.label).startsWith(m))
+            );
+        }
 
-    return {
-      label: `Tahun ${year}`,
-      data: values,
-      borderColor: color,
-      backgroundColor: color.replace("0.8", "0.3"),
-      borderWidth: 2,
-      tension: 0.3
+        const datasets = Object.keys(data.data).map((year) => {
+            const yearData = data.data[year];
+            const color = getRandomColor();
+
+            const values = baseLabels.map((label) => {
+                const found = yearData.find(r => String(r.label).startsWith(label));
+                return found ? found.total_visitor : 0;
+            });
+
+            return {
+                label: `Tahun ${year}`,
+                data: values,
+                borderColor: color,
+                backgroundColor: color.replace("0.8", "0.3"),
+                borderWidth: 2,
+                tension: 0.3
+            };
+        });
+
+        return { labels: baseLabels, datasets };
     };
-  });
-
-  return { labels: baseLabels, datasets };
-};
 
 
 
-    const handleApplyFilters = async () => {
+    const handleApplyFiltersLeft = async () => {
         setTempYears(selectedYears);
         setTempType(selectedType);
         setShowFilterL(false);
@@ -151,18 +156,112 @@ const autoBuildChartData = (data, selectedType) => {
             console.log(selectedYears, selectedType)
             console.log(data)
 
+
+
             const chart = autoBuildChartData(data, selectedType)
 
             setChartData({
                 lineChart: chart,
-                barChart:  chart,
+                barChart: chart,
                 pieChart: chart,
             });
+
+            setTableData(data)
+
 
         } catch (err) {
             console.error("❌ Error applying filters:", err);
         }
     };
+
+    function DataTable({ selectedType, data }) {
+        if (!data || !data.data) return null;
+
+        // ---------- DEFINE HEADERS BASED ON PERIOD ----------
+        const getHeaders = () => {
+            switch (selectedType) {
+                case "daily":
+                    return ["Year", "Date", "Total Visitors"];
+
+                case "weekly":
+                    return ["Year", "Week", "Start Date", "End Date", "Total Visitors"];
+
+                case "monthly":
+                    return ["Year", "Month", "Total Visitors"];
+
+                case "yearly":
+                    return ["Year", "Total Visitors"];
+
+                default:
+                    return ["Year", "Label", "Total Visitors"];
+            }
+        };
+
+        const headers = getHeaders();
+
+        const renderRows = () => {
+            return Object.keys(data.data).map((year) =>
+                data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+
+                        <td className="p-3">{year}</td>
+
+                        {selectedType === "daily" && (
+                            <td className="p-3">{item.label}</td>
+                        )}
+
+                        {selectedType === "monthly" && (
+                            <td className="p-3">{item.label}</td>
+                        )}
+
+                        {selectedType === "yearly" && (
+                            <td className="p-3">{item.total_visitor}</td>
+                        )}
+
+                        {selectedType === "weekly" && (
+                            <>
+                                <td className="p-3">{item.label}</td>
+                                <td className="p-3">{item.start_date}</td>
+                                <td className="p-3">{item.end_date}</td>
+                                <td className="p-3">{item.total_visitor}</td>
+                            </>
+                        )}
+
+                        {/* DEFAULT FALLBACK */}
+                        {selectedType !== "weekly" && selectedType !== "yearly" && (
+                            <td className="p-3">{item.total_visitor}</td>
+                        )}
+
+                    </tr>
+                ))
+            );
+        };
+
+
+        return (
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <h3 className="font-semibold text-lg mb-4 capitalize">
+                    {selectedType} Visitor Data
+                </h3>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                {headers.map((header, idx) => (
+                                    <th key={idx} className="p-3 border font-medium text-left">
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>{renderRows()}</tbody>
+                    </table>
+                </div>
+            </div>
+        );
+    }
+
 
 
     const renderChartL = () => {
@@ -177,7 +276,7 @@ const autoBuildChartData = (data, selectedType) => {
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
-                            plugins:{
+                            plugins: {
                                 legend: {
                                     position: 'top',
                                     labels: {
@@ -204,7 +303,7 @@ const autoBuildChartData = (data, selectedType) => {
                                     },
                                     align: 'center',
                                 },
-                                
+
                             },
                             scales: {
                                 x: {
@@ -272,7 +371,7 @@ const autoBuildChartData = (data, selectedType) => {
                     <Bar data={chartData.barChart} options={{
                         responsive: true,
                         maintainAspectRatio: false,
-                        plugins:{
+                        plugins: {
                             legend: {
                                 position: 'top',
                                 labels: {
@@ -762,7 +861,7 @@ const autoBuildChartData = (data, selectedType) => {
                                                     Cancel
                                                 </button>
                                                 <button
-                                                    onClick={handleApplyFilters}
+                                                    onClick={handleApplyFiltersLeft}
                                                     className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
                                                 >
                                                     Apply
@@ -874,6 +973,10 @@ const autoBuildChartData = (data, selectedType) => {
                             </div>
                         </div>
 
+                        {tableData && (
+                            <DataTable selectedType={selectedType} data={tableData} />
+                        )}
+
                         <div className='mt-5'>
                             <div className="relative inline-flex justify-between items-center mb-6">
                                 <h3 className="font-semibold text-lg">Ringkasan</h3>
@@ -937,6 +1040,7 @@ const autoBuildChartData = (data, selectedType) => {
                                 </div>
                             </div>
                         </div>
+
                     </div>
 
                     <div className='grid grid-cols-1 gap-8 '>

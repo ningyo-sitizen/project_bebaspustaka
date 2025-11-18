@@ -220,7 +220,6 @@ function Dashboard() {
 
 
 
-                {/* nih baru dah visualisasinya */}
                 <main className="ml-64 flex-1 p-8">
 
                     <div className="w-full h-48 bg-[url('https://cdn.designfast.io/image/2025-10-30/db2f71c9-29cb-42eb-a2eb-47ec9e3bdb1c.png')] 
