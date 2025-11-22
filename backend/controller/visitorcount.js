@@ -101,6 +101,11 @@ exports.getDashboardDatVisitor = async (req, res) => {
 
     const [rows] = await bebaspustaka.query(sql, params);
 
+    const formatDate = (d) => {
+    if (!d) return null;
+    return new Date(d).toISOString().split("T")[0];
+}
+
     res.json({
       years: years,
       data: rows.reduce((acc, r) => {
@@ -108,8 +113,8 @@ exports.getDashboardDatVisitor = async (req, res) => {
         acc[r.year].push({
           label: r.label,
           total_visitor: r.total_visitor,
-          start_date: r.start_date,
-          end_date: r.end_date
+          start_date:formatDate(r.start_date),
+          end_date: formatDate(r.end_date)
         });
         return acc;
       }, {})

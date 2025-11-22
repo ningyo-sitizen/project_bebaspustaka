@@ -33,12 +33,19 @@ function Dashboard() {
 
     const [tableData, setTableData] = useState(null);
 
-
-    const [chartData, setChartData] = useState({
+    const [chartDataR, setChartDataR] = useState({
         lineChart: null,
         pieChart: null,
         barChart: null,
-    });
+    })
+
+    const [chartDataL, setChartDataL] = useState({
+        lineChart: null,
+        pieChart: null,
+        barChart: null,
+    })
+
+
 
     const [showFilterR, setShowFilterR] = useState(false);
     const [showFilterL, setShowFilterL] = useState(false);
@@ -61,21 +68,54 @@ function Dashboard() {
     const [cekB2, setCekB2] = useState(false);
     const [cekC2, setCekC2] = useState(false);
 
+
+
     const [years, setYears] = useState([]);
     const [selectedYears, setSelectedYears] = useState([]);
     const [selectedType, setSelectedType] = useState("");
     const [tempYears, setTempYears] = useState([]);
     const [tempType, setTempType] = useState("");
 
+    const [angkatan, setAngkatan] = useState([]);
+    const [selectedAngkatan, setSelectedAngkatan] = useState([]);
+    const [tempAngkatan, setTempAngkatan] = useState([])
+    const [lembaga, setLembaga] = useState([]);
+    const [selectedLembaga, setSelectedLembaga] = useState([]);
+    const [tempLembaga, setTempLembaga] = useState([]);
+    const [prodi, setProdi] = useState({});
+    const [selectedProdi, setSelectedProdi] = useState([]);
+    const [tempProdi, setTempProdi] = useState([]);
+
+    const [activeProdiR, setActiveProdiR] = useState(false);
+    const [tableDataRight, setTableDataRight] = useState(null);
+
+
     const handleResetFilters = () => {
         setSelectedYears([]);
         setSelectedType("");
+        fetchChartDataLeft();
     };
 
     const handleCancelFilters = () => {
         setSelectedYears(tempYears);
         setSelectedType(tempType);
         setShowFilterL(false);
+    };
+
+    const handleResetFiltersRight = () => {
+        setSelectedAngkatan([]);
+        setSelectedLembaga([]);
+        setSelectedProdi([]);
+        setTempAngkatan([]);
+        setTempLembaga([]);
+        setTempProdi([]);
+        fetchChartDataRight();
+    };
+    const handleCancelFiltersRight = () => {
+        setSelectedAngkatan(tempAngkatan);
+        setSelectedLembaga(tempLembaga);
+        setSelectedProdi(tempProdi);
+        setShowFilterR(false);
     };
 
 
@@ -134,9 +174,6 @@ function Dashboard() {
 
         return { labels: baseLabels, datasets };
     };
-
-
-
     const handleApplyFiltersLeft = async () => {
         setTempYears(selectedYears);
         setTempType(selectedType);
@@ -160,24 +197,151 @@ function Dashboard() {
 
             const chart = autoBuildChartData(data, selectedType)
 
-            setChartData({
+            setChartDataL({
                 lineChart: chart,
                 barChart: chart,
                 pieChart: chart,
             });
 
             setTableData(data)
+            fetchAngkatan()
+            fetchProdi()
+            console.log(angkatan)
+            console.log(prodi)
 
+            console.log(years)
 
         } catch (err) {
             console.error("❌ Error applying filters:", err);
         }
     };
 
+
+    const autoBuildChartDataRight = (apiResponse) => {
+        const { mode, data, years } = apiResponse;
+
+        const generateColors = (count) => {
+            const colors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40'
+            ];
+            return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
+        };
+
+        if (mode === "default_year") {
+            
+            const sortedYears = [...years].sort((a, b) => a - b);
+
+            return {
+                labels: sortedYears,  
+                datasets: [{
+                    label: "Total Peminjaman",
+                    data: sortedYears.map(year => data[year][0].total),  
+                    backgroundColor: generateColors(sortedYears.length),  
+                    borderColor: generateColors(sortedYears.length), 
+                    borderWidth: 1
+                }]
+            };
+        }
+
+        if (mode === "per_lembaga") {
+            const sortedYears = [...years].sort((a, b) => b - a);
+
+            const lembagaSet = new Set();
+            sortedYears.forEach(year => {  
+                data[year].forEach(item => lembagaSet.add(item.lembaga));
+            });
+            const lembagaList = Array.from(lembagaSet);
+
+            return {
+                labels: sortedYears,  
+                datasets: lembagaList.map((lem, idx) => ({
+                    label: lem,
+                    data: sortedYears.map(year => { 
+                        const found = data[year].find(item => item.lembaga === lem);
+                        return found ? found.total : 0;
+                    }),
+                    backgroundColor: generateColors(lembagaList.length)[idx],
+                    borderColor: generateColors(lembagaList.length)[idx],
+                    borderWidth: 1
+                }))
+            };
+        }
+
+        if (mode === "per_program") {
+            const sortedYears = [...years].sort((a, b) => b - a);
+
+            const programSet = new Set();
+            sortedYears.forEach(year => {  
+                data[year].forEach(item => programSet.add(item.program));
+            });
+            const programList = Array.from(programSet);
+
+            return {
+                labels: sortedYears,
+                datasets: programList.map((prog, idx) => ({
+                    label: prog,
+                    data: sortedYears.map(year => { 
+                        const found = data[year].find(item => item.program === prog);
+                        return found ? found.total : 0;
+                    }),
+                    backgroundColor: generateColors(programList.length)[idx],
+                    borderColor: generateColors(programList.length)[idx],
+                    borderWidth: 1
+                }))
+            };
+        }
+
+        return {
+            labels: [],
+            datasets: []
+        };
+    };
+
+    const handleApplyFiltersRight = async () => {
+        setTempAngkatan(selectedAngkatan);
+        setTempLembaga(selectedLembaga);
+        setTempProdi(selectedProdi);
+        setShowFilterR(false);
+
+        try {
+            const token = localStorage.getItem("token");
+            const query = new URLSearchParams();
+
+            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+
+            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            console.log("Filter Right Applied:", {
+                angkatan: selectedAngkatan,
+                lembaga: selectedLembaga,
+                prodi: selectedProdi
+            });
+            console.log("Response data:", data);
+
+            const chart = autoBuildChartDataRight(data);
+
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart,
+                doughnutChart: chart
+            });
+
+            setTableDataRight(data);
+
+        } catch (err) {
+            console.error("❌ Error applying right filters:", err);
+        }
+    };
     function DataTable({ selectedType, data }) {
         if (!data || !data.data) return null;
 
-        // ---------- DEFINE HEADERS BASED ON PERIOD ----------
         const getHeaders = () => {
             switch (selectedType) {
                 case "daily":
@@ -262,17 +426,113 @@ function Dashboard() {
         );
     }
 
+function DataTableRight({ data }) {
+    if (!data || !data.data) return null;
+
+    const { mode, years, lembaga } = data;
+
+    const getHeaders = () => {
+        switch (mode) {
+            case "default_year":
+                return ["Tahun", "Total Peminjaman"];
+            case "per_lembaga":
+                return ["Tahun", "Lembaga", "Total Peminjaman"];
+            case "per_program":
+                return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"]; 
+            default:
+                return ["Tahun", "Info", "Total"];
+        }
+    };
+
+    const headers = getHeaders();
+
+    const renderRows = () => {
+        const sortedYears = [...years].sort((a, b) => b - a);
+
+        if (mode === "default_year") {
+            return sortedYears.map((year) => (
+                <tr key={year} className="border-b hover:bg-gray-50">
+                    <td className="p-3 font-semibold">{year}</td>
+                    <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
+                </tr>
+            ));
+        }
+
+        if (mode === "per_lembaga") {
+            return sortedYears.map((year) =>
+                data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga}</td>
+                        <td className="p-3">{item.total.toLocaleString()}</td>
+                    </tr>
+                ))
+            );
+        }
+
+        if (mode === "per_program") {
+            return sortedYears.map((year) =>
+                data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga}</td> {/* ✅ TAMBAH Kolom Lembaga */}
+                        <td className="p-3">{item.program}</td>
+                        <td className="p-3">{item.total.toLocaleString()}</td>
+                    </tr>
+                ))
+            );
+        }
+
+        return null;
+    };
+
+    const getTitle = () => {
+        switch (mode) {
+            case "default_year":
+                return "Data Peminjaman Per Tahun";
+            case "per_lembaga":
+                return "Data Peminjaman Per Lembaga";
+            case "per_program":
+                return "Data Peminjaman Per Program Studi";
+            default:
+                return "Data Peminjaman";
+        }
+    };
+
+    return (
+        <div className="bg-white p-6 mt-8 rounded-xl shadow">
+            <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
+
+            <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            {headers.map((header, idx) => (
+                                <th key={idx} className="p-3 border font-medium text-left">
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>{renderRows()}</tbody>
+                </table>
+            </div>
+        </div>
+    );
+}
+
+
 
 
     const renderChartL = () => {
-        if (!chartData.lineChart || !chartData.pieChart || !chartData.barChart) {
+        if (!chartDataL.lineChart || !chartDataL.pieChart || !chartDataL.barChart) {
             return <p>Loading chart...</p>;
         }
         switch (activeChartL) {
             case "Line":
                 return (
                     <Line
-                        data={chartData.lineChart}
+                        data={chartDataL.lineChart}
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
@@ -321,7 +581,7 @@ function Dashboard() {
                     />
                 );
             case "circle":
-                return (<Pie data={chartData.pieChart} options={{
+                return (<Pie data={chartDataL.pieChart} options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -368,7 +628,7 @@ function Dashboard() {
                 );
             case "Bar":
                 return (
-                    <Bar data={chartData.barChart} options={{
+                    <Bar data={chartDataL.barChart} options={{
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
@@ -417,14 +677,14 @@ function Dashboard() {
     };
 
     const renderChartR = () => {
-        if (!chartData.lineChart || !chartData.pieChart || !chartData.barChart) {
+        if (!chartDataR.lineChart || !chartDataR.pieChart || !chartDataR.barChart) {
             return <p>Loading chart...</p>;
         }
         switch (activeChartR) {
             case "Line":
                 return (
                     <Line
-                        data={chartData.lineChart}
+                        data={chartDataR.lineChart}
                         options={{
                             responsive: true,
                             maintainAspectRatio: false,
@@ -455,7 +715,7 @@ function Dashboard() {
                     />
                 );
             case "circle":
-                return (<Pie data={chartData.pieChart} options={{
+                return (<Pie data={chartDataR.pieChart} options={{
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
@@ -485,7 +745,7 @@ function Dashboard() {
                 );
             case "Bar":
                 return (
-                    <Bar data={chartData.barChart} options={{
+                    <Bar data={chartDataR.barChart} options={{
                         responsive: true,
                         maintainAspectRatio: false,
                         plugins: {
@@ -522,8 +782,20 @@ function Dashboard() {
             setUser(JSON.parse(savedUser));
         }
         fetchYears();
-        fetchChartData();
+        fetchChartDataLeft();
+        fetchChartDataRight();
+        fetchAngkatan();
+        fetchLembaga();
     }, []);
+
+    useEffect(() => {
+        if (selectedLembaga.length > 0) {
+            fetchProdi(selectedLembaga);
+        } else {
+            setProdi({});
+            setSelectedProdi([]);
+        }
+    }, [selectedLembaga]);
 
     const fetchYears = async () => {
         try {
@@ -537,70 +809,155 @@ function Dashboard() {
         }
     }
 
-    const fetchChartData = async () => {
+    const fetchAngkatan = async () => {
         try {
-            const mockData = {
-                monthlyVisits: {
-                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                    values: [65, 59, 80, 81, 56, 55]
-                }
-            };
-
-            setChartData({
-                lineChart: {
-                    labels: mockData.monthlyVisits.labels,
-                    datasets: [
-                        {
-                            label: 'Kunjungan per Bulan',
-                            data: mockData.monthlyVisits.values,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1
-                        },
-                    ],
-                },
-                pieChart: {
-                    labels: ['Teknik Informatika', 'Teknik Multimedia & Jaringan', 'Teknik Multimedia', 'Teknik Komputer & Jaringan'],
-                    datasets: [
-                        {
-                            label: 'Angkatan',
-                            data: [120, 90, 70, 40],
-                            backgroundColor: [
-                                '#537FF1',
-                                '#8979FF',
-                                '#A8B5CB',
-                                '#667790',
-                            ],
-                        }
-                    ]
-                },
-                barChart: {
-                    labels: mockData.monthlyVisits.labels,
-                    datasets: [
-                        {
-                            label: 'Kunjungan per Bulan',
-                            data: mockData.monthlyVisits.values,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        },
-                    ],
-                }
+            const res = await fetch("http://localhost:8080/api/loan/angkatan", {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
             });
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
+            const data = await res.json();
+            setAngkatan(data);
+        }
+        catch (err) {
+            console.log("gagal mengambil tahun angkatan")
+        }
+    }
 
-            const fallbackData = {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+    const fetchLembaga = async () => {
+        try {
+            const res = await fetch("http://localhost:8080/api/loan/lembaga", {
+                headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+
+            });
+            const data = await res.json();
+            setLembaga(data);
+        } catch (err) {
+            console.log("gagal mengambil lembaga")
+        }
+    }
+
+    const fetchProdi = async (lembagaList) => {
+        if (lembagaList.length === 0) {
+            setProdi({});
+            setSelectedProdi([]);
+            return;
+        }
+
+        const query = new URLSearchParams();
+        query.append("lembaga", lembagaList.join(","));
+
+        const res = await fetch(`http://localhost:8080/api/loan/program?${query}`, {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        })
+        const data = await res.json();
+
+        setProdi(data);
+
+        const allValiProdi = Object.values(data).flat();
+        setSelectedProdi((prev) =>
+            prev.filter((ps) => allValiProdi.includes(ps))
+        )
+    }
+
+const fetchChartDataLeft = async () => {
+    try {
+        const token = localStorage.getItem("token");
+        const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        const mockData = await res.json();
+
+        setChartDataL({
+            lineChart: {
+                labels: mockData.labels,
                 datasets: [
                     {
-                        label: 'Kunjungan per Bulan',
-                        data: [65, 59, 80, 81, 56, 55],
+                        label: 'Kunjungan per Bulan tahun 2025',
+                        data: mockData.data,
                         borderColor: 'rgb(75, 192, 192)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         tension: 0.1
                     },
                 ],
-            };
-            setChartData({ lineChart: fallbackData });
+            },
+            pieChart: {
+                labels: mockData.labels,
+                datasets: [
+                    {
+                        label: "Kunjungan",
+                        data: mockData.data,
+                        backgroundColor: [
+                            '#537FF1',
+                            '#8979FF',
+                            '#A8B5CB',
+                            '#667790',
+                        ]
+                    }
+                ]
+            },
+            barChart: {
+                labels: mockData.labels,
+                datasets: [
+                    {
+                        label: 'Kunjungan per Bulan',
+                        data: mockData.data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                    },
+                ],
+            }
+        });
+
+        const tableDataFormat = {
+            years: [2025],
+            data: {
+                2025: mockData.labels.map((label, index) => ({
+                    label: label,
+                    total_visitor: mockData.data[index]
+                }))
+            }
+        };
+        
+        setTableData(tableDataFormat);
+        setSelectedType("monthly");
+
+    } catch (error) {
+        console.error('Error fetching chart data:', error);
+        
+        const fallbackData = {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
+            datasets: [
+                {
+                    label: 'Kunjungan per Bulan',
+                    data: [65, 59, 80, 81, 56, 55],
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1
+                },
+            ],
+        };
+        setChartDataL({ lineChart: fallbackData });
+    }
+};
+
+    const fetchChartDataRight = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:8080/api/loan/summary`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            const chart = autoBuildChartDataRight(data);
+
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart,
+                doughnutChart: chart
+            });
+
+            setTableDataRight(data);
+        } catch (err) {
+            console.error("❌ Error fetching right chart data:", err);
         }
     };
 
@@ -900,82 +1257,139 @@ function Dashboard() {
                                         </div>
                                     </div>
 
-                                    {/* filtering */}
                                     {showFilterR && (
                                         <div className="absolute top-0 right-0 p-4 bg-white border w-64 z-20">
-                                            <p className="font-thin mb-2">Filter </p>
-                                            <p className="font-nomral text-[#023048]">Kategori Akademik</p>
+                                            <p className="font-thin mb-2">Filter</p>
+                                            <p className="font-normal text-[#023048]">Kategori Akademik</p>
 
-                                            <p className={`cursor-pointer text-black transition-all ${activeR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                }`}
-                                                onClick={() => setActiveR(!activeR)}>Tahun Masuk
+                                            {/* Tahun Masuk */}
+                                            <p className={`cursor-pointer text-black transition-all ${activeR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                onClick={() => setActiveR(!activeR)}>
+                                                Tahun Masuk
                                             </p>
                                             <div className='gap-5'>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekA1}
-                                                        onChange={() => setCekA1(!cekA1)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekA1 ? "underline" : "text-gray-600"}>
-                                                        2021
-                                                    </span>
-                                                </label>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekB2}
-                                                        onChange={() => setCekB2(!cekB2)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekB2 ? "underline" : "text-gray-600"}>
-                                                        2022
-                                                    </span>
-                                                </label>
-                                                <label className="cursor-pointer flex items-center gap-2 font-thin">
-                                                    <input
-                                                        type="checkbox"
-                                                        checked={cekC2}
-                                                        onChange={() => setCekC2(!cekC2)}
-                                                        className="accent-blue-600 w-[10px] h-[10px] cursor-pointer"
-                                                    />
-                                                    <span className={cekC2 ? "underline" : "text-gray-600"}>
-                                                        2023
-                                                    </span>
-                                                </label>
+                                                {angkatan.length > 0 ? (
+                                                    angkatan.map((item) => (
+                                                        <label key={item} className="cursor-pointer flex items-center gap-2 font-thin">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={item}
+                                                                checked={selectedAngkatan.includes(item)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedAngkatan([...selectedAngkatan, item]);
+                                                                    } else {
+                                                                        setSelectedAngkatan(selectedAngkatan.filter((y) => y !== item));
+                                                                    }
+                                                                }}
+                                                                className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
+                                                            />
+                                                            <span className={selectedAngkatan.includes(item) ? "underline text-[#023048]" : "text-gray-600"}>
+                                                                {item}
+                                                            </span>
+                                                        </label>
+                                                    ))
+                                                ) : (
+                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                )}
                                             </div>
 
-                                            <p className={`cursor-pointer text-black transition-all ${actJurusanR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                }`}
-                                                onClick={() => setActJurusanR(!actJurusanR)}>Jurusan
+                                            {/* Lembaga */}
+                                            <p className={`cursor-pointer text-black transition-all ${actJurusanR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                onClick={() => setActJurusanR(!actJurusanR)}>
+                                                Lembaga
                                             </p>
-                                            <p className="font-nomral text-[#023048] mt-3">Kategori Diagram</p>
+                                            <div className="gap-5">
+                                                {lembaga.length > 0 && (
+                                                    lembaga.map((item) => (
+                                                        <label key={item} className="cursor-pointer flex items-center gap-2 font-thin">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={item}
+                                                                checked={selectedLembaga.includes(item)}
+                                                                onChange={(e) => {
+                                                                    let updated;
+                                                                    if (e.target.checked) {
+                                                                        updated = [...selectedLembaga, item];
+                                                                    } else {
+                                                                        updated = selectedLembaga.filter((l) => l !== item);
+                                                                    }
+                                                                    setSelectedLembaga(updated);
+                                                                    fetchProdi(updated);
+                                                                }}
+                                                                className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
+                                                            />
+                                                            <span className={selectedLembaga.includes(item) ? "underline text-[#023048]" : "text-gray-600"}>
+                                                                {item}
+                                                            </span>
+                                                        </label>
+                                                    ))
+                                                )}
+                                            </div>
+
+
+                                            <p className={`cursor-pointer text-black transition-all ${activeProdiR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                onClick={() => setActiveProdiR(!activeProdiR)}>
+                                                Program Studi
+                                            </p>
+                                            {Object.keys(prodi).map((lem) => (
+                                                <div key={lem} className="mt-2">
+                                                    <p className="font-semibold text-[#023048]">{lem}</p>
+                                                    {prodi[lem].map((ps) => (
+                                                        <label key={ps} className="flex items-center gap-2 ml-4 text-sm">
+                                                            <input
+                                                                type="checkbox"
+                                                                value={ps}
+                                                                checked={selectedProdi.includes(ps)}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) {
+                                                                        setSelectedProdi([...selectedProdi, ps]);
+                                                                    } else {
+                                                                        setSelectedProdi(selectedProdi.filter((p) => p !== ps));
+                                                                    }
+                                                                }}
+                                                            />
+                                                            <span className={selectedProdi.includes(ps) ? "underline text-[#023048]" : "text-gray-600"}>
+                                                                {ps}
+                                                            </span>
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            ))}
+
+                                            <p className="font-normal text-[#023048] mt-3">Kategori Diagram</p>
                                             <div className='gap-4 mb-4 pb-4'>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "circle" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartR("circle")}>Diagram Lingkaran
+                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "circle" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                    onClick={() => setActiveChartR("circle")}>
+                                                    Diagram Lingkaran
                                                 </p>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "Line" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartR("Line")}>Diagram Garis
+                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "Line" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                    onClick={() => setActiveChartR("Line")}>
+                                                    Diagram Garis
                                                 </p>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "Bar" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartR("Bar")}>Diagram Batang
+                                                <p className={`cursor-pointer text-black transition-all ${activeChartR === "Bar" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
+                                                    onClick={() => setActiveChartR("Bar")}>
+                                                    Diagram Batang
                                                 </p>
                                             </div>
 
+                                            <div className="flex gap-2 mt-4">
+                                                <button onClick={handleResetFiltersRight} className="px-3 py-1 bg-gray-300 rounded">
+                                                    Reset
+                                                </button>
+                                                <button onClick={handleCancelFiltersRight} className="px-3 py-1 bg-gray-500 text-white rounded">
+                                                    Batal
+                                                </button>
+                                                <button onClick={handleApplyFiltersRight} className="px-3 py-1 bg-blue-600 text-white rounded">
+                                                    Terapkan
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
 
                             </div>
                         </div>
-
-                        {tableData && (
-                            <DataTable selectedType={selectedType} data={tableData} />
-                        )}
 
                         <div className='mt-5'>
                             <div className="relative inline-flex justify-between items-center mb-6">
@@ -984,58 +1398,23 @@ function Dashboard() {
 
                             <div className="bg-white p-6">
                                 <div className="relative">
-
-                                    <div className="overflow-x-auto">
-                                        <div className="font-semibold font-black">Data Kunjungan Mahasiswa</div>
-                                        <table className="w-full border-collapse">
-                                            <thead>
-                                                <tr className="bg-gray-50 border-b-2 border-black">
-                                                    <th className="text-left p-4 font-normal text-gray-600">No</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Jurusan</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Program Studi</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Tahun Masuk</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr className="border-b border-black hover:bg-gray-50">
-                                                    <td className="p-4">1</td>
-                                                    <td className="p-4">Teknik Informatika & Komputer</td>
-                                                    <td className="p-4">D4 Teknik Informatika</td>
-                                                    <td className="p-4">2025</td>
-
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
+                                                    {tableData && (
+                            <DataTable selectedType={selectedType} data={tableData} />
+                        )}
                                 </div>
                             </div>
                         </div>
-
                         <div className='mt-5'>
                             <div className="mb-4 h-[32px]"></div>
                             <div className="bg-white p-6">
                                 <div className="relative">
 
                                     <div className="overflow-x-auto">
-                                        <div className="font-semibold font-black">Data Bebas Pustaka</div>
-                                        <table className="w-full border-collapse">
-                                            <thead>
-                                                <tr className="bg-gray-50 border-b-2 border-black">
-                                                    <th className="text-left p-4 font-normal text-gray-600">No</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Jurusan</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Program Studi</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Tahun Masuk</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr className="border-b border-black hover:bg-gray-50">
-                                                    <td className="p-4">1</td>
-                                                    <td className="p-4">Teknik Informatika & Komputer</td>
-                                                    <td className="p-4">D4 Teknik Informatika</td>
-                                                    <td className="p-4">2025</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
+                                        {tableDataRight && (
+                                            <div className="xl:col-span-2">
+                                                <DataTableRight data={tableDataRight} />
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </div>
@@ -1083,7 +1462,6 @@ function Dashboard() {
                 </main>
             </div >
 
-            {/* Footer */}
             < footer className='bg-[#023048] text-white py-6 text-center' >
                 <div className="ml-64">
                     <p className="text-sm">blalaalS</p>
