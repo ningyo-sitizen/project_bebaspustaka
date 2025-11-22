@@ -107,9 +107,6 @@ exports.getSummaryReport = async (req, res) => {
 
     const [rows] = await bebaspustaka.query(sql, params);
 
-    /** ------------------------
-     * DEFAULT MODE → per tahun
-     * ------------------------*/
     if (!tahun && !lembaga && !program) {
       const group = {};
 
@@ -128,9 +125,7 @@ exports.getSummaryReport = async (req, res) => {
       });
     }
 
-    /** ---------------------------
-     * FILTER 1: Tahun saja → lembaga per tahun
-     * ---------------------------*/
+
     if (tahunList.length > 0 && lembagaList.length === 0 && programList.length === 0) {
       const group = {};
 
@@ -154,22 +149,18 @@ exports.getSummaryReport = async (req, res) => {
     }
 
 
-/** ---------------------------
- * FILTER 2: Tahun + lembaga → program studi
- * ---------------------------*/
 if (lembagaList.length > 0) {
   const group = {};
 
   rows.forEach(r => {
     if (!group[r.tahun]) group[r.tahun] = {};
     
-    // ✅ UBAH: Gunakan key unik berdasarkan program + lembaga
     const key = `${r.program}|${r.lembaga}`;
     
     if (!group[r.tahun][key]) {
       group[r.tahun][key] = {
         program: r.program,
-        lembaga: r.lembaga, // ✅ TAMBAHKAN lembaga
+        lembaga: r.lembaga,
         total: 0
       };
     }
@@ -182,12 +173,12 @@ if (lembagaList.length > 0) {
     years: tahunList,
     lembaga: lembagaList,
     data: Object.keys(group).reduce((acc, year) => {
-      acc[year] = Object.values(group[year]); // ✅ UBAH dari map ke values
+      acc[year] = Object.values(group[year]);
       return acc;
     }, {})
   });
 }
-    /** fallback raw */
+
     res.json({
       mode: "raw",
       data: rows
@@ -199,4 +190,6 @@ if (lembagaList.length > 0) {
   }
 };
 
+exports.getLoanHistory = async (req,res) => {
 
+}
