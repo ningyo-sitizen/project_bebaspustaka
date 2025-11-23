@@ -190,6 +190,47 @@ if (lembagaList.length > 0) {
   }
 };
 
-exports.getLoanHistory = async (req,res) => {
+exports.getLoanHistory = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
 
-}
+    const sql = `
+      SELECT loan_id, member_id, loan_date, due_date, is_return, return_date
+      FROM loan
+      ORDER BY 
+        (is_return = 0 AND return_date IS NULL) DESC,
+        is_return ASC
+      LIMIT ? OFFSET ?
+    `;
+
+    const [rows] = await opac.query(sql, [limit, offset]);
+
+    const data = rows.map(r => ({
+      loan_id: r.loan_id,
+      member_id: r.member_id,
+      loan_date: r.loan_date ? r.loan_date.toISOString().split("T")[0] : null,
+      due_date: r.due_date ? r.due_date.toISOString().split("T")[0] : null,
+      return_date: r.return_date ? r.return_date.toISOString().split("T")[0] : null,
+
+      is_return: r.is_return,
+
+      status:
+        r.is_return === 0 && r.return_date === null
+          ? "Belum Dikembalikan"
+          : "Sudah Dikembalikan",
+    }));
+
+    res.json({
+      success: true,
+      page,
+      limit,
+      data
+    });
+
+  } catch (err) {
+    console.error("❌ Error getLoanHistory:", err);
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};

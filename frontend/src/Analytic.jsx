@@ -89,6 +89,10 @@ function Dashboard() {
     const [activeProdiR, setActiveProdiR] = useState(false);
     const [tableDataRight, setTableDataRight] = useState(null);
 
+    const [loanHistory, setLoanHistory] = useState([]);
+    const [page, setPage] = useState(1);
+    const [limit] = useState(10);
+
 
     const handleResetFilters = () => {
         setSelectedYears([]);
@@ -153,6 +157,8 @@ function Dashboard() {
             );
         }
 
+
+
         const datasets = Object.keys(data.data).map((year) => {
             const yearData = data.data[year];
             const color = getRandomColor();
@@ -208,7 +214,6 @@ function Dashboard() {
             fetchProdi()
             console.log(angkatan)
             console.log(prodi)
-
             console.log(years)
 
         } catch (err) {
@@ -229,35 +234,35 @@ function Dashboard() {
         };
 
         if (mode === "default_year") {
-            
+
             const sortedYears = [...years].sort((a, b) => a - b);
 
             return {
-                labels: sortedYears,  
+                labels: sortedYears,
                 datasets: [{
                     label: "Total Peminjaman",
-                    data: sortedYears.map(year => data[year][0].total),  
-                    backgroundColor: generateColors(sortedYears.length),  
-                    borderColor: generateColors(sortedYears.length), 
+                    data: sortedYears.map(year => data[year][0].total),
+                    backgroundColor: generateColors(sortedYears.length),
+                    borderColor: generateColors(sortedYears.length),
                     borderWidth: 1
                 }]
             };
         }
 
         if (mode === "per_lembaga") {
-            const sortedYears = [...years].sort((a, b) => b - a);
+            const sortedYears = [...years].sort((a, b) => a - b);
 
             const lembagaSet = new Set();
-            sortedYears.forEach(year => {  
+            sortedYears.forEach(year => {
                 data[year].forEach(item => lembagaSet.add(item.lembaga));
             });
             const lembagaList = Array.from(lembagaSet);
 
             return {
-                labels: sortedYears,  
+                labels: sortedYears,
                 datasets: lembagaList.map((lem, idx) => ({
                     label: lem,
-                    data: sortedYears.map(year => { 
+                    data: sortedYears.map(year => {
                         const found = data[year].find(item => item.lembaga === lem);
                         return found ? found.total : 0;
                     }),
@@ -269,10 +274,10 @@ function Dashboard() {
         }
 
         if (mode === "per_program") {
-            const sortedYears = [...years].sort((a, b) => b - a);
+            const sortedYears = [...years].sort((a, b) => a - b);
 
             const programSet = new Set();
-            sortedYears.forEach(year => {  
+            sortedYears.forEach(year => {
                 data[year].forEach(item => programSet.add(item.program));
             });
             const programList = Array.from(programSet);
@@ -281,7 +286,7 @@ function Dashboard() {
                 labels: sortedYears,
                 datasets: programList.map((prog, idx) => ({
                     label: prog,
-                    data: sortedYears.map(year => { 
+                    data: sortedYears.map(year => {
                         const found = data[year].find(item => item.program === prog);
                         return found ? found.total : 0;
                     }),
@@ -426,100 +431,100 @@ function Dashboard() {
         );
     }
 
-function DataTableRight({ data }) {
-    if (!data || !data.data) return null;
+    function DataTableRight({ data }) {
+        if (!data || !data.data) return null;
 
-    const { mode, years, lembaga } = data;
+        const { mode, years, lembaga } = data;
 
-    const getHeaders = () => {
-        switch (mode) {
-            case "default_year":
-                return ["Tahun", "Total Peminjaman"];
-            case "per_lembaga":
-                return ["Tahun", "Lembaga", "Total Peminjaman"];
-            case "per_program":
-                return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"]; 
-            default:
-                return ["Tahun", "Info", "Total"];
-        }
-    };
+        const getHeaders = () => {
+            switch (mode) {
+                case "default_year":
+                    return ["Tahun", "Total Peminjaman"];
+                case "per_lembaga":
+                    return ["Tahun", "Lembaga", "Total Peminjaman"];
+                case "per_program":
+                    return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
+                default:
+                    return ["Tahun", "Info", "Total"];
+            }
+        };
 
-    const headers = getHeaders();
+        const headers = getHeaders();
 
-    const renderRows = () => {
-        const sortedYears = [...years].sort((a, b) => b - a);
+        const renderRows = () => {
+            const sortedYears = [...years].sort((a, b) => b - a);
 
-        if (mode === "default_year") {
-            return sortedYears.map((year) => (
-                <tr key={year} className="border-b hover:bg-gray-50">
-                    <td className="p-3 font-semibold">{year}</td>
-                    <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
-                </tr>
-            ));
-        }
-
-        if (mode === "per_lembaga") {
-            return sortedYears.map((year) =>
-                data.data[year].map((item, i) => (
-                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+            if (mode === "default_year") {
+                return sortedYears.map((year) => (
+                    <tr key={year} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold">{year}</td>
-                        <td className="p-3">{item.lembaga}</td>
-                        <td className="p-3">{item.total.toLocaleString()}</td>
+                        <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
                     </tr>
-                ))
-            );
-        }
+                ));
+            }
 
-        if (mode === "per_program") {
-            return sortedYears.map((year) =>
-                data.data[year].map((item, i) => (
-                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-semibold">{year}</td>
-                        <td className="p-3">{item.lembaga}</td> {/* ✅ TAMBAH Kolom Lembaga */}
-                        <td className="p-3">{item.program}</td>
-                        <td className="p-3">{item.total.toLocaleString()}</td>
-                    </tr>
-                ))
-            );
-        }
-
-        return null;
-    };
-
-    const getTitle = () => {
-        switch (mode) {
-            case "default_year":
-                return "Data Peminjaman Per Tahun";
-            case "per_lembaga":
-                return "Data Peminjaman Per Lembaga";
-            case "per_program":
-                return "Data Peminjaman Per Program Studi";
-            default:
-                return "Data Peminjaman";
-        }
-    };
-
-    return (
-        <div className="bg-white p-6 mt-8 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
-
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            {headers.map((header, idx) => (
-                                <th key={idx} className="p-3 border font-medium text-left">
-                                    {header}
-                                </th>
-                            ))}
+            if (mode === "per_lembaga") {
+                return sortedYears.map((year) =>
+                    data.data[year].map((item, i) => (
+                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{year}</td>
+                            <td className="p-3">{item.lembaga}</td>
+                            <td className="p-3">{item.total.toLocaleString()}</td>
                         </tr>
-                    </thead>
-                    <tbody>{renderRows()}</tbody>
-                </table>
+                    ))
+                );
+            }
+
+            if (mode === "per_program") {
+                return sortedYears.map((year) =>
+                    data.data[year].map((item, i) => (
+                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{year}</td>
+                            <td className="p-3">{item.lembaga}</td> {/* ✅ TAMBAH Kolom Lembaga */}
+                            <td className="p-3">{item.program}</td>
+                            <td className="p-3">{item.total.toLocaleString()}</td>
+                        </tr>
+                    ))
+                );
+            }
+
+            return null;
+        };
+
+        const getTitle = () => {
+            switch (mode) {
+                case "default_year":
+                    return "Data Peminjaman Per Tahun";
+                case "per_lembaga":
+                    return "Data Peminjaman Per Lembaga";
+                case "per_program":
+                    return "Data Peminjaman Per Program Studi";
+                default:
+                    return "Data Peminjaman";
+            }
+        };
+
+        return (
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
+
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                {headers.map((header, idx) => (
+                                    <th key={idx} className="p-3 border font-medium text-left">
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>{renderRows()}</tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    );
-}
+        );
+    }
 
 
 
@@ -785,7 +790,9 @@ function DataTableRight({ data }) {
         fetchChartDataLeft();
         fetchChartDataRight();
         fetchAngkatan();
+        fetchLoanHistory(1);
         fetchLembaga();
+
     }, []);
 
     useEffect(() => {
@@ -835,6 +842,18 @@ function DataTableRight({ data }) {
         }
     }
 
+    const fetchLoanHistory = async (page = 1) => {
+        const res = await fetch(
+            `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${limit}`,
+            { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
+        );
+
+        const result = await res.json();
+        setLoanHistory(result.data);
+        setPage(result.page);
+    };
+    ;
+
     const fetchProdi = async (lembagaList) => {
         if (lembagaList.length === 0) {
             setProdi({});
@@ -858,85 +877,86 @@ function DataTableRight({ data }) {
         )
     }
 
-const fetchChartDataLeft = async () => {
-    try {
-        const token = localStorage.getItem("token");
-        const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        const mockData = await res.json();
 
-        setChartDataL({
-            lineChart: {
-                labels: mockData.labels,
+    const fetchChartDataLeft = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const mockData = await res.json();
+
+            setChartDataL({
+                lineChart: {
+                    labels: mockData.labels,
+                    datasets: [
+                        {
+                            label: 'Kunjungan per Bulan tahun 2025',
+                            data: mockData.data,
+                            borderColor: 'rgb(75, 192, 192)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            tension: 0.1
+                        },
+                    ],
+                },
+                pieChart: {
+                    labels: mockData.labels,
+                    datasets: [
+                        {
+                            label: "Kunjungan",
+                            data: mockData.data,
+                            backgroundColor: [
+                                '#537FF1',
+                                '#8979FF',
+                                '#A8B5CB',
+                                '#667790',
+                            ]
+                        }
+                    ]
+                },
+                barChart: {
+                    labels: mockData.labels,
+                    datasets: [
+                        {
+                            label: 'Kunjungan per Bulan',
+                            data: mockData.data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        },
+                    ],
+                }
+            });
+
+            const tableDataFormat = {
+                years: [2025],
+                data: {
+                    2025: mockData.labels.map((label, index) => ({
+                        label: label,
+                        total_visitor: mockData.data[index]
+                    }))
+                }
+            };
+
+            setTableData(tableDataFormat);
+            setSelectedType("monthly");
+
+        } catch (error) {
+            console.error('Error fetching chart data:', error);
+
+            const fallbackData = {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
                 datasets: [
                     {
-                        label: 'Kunjungan per Bulan tahun 2025',
-                        data: mockData.data,
+                        label: 'Kunjungan per Bulan',
+                        data: [65, 59, 80, 81, 56, 55],
                         borderColor: 'rgb(75, 192, 192)',
                         backgroundColor: 'rgba(75, 192, 192, 0.2)',
                         tension: 0.1
                     },
                 ],
-            },
-            pieChart: {
-                labels: mockData.labels,
-                datasets: [
-                    {
-                        label: "Kunjungan",
-                        data: mockData.data,
-                        backgroundColor: [
-                            '#537FF1',
-                            '#8979FF',
-                            '#A8B5CB',
-                            '#667790',
-                        ]
-                    }
-                ]
-            },
-            barChart: {
-                labels: mockData.labels,
-                datasets: [
-                    {
-                        label: 'Kunjungan per Bulan',
-                        data: mockData.data,
-                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                    },
-                ],
-            }
-        });
-
-        const tableDataFormat = {
-            years: [2025],
-            data: {
-                2025: mockData.labels.map((label, index) => ({
-                    label: label,
-                    total_visitor: mockData.data[index]
-                }))
-            }
-        };
-        
-        setTableData(tableDataFormat);
-        setSelectedType("monthly");
-
-    } catch (error) {
-        console.error('Error fetching chart data:', error);
-        
-        const fallbackData = {
-            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-            datasets: [
-                {
-                    label: 'Kunjungan per Bulan',
-                    data: [65, 59, 80, 81, 56, 55],
-                    borderColor: 'rgb(75, 192, 192)',
-                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                    tension: 0.1
-                },
-            ],
-        };
-        setChartDataL({ lineChart: fallbackData });
-    }
-};
+            };
+            setChartDataL({ lineChart: fallbackData });
+        }
+    };
 
     const fetchChartDataRight = async () => {
         try {
@@ -1398,9 +1418,9 @@ const fetchChartDataLeft = async () => {
 
                             <div className="bg-white p-6">
                                 <div className="relative">
-                                                    {tableData && (
-                            <DataTable selectedType={selectedType} data={tableData} />
-                        )}
+                                    {tableData && (
+                                        <DataTable selectedType={selectedType} data={tableData} />
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1444,16 +1464,49 @@ const fetchChartDataLeft = async () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr className="border-b border-black hover:bg-gray-50">
-                                                <td className="p-4">1</td>
-                                                <td className="p-4">#24324323</td>
-                                                <td className="p-4">29/09/2025</td>
-                                                <td className="p-4">7 Hari</td>
-                                                <td className="p-4">01/10/2025</td>
-                                                <td className="p-4 text-[#4ABC4C]">Sudah Dikembalikan</td>
-                                            </tr>
+                                            {loanHistory.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="6" className="text-center p-4">Tidak ada data</td>
+                                                </tr>
+                                            ) : (
+                                                loanHistory.map((item, index) => (
+                                                    <tr key={item.loan_id} className="border-b hover:bg-gray-50">
+                                                        <td className="p-4">{index + 1}</td>
+                                                        <td className="p-4">{item.member_id}</td>
+                                                        <td className="p-4">{item.loan_date || "-"}</td>
+                                                        <td className="p-4">{item.due_date || "-"}</td>
+                                                        <td className="p-4">{item.return_date || "-"}</td>
+                                                        <td
+                                                            className={`p-4 font-semibold ${item.is_return === 0 ? "text-red-500" : "text-green-600"
+                                                                }`}
+                                                        >
+                                                            {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            )}
                                         </tbody>
+
+
                                     </table>
+                                    <div className="flex gap-3 mt-4">
+                                        <button
+                                            className="px-4 py-2 bg-gray-300 rounded"
+                                            onClick={() => page > 1 && fetchLoanHistory(page - 1)}
+                                        >
+                                            Prev
+                                        </button>
+
+                                        <span className="px-4 py-2">Page {page}</span>
+
+                                        <button
+                                            className="px-4 py-2 bg-gray-300 rounded"
+                                            onClick={() => fetchLoanHistory(page + 1)}
+                                        >
+                                            Next
+                                        </button>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
