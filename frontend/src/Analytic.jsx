@@ -13,6 +13,8 @@ import {
 } from 'chart.js';
 import { useState, useEffect } from 'react';
 import { data, Link } from 'react-router-dom';
+import { useCallback } from 'react';
+import { use } from 'react';
 
 ChartJS.register(
     CategoryScale,
@@ -29,7 +31,6 @@ ChartJS.register(
 function Dashboard() {
 
     const [user, setUser] = useState(null);
-    const [visitors, setVisitors] = useState([]);
 
     const [tableData, setTableData] = useState(null);
 
@@ -45,8 +46,11 @@ function Dashboard() {
         barChart: null,
     })
 
-
-
+    const [isLoadingLeft, setIsLoadingLeft] = useState(false);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [visitorPage, setVisitorPage] = useState(1);
+    const [visitorLimit] = useState(12);
+    const [visitorPagination, setVisitorPagination] = useState(null);
     const [showFilterR, setShowFilterR] = useState(false);
     const [showFilterL, setShowFilterL] = useState(false);
 
@@ -59,22 +63,16 @@ function Dashboard() {
     const [activeChartR, setActiveChartR] = useState("Line");
     const [activeChartL, setActiveChartL] = useState("Line");
 
-
-    const [cekA, setCekA] = useState(false);
-    const [cekB, setCekB] = useState(false);
-    const [cekC, setCekC] = useState(false);
-
-    const [cekA1, setCekA1] = useState(false);
-    const [cekB2, setCekB2] = useState(false);
-    const [cekC2, setCekC2] = useState(false);
-
-
-
     const [years, setYears] = useState([]);
     const [selectedYears, setSelectedYears] = useState([]);
     const [selectedType, setSelectedType] = useState("");
     const [tempYears, setTempYears] = useState([]);
     const [tempType, setTempType] = useState("");
+
+    const [tablePageLeft, setTablePageLeft] = useState(1);
+    const [tableLimitLeft] = useState(50);
+    const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
+    const [tableDataLeft, setTableDataLeft] = useState(null);
 
     const [angkatan, setAngkatan] = useState([]);
     const [selectedAngkatan, setSelectedAngkatan] = useState([]);
@@ -180,10 +178,36 @@ function Dashboard() {
 
         return { labels: baseLabels, datasets };
     };
-    const handleApplyFiltersLeft = async () => {
+    const fetchTableDataLeft = useCallback(async (pageNum) => {
+        try {
+            const token = localStorage.getItem("token");
+            const query = new URLSearchParams();
+            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
+            if (selectedType) query.append("period", selectedType);
+            query.append("page", pageNum);
+            query.append("limit", tableLimitLeft);
+            query.append("tableOnly", "true"); // ✅ Flag untuk pagination
+
+            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const data = await res.json();
+
+            setTableDataLeft(data);
+            setTablePaginationLeft(data.pagination);
+            setTablePageLeft(pageNum);
+        } catch (err) {
+            console.error("Error fetching table data:", err);
+        }
+    }, [selectedYears, selectedType, tableLimitLeft]);
+
+    const handleApplyFiltersLeft = useCallback(async () => {
         setTempYears(selectedYears);
         setTempType(selectedType);
         setShowFilterL(false);
+        setIsLoadingLeft(true);
+
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
             const token = localStorage.getItem("token");
@@ -191,35 +215,33 @@ function Dashboard() {
             if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
             if (selectedType) query.append("period", selectedType);
 
+            // ✅ Fetch FULL data untuk chart (comparison)
             const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const data = await res.json();
+            const responseData = await res.json();
 
-            console.log(selectedYears, selectedType)
-            console.log(data)
+            requestAnimationFrame(() => {
+                const chart = autoBuildChartData(responseData, selectedType);
 
+                setChartDataL({
+                    lineChart: chart,
+                    barChart: chart,
+                    pieChart: chart,
+                });
 
-
-            const chart = autoBuildChartData(data, selectedType)
-
-            setChartDataL({
-                lineChart: chart,
-                barChart: chart,
-                pieChart: chart,
+                setTableData(responseData);
+                setIsLoadingLeft(false);
             });
 
-            setTableData(data)
-            fetchAngkatan()
-            fetchProdi()
-            console.log(angkatan)
-            console.log(prodi)
-            console.log(years)
+            // ✅ Fetch paginated data untuk table
+            fetchTableDataLeft(1);
 
         } catch (err) {
-            console.error("❌ Error applying filters:", err);
+            console.error("Error applying filters:", err);
+            setIsLoadingLeft(false);
         }
-    };
+    }, [selectedYears, selectedType]);
 
 
     const autoBuildChartDataRight = (apiResponse) => {
@@ -327,7 +349,6 @@ function Dashboard() {
                 lembaga: selectedLembaga,
                 prodi: selectedProdi
             });
-            console.log("Response data:", data);
 
             const chart = autoBuildChartDataRight(data);
 
@@ -344,23 +365,21 @@ function Dashboard() {
             console.error("❌ Error applying right filters:", err);
         }
     };
-    function DataTable({ selectedType, data }) {
-        if (!data || !data.data) return null;
+    function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
+        if (!data || !data.data) {
+            return <p className="text-center text-gray-500">No data available</p>;
+        }
 
         const getHeaders = () => {
             switch (selectedType) {
                 case "daily":
                     return ["Year", "Date", "Total Visitors"];
-
                 case "weekly":
                     return ["Year", "Week", "Start Date", "End Date", "Total Visitors"];
-
                 case "monthly":
                     return ["Year", "Month", "Total Visitors"];
-
                 case "yearly":
                     return ["Year", "Total Visitors"];
-
                 default:
                     return ["Year", "Label", "Total Visitors"];
             }
@@ -372,61 +391,116 @@ function Dashboard() {
             return Object.keys(data.data).map((year) =>
                 data.data[year].map((item, i) => (
                     <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-medium">{year}</td>
 
-                        <td className="p-3">{year}</td>
-
-                        {selectedType === "daily" && (
-                            <td className="p-3">{item.label}</td>
-                        )}
-
-                        {selectedType === "monthly" && (
-                            <td className="p-3">{item.label}</td>
-                        )}
-
-                        {selectedType === "yearly" && (
-                            <td className="p-3">{item.total_visitor}</td>
-                        )}
-
-                        {selectedType === "weekly" && (
+                        {selectedType === "weekly" ? (
                             <>
                                 <td className="p-3">{item.label}</td>
                                 <td className="p-3">{item.start_date}</td>
                                 <td className="p-3">{item.end_date}</td>
-                                <td className="p-3">{item.total_visitor}</td>
+                                <td className="p-3">{item.total_visitor.toLocaleString()}</td>
+                            </>
+                        ) : selectedType === "yearly" ? (
+                            <td className="p-3">{item.total_visitor.toLocaleString()}</td>
+                        ) : (
+                            <>
+                                <td className="p-3">{item.label}</td>
+                                <td className="p-3">{item.total_visitor.toLocaleString()}</td>
                             </>
                         )}
-
-                        {/* DEFAULT FALLBACK */}
-                        {selectedType !== "weekly" && selectedType !== "yearly" && (
-                            <td className="p-3">{item.total_visitor}</td>
-                        )}
-
                     </tr>
                 ))
             );
         };
 
-
         return (
-            <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <h3 className="font-semibold text-lg mb-4 capitalize">
-                    {selectedType} Visitor Data
-                </h3>
+            <div>
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-lg capitalize">
+                        {selectedType} Visitor Data
+                    </h3>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-medium text-left">
-                                        {header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>{renderRows()}</tbody>
-                    </table>
+                    {/* ✅ Info jumlah data per tahun */}
+                    {data.recordsPerYear && (
+                        <div className="text-sm text-gray-600">
+                            {Object.entries(data.recordsPerYear).map(([year, count]) => (
+                                <span key={year} className="mr-3">
+                                    {year}: {count} records
+                                </span>
+                            ))}
+                        </div>
+                    )}
                 </div>
+
+                {isLoading ? (
+                    <div className="flex justify-center items-center py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                    </div>
+                ) : (
+                    <>
+                        <div className="overflow-x-auto max-h-[600px]">
+                            <table className="w-full border-collapse border border-gray-300">
+                                <thead className="bg-gray-100 sticky top-0">
+                                    <tr>
+                                        {headers.map((header, idx) => (
+                                            <th key={idx} className="p-3 border font-medium text-left">
+                                                {header}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>{renderRows()}</tbody>
+                            </table>
+                        </div>
+
+                        {/* ✅ Pagination hanya jika ada */}
+                        {pagination && pagination.totalPages > 1 && (
+                            <div className="flex items-center justify-between mt-6 px-4">
+                                <div className="text-sm text-gray-600">
+                                    Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
+                                    {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
+                                    {pagination.totalItems} entries
+                                </div>
+
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => onPageChange(1)}
+                                        disabled={!pagination.hasPrevPage}
+                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        First
+                                    </button>
+                                    <button
+                                        onClick={() => onPageChange(pagination.currentPage - 1)}
+                                        disabled={!pagination.hasPrevPage}
+                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        Previous
+                                    </button>
+
+                                    <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
+                                        Page {pagination.currentPage} of {pagination.totalPages}
+                                    </span>
+
+                                    <button
+                                        onClick={() => onPageChange(pagination.currentPage + 1)}
+                                        disabled={!pagination.hasNextPage}
+                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        Next
+                                    </button>
+                                    <button
+                                        onClick={() => onPageChange(pagination.totalPages)}
+                                        disabled={!pagination.hasNextPage}
+                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        Last
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
             </div>
         );
     }
@@ -804,7 +878,7 @@ function Dashboard() {
         }
     }, [selectedLembaga]);
 
-    const fetchYears = async () => {
+    const fetchYears = useCallback(async () => {
         try {
             const res = await fetch("http://localhost:8080/api/dashboard/years", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -814,9 +888,9 @@ function Dashboard() {
         } catch (err) {
             console.log("xd", err);
         }
-    }
+    })
 
-    const fetchAngkatan = async () => {
+    const fetchAngkatan = useCallback(async () => {
         try {
             const res = await fetch("http://localhost:8080/api/loan/angkatan", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -827,9 +901,9 @@ function Dashboard() {
         catch (err) {
             console.log("gagal mengambil tahun angkatan")
         }
-    }
+    })
 
-    const fetchLembaga = async () => {
+    const fetchLembaga = useCallback(async () => {
         try {
             const res = await fetch("http://localhost:8080/api/loan/lembaga", {
                 headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
@@ -840,9 +914,9 @@ function Dashboard() {
         } catch (err) {
             console.log("gagal mengambil lembaga")
         }
-    }
+    })
 
-    const fetchLoanHistory = async (page = 1) => {
+    const fetchLoanHistory = useCallback(async (page = 1) => {
         const res = await fetch(
             `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${limit}`,
             { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
@@ -851,10 +925,10 @@ function Dashboard() {
         const result = await res.json();
         setLoanHistory(result.data);
         setPage(result.page);
-    };
-    ;
+    });
 
-    const fetchProdi = async (lembagaList) => {
+
+    const fetchProdi = useCallback(async (lembagaList) => {
         if (lembagaList.length === 0) {
             setProdi({});
             setSelectedProdi([]);
@@ -875,10 +949,11 @@ function Dashboard() {
         setSelectedProdi((prev) =>
             prev.filter((ps) => allValiProdi.includes(ps))
         )
-    }
+    })
 
 
-    const fetchChartDataLeft = async () => {
+    const fetchChartDataLeft = useCallback(async () => {
+        setIsLoadingLeft(true);
         try {
             const token = localStorage.getItem("token");
             const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
@@ -886,79 +961,59 @@ function Dashboard() {
             });
             const mockData = await res.json();
 
-            setChartDataL({
-                lineChart: {
-                    labels: mockData.labels,
-                    datasets: [
-                        {
+            requestAnimationFrame(() => {
+                setChartDataL({
+                    lineChart: {
+                        labels: mockData.labels,
+                        datasets: [{
                             label: 'Kunjungan per Bulan tahun 2025',
                             data: mockData.data,
                             borderColor: 'rgb(75, 192, 192)',
                             backgroundColor: 'rgba(75, 192, 192, 0.2)',
                             tension: 0.1
-                        },
-                    ],
-                },
-                pieChart: {
-                    labels: mockData.labels,
-                    datasets: [
-                        {
+                        }]
+                    },
+                    pieChart: {
+                        labels: mockData.labels,
+                        datasets: [{
                             label: "Kunjungan",
                             data: mockData.data,
-                            backgroundColor: [
-                                '#537FF1',
-                                '#8979FF',
-                                '#A8B5CB',
-                                '#667790',
-                            ]
-                        }
-                    ]
-                },
-                barChart: {
-                    labels: mockData.labels,
-                    datasets: [
-                        {
+                            backgroundColor: ['#537FF1', '#8979FF', '#A8B5CB', '#667790']
+                        }]
+                    },
+                    barChart: {
+                        labels: mockData.labels,
+                        datasets: [{
                             label: 'Kunjungan per Bulan',
                             data: mockData.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)',
-                        },
-                    ],
-                }
+                            backgroundColor: 'rgba(75, 192, 192, 0.5)'
+                        }]
+                    }
+                });
+
+                // Set table data sama dengan chart data (awalnya)
+                const tableDataFormat = {
+                    years: [2025],
+                    data: {
+                        2025: mockData.labels.map((label, index) => ({
+                            label: label,
+                            total_visitor: mockData.data[index]
+                        }))
+                    }
+                };
+
+                setTableData(tableDataFormat);
+                setTableDataLeft(tableDataFormat);
+                setSelectedType("monthly");
+                setIsLoadingLeft(false);
             });
-
-            const tableDataFormat = {
-                years: [2025],
-                data: {
-                    2025: mockData.labels.map((label, index) => ({
-                        label: label,
-                        total_visitor: mockData.data[index]
-                    }))
-                }
-            };
-
-            setTableData(tableDataFormat);
-            setSelectedType("monthly");
-
         } catch (error) {
             console.error('Error fetching chart data:', error);
-
-            const fallbackData = {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'],
-                datasets: [
-                    {
-                        label: 'Kunjungan per Bulan',
-                        data: [65, 59, 80, 81, 56, 55],
-                        borderColor: 'rgb(75, 192, 192)',
-                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                        tension: 0.1
-                    },
-                ],
-            };
-            setChartDataL({ lineChart: fallbackData });
+            setIsLoadingLeft(false);
         }
-    };
+    }, []);
 
-    const fetchChartDataRight = async () => {
+    const fetchChartDataRight = useCallback(async () => {
         try {
             const token = localStorage.getItem("token");
             const res = await fetch(`http://localhost:8080/api/loan/summary`, {
@@ -979,7 +1034,7 @@ function Dashboard() {
         } catch (err) {
             console.error("❌ Error fetching right chart data:", err);
         }
-    };
+    });
 
     return (
         <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
@@ -1416,11 +1471,25 @@ function Dashboard() {
                                 <h3 className="font-semibold text-lg">Ringkasan</h3>
                             </div>
 
-                            <div className="bg-white p-6">
+                            <div className="bg-white p-6 rounded-xl shadow">
                                 <div className="relative">
-                                    {tableData && (
-                                        <DataTable selectedType={selectedType} data={tableData} />
-                                    )}
+                                    {tableDataLeft ? (
+                                        <DataTable
+                                            selectedType={selectedType}
+                                            data={tableDataLeft}
+                                            pagination={tablePaginationLeft}
+                                            onPageChange={fetchTableDataLeft}
+                                            isLoading={false}
+                                        />
+                                    ) : tableData ? (
+                                        <DataTable
+                                            selectedType={selectedType}
+                                            data={tableData}
+                                            pagination={null}
+                                            onPageChange={() => { }}
+                                            isLoading={isLoadingLeft}
+                                        />
+                                    ) : null}
                                 </div>
                             </div>
                         </div>
@@ -1456,7 +1525,9 @@ function Dashboard() {
                                         <thead>
                                             <tr className="bg-gray-50 border-b-2 border-black">
                                                 <th className="text-left p-4 font-normal text-gray-600">No</th>
+                                                <th className="text-left p-4 font-normal text-gray-600">loan id</th>
                                                 <th className="text-left p-4 font-normal text-gray-600">Member ID</th>
+                                                <th className="text-left p-4 font-normal text-gray-600">item code</th>
                                                 <th className="text-left p-4 font-normal text-gray-600">Tanggal Pinjam</th>
                                                 <th className="text-left p-4 font-normal text-gray-600">Deadline</th>
                                                 <th className="text-left p-4 font-normal text-gray-600">Tanggal di kembalikan</th>
@@ -1464,22 +1535,34 @@ function Dashboard() {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {loanHistory.length === 0 ? (
+                                            {isLoadingHistory ? (
+                                                Array.from({ length: limit }).map((_, i) => (
+                                                    <tr key={i} className="border-b animate-pulse">
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                        <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                    </tr>
+                                                ))
+                                            ) : loanHistory.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="6" className="text-center p-4">Tidak ada data</td>
+                                                    <td colSpan="8" className="text-center p-4">Tidak ada data</td>
                                                 </tr>
                                             ) : (
                                                 loanHistory.map((item, index) => (
                                                     <tr key={item.loan_id} className="border-b hover:bg-gray-50">
                                                         <td className="p-4">{index + 1}</td>
+                                                        <td className="p-4">{item.loan_id}</td>
                                                         <td className="p-4">{item.member_id}</td>
+                                                        <td className="p-4">{item.item_code}</td>
                                                         <td className="p-4">{item.loan_date || "-"}</td>
                                                         <td className="p-4">{item.due_date || "-"}</td>
                                                         <td className="p-4">{item.return_date || "-"}</td>
-                                                        <td
-                                                            className={`p-4 font-semibold ${item.is_return === 0 ? "text-red-500" : "text-green-600"
-                                                                }`}
-                                                        >
+                                                        <td className={`p-4 font-semibold ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
                                                             {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
                                                         </td>
                                                     </tr>

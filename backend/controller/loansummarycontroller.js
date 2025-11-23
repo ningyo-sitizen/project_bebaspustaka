@@ -192,12 +192,12 @@ if (lembagaList.length > 0) {
 
 exports.getLoanHistory = async (req, res) => {
   try {
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
+    const page = parseInt(req.query.page)
+    const limit = parseInt(req.query.limit) 
     const offset = (page - 1) * limit;
 
     const sql = `
-      SELECT loan_id, member_id, loan_date, due_date, is_return, return_date
+      SELECT loan_id, member_id, item_code, loan_date, due_date, is_return, return_date
       FROM loan
       ORDER BY 
         (is_return = 0 AND return_date IS NULL) DESC,
@@ -210,6 +210,7 @@ exports.getLoanHistory = async (req, res) => {
     const data = rows.map(r => ({
       loan_id: r.loan_id,
       member_id: r.member_id,
+      item_code: r.item_code,
       loan_date: r.loan_date ? r.loan_date.toISOString().split("T")[0] : null,
       due_date: r.due_date ? r.due_date.toISOString().split("T")[0] : null,
       return_date: r.return_date ? r.return_date.toISOString().split("T")[0] : null,
