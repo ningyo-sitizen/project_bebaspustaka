@@ -153,7 +153,6 @@ exports.getDashboardDatVisitor = async (req, res) => {
       return new Date(d).toISOString().split("T")[0];
     };
     
-    // ✅ Jika request untuk table saja (pagination)
     if (tableOnly) {
       const [[{ total }]] = await bebaspustaka.query(countSql, [years]);
       const totalPages = Math.ceil(total / limit);
