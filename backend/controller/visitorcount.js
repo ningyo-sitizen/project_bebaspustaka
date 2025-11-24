@@ -50,14 +50,13 @@ exports.getDashboardDatVisitor = async (req, res) => {
     
     let sql = "";
     let countSql = "";
-    let chartSql = ""; // ✅ SQL terpisah untuk chart (no limit)
+    let chartSql = ""; // 
     let params = [];
     
     console.log("year =", years);
     console.log("period = ", period);
     
     if (period === "daily") {
-      // Chart data - ALL records
       chartSql = `
         SELECT year, DATE_FORMAT(hari, '%d-%m-%Y') as label, total_visitor 
         FROM summary_daily_visitor
@@ -65,7 +64,6 @@ exports.getDashboardDatVisitor = async (req, res) => {
         ORDER BY hari
       `;
       
-      // Table data - PAGINATED
       countSql = `
         SELECT COUNT(*) as total
         FROM summary_daily_visitor
@@ -200,7 +198,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
       return acc;
     }, {});
     
-    // Get total count for pagination info
+    
     const [[{ total }]] = await bebaspustaka.query(countSql, [years]);
     
     res.json({
