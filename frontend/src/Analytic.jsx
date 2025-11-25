@@ -54,6 +54,7 @@ function Dashboard() {
     const [showFilterR, setShowFilterR] = useState(false);
     const [showFilterL, setShowFilterL] = useState(false);
 
+
     const [activeR, setActiveR] = useState(false);
     const [activeL, setActiveL] = useState(false);
 
@@ -74,6 +75,8 @@ function Dashboard() {
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
     const [tableDataLeft, setTableDataLeft] = useState(null);
 
+
+
     const [angkatan, setAngkatan] = useState([]);
     const [selectedAngkatan, setSelectedAngkatan] = useState([]);
     const [tempAngkatan, setTempAngkatan] = useState([])
@@ -86,6 +89,9 @@ function Dashboard() {
 
     const [activeProdiR, setActiveProdiR] = useState(false);
     const [tableDataRight, setTableDataRight] = useState(null);
+    const [tablePageRight, setTablePageRight] = useState(1);
+    const [tableLimitRight] = useState(8);
+    const [tablePaginationRight, setTablePaginationRight] = useState(null);
 
     const [loanHistory, setLoanHistory] = useState([]);
     const [page, setPage] = useState(1);
@@ -186,7 +192,7 @@ function Dashboard() {
             if (selectedType) query.append("period", selectedType);
             query.append("page", pageNum);
             query.append("limit", tableLimitLeft);
-            query.append("tableOnly", "true"); // ✅ Flag untuk pagination
+            query.append("tableOnly", "true");
 
             const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
@@ -200,6 +206,78 @@ function Dashboard() {
             console.error("Error fetching table data:", err);
         }
     }, [selectedYears, selectedType, tableLimitLeft]);
+
+const fetchTableDataRight = useCallback(async (pageNum) => {
+    try {
+        const token = localStorage.getItem("token");
+        const query = new URLSearchParams();
+
+        if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+        if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+        if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+
+        query.append("page", pageNum);
+        query.append("limit", tableLimitRight);
+
+        const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const apiData = await res.json();
+        
+        console.log("📦 Raw API Response:", apiData);
+
+        if (apiData.totalPages) {
+            setTablePaginationRight({
+                currentPage: apiData.page || 1,
+                totalPages: apiData.totalPages || 1,
+                totalItems: apiData.totalRows || 0,
+                itemsPerPage: apiData.limit || tableLimitRight,
+                hasPrevPage: (apiData.page || 1) > 1,
+                hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
+            });
+        }
+
+        setTablePageRight(pageNum);
+
+        const transformedData = transformPagedDataForChart(apiData);
+        console.log("🔄 Transformed Data:", transformedData);
+
+        if (transformedData && transformedData.data && transformedData.years) {
+            const chart = autoBuildChartDataRight(transformedData);
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart,
+                doughnutChart: chart
+            });
+
+            setTableDataRight(transformedData);
+        } else {
+            console.error("❌ Invalid transformed data structure");
+            setTableDataRight({
+                mode: "default_year",
+                years: [],
+                data: {}
+            });
+        }
+
+    } catch (err) {
+        console.error("❌ Error fetching table data right:", err);
+        
+        setTableDataRight({
+            mode: "default_year",
+            years: [],
+            data: {}
+        });
+        
+        setTablePaginationRight(null);
+    }
+}, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
 
     const handleApplyFiltersLeft = useCallback(async () => {
         setTempYears(selectedYears);
@@ -215,7 +293,6 @@ function Dashboard() {
             if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
             if (selectedType) query.append("period", selectedType);
 
-            // ✅ Fetch FULL data untuk chart (comparison)
             const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
@@ -234,7 +311,6 @@ function Dashboard() {
                 setIsLoadingLeft(false);
             });
 
-            // ✅ Fetch paginated data untuk table
             fetchTableDataLeft(1);
 
         } catch (err) {
@@ -244,86 +320,110 @@ function Dashboard() {
     }, [selectedYears, selectedType]);
 
 
-    const autoBuildChartDataRight = (apiResponse) => {
-        const { mode, data, years } = apiResponse;
-
-        const generateColors = (count) => {
-            const colors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40'
-            ];
-            return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
-        };
-
-        if (mode === "default_year") {
-
-            const sortedYears = [...years].sort((a, b) => a - b);
-
-            return {
-                labels: sortedYears,
-                datasets: [{
-                    label: "Total Peminjaman",
-                    data: sortedYears.map(year => data[year][0].total),
-                    backgroundColor: generateColors(sortedYears.length),
-                    borderColor: generateColors(sortedYears.length),
-                    borderWidth: 1
-                }]
-            };
-        }
-
-        if (mode === "per_lembaga") {
-            const sortedYears = [...years].sort((a, b) => a - b);
-
-            const lembagaSet = new Set();
-            sortedYears.forEach(year => {
-                data[year].forEach(item => lembagaSet.add(item.lembaga));
-            });
-            const lembagaList = Array.from(lembagaSet);
-
-            return {
-                labels: sortedYears,
-                datasets: lembagaList.map((lem, idx) => ({
-                    label: lem,
-                    data: sortedYears.map(year => {
-                        const found = data[year].find(item => item.lembaga === lem);
-                        return found ? found.total : 0;
-                    }),
-                    backgroundColor: generateColors(lembagaList.length)[idx],
-                    borderColor: generateColors(lembagaList.length)[idx],
-                    borderWidth: 1
-                }))
-            };
-        }
-
-        if (mode === "per_program") {
-            const sortedYears = [...years].sort((a, b) => a - b);
-
-            const programSet = new Set();
-            sortedYears.forEach(year => {
-                data[year].forEach(item => programSet.add(item.program));
-            });
-            const programList = Array.from(programSet);
-
-            return {
-                labels: sortedYears,
-                datasets: programList.map((prog, idx) => ({
-                    label: prog,
-                    data: sortedYears.map(year => {
-                        const found = data[year].find(item => item.program === prog);
-                        return found ? found.total : 0;
-                    }),
-                    backgroundColor: generateColors(programList.length)[idx],
-                    borderColor: generateColors(programList.length)[idx],
-                    borderWidth: 1
-                }))
-            };
-        }
-
+const autoBuildChartDataRight = (apiResponse) => {
+    if (!apiResponse || !apiResponse.data) {
+        console.warn("⚠️ Invalid apiResponse in autoBuildChartDataRight");
         return {
             labels: [],
             datasets: []
         };
+    }
+
+    const { mode, data, years = [] } = apiResponse;
+
+    if (!years || years.length === 0) {
+        console.warn("⚠️ No years data available");
+        return {
+            labels: [],
+            datasets: []
+        };
+    }
+
+    const generateColors = (count) => {
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#FF6384', '#C9CBCF', '#4BC0C0', '#FF9F40'
+        ];
+        return Array.from({ length: count }, (_, i) => colors[i % colors.length]);
     };
+
+    if (mode === "default_year") {
+        const sortedYears = [...years].sort((a, b) => a - b);
+
+        return {
+            labels: sortedYears,
+            datasets: [{
+                label: "Total Peminjaman",
+                data: sortedYears.map(year => {
+                    if (!data[year] || !data[year][0]) return 0;
+                    return data[year][0].total || 0;
+                }),
+                backgroundColor: generateColors(sortedYears.length),
+                borderColor: generateColors(sortedYears.length),
+                borderWidth: 1
+            }]
+        };
+    }
+
+    if (mode === "per_lembaga") {
+        const sortedYears = [...years].sort((a, b) => a - b);
+
+        const lembagaSet = new Set();
+        sortedYears.forEach(year => {
+            if (data[year] && Array.isArray(data[year])) {
+                data[year].forEach(item => lembagaSet.add(item.lembaga));
+            }
+        });
+        const lembagaList = Array.from(lembagaSet);
+
+        return {
+            labels: sortedYears,
+            datasets: lembagaList.map((lem, idx) => ({
+                label: lem,
+                data: sortedYears.map(year => {
+                    if (!data[year]) return 0;
+                    const found = data[year].find(item => item.lembaga === lem);
+                    return found ? (found.total || 0) : 0;
+                }),
+                backgroundColor: generateColors(lembagaList.length)[idx],
+                borderColor: generateColors(lembagaList.length)[idx],
+                borderWidth: 1
+            }))
+        };
+    }
+
+    if (mode === "per_program") {
+        const sortedYears = [...years].sort((a, b) => a - b);
+
+        const programSet = new Set();
+        sortedYears.forEach(year => {
+            if (data[year] && Array.isArray(data[year])) {
+                data[year].forEach(item => programSet.add(item.program));
+            }
+        });
+        const programList = Array.from(programSet);
+
+        return {
+            labels: sortedYears,
+            datasets: programList.map((prog, idx) => ({
+                label: prog,
+                data: sortedYears.map(year => {
+                    if (!data[year]) return 0;
+                    const found = data[year].find(item => item.program === prog);
+                    return found ? (found.total || 0) : 0;
+                }),
+                backgroundColor: generateColors(programList.length)[idx],
+                borderColor: generateColors(programList.length)[idx],
+                borderWidth: 1
+            }))
+        };
+    }
+
+    return {
+        labels: [],
+        datasets: []
+    };
+};
 
     const handleApplyFiltersRight = async () => {
         setTempAngkatan(selectedAngkatan);
@@ -331,40 +431,74 @@ function Dashboard() {
         setTempProdi(selectedProdi);
         setShowFilterR(false);
 
-        try {
-            const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
-
-            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
-
-            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
-
-            console.log("Filter Right Applied:", {
-                angkatan: selectedAngkatan,
-                lembaga: selectedLembaga,
-                prodi: selectedProdi
-            });
-
-            const chart = autoBuildChartDataRight(data);
-
-            setChartDataR({
-                lineChart: chart,
-                barChart: chart,
-                pieChart: chart,
-                doughnutChart: chart
-            });
-
-            setTableDataRight(data);
-
-        } catch (err) {
-            console.error("❌ Error applying right filters:", err);
-        }
+        await fetchChartDataRight(1)
+        
     };
+const transformPagedDataForChart = (pagedData) => {
+    console.log("🔄 Transform input:", pagedData);
+    
+    if (!pagedData || !pagedData.data) {
+        console.warn("⚠️ Invalid pagedData structure");
+        return {
+            mode: "default_year",
+            years: [],
+            data: {}
+        };
+    }
+
+    if (pagedData.mode === "paged") {
+        const grouped = {};
+        const years = new Set();
+
+        pagedData.data.forEach(row => {
+            const year = row.tahun;
+            years.add(year);
+            
+            if (!grouped[year]) {
+                grouped[year] = [];
+            }
+
+            if (row.program && row.lembaga) {
+                grouped[year].push({
+                    program: row.program,
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam
+                });
+            } else if (row.lembaga) {
+                grouped[year].push({
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam
+                });
+            } else {
+                grouped[year].push({
+                    total: row.total_pinjam
+                });
+            }
+        });
+
+        let mode = "default_year";
+        if (pagedData.data.length > 0) {
+            const firstRow = pagedData.data[0];
+            if (firstRow.program && firstRow.lembaga) {
+                mode = "per_program";
+            } else if (firstRow.lembaga) {
+                mode = "per_lembaga";
+            }
+        }
+
+        const result = {
+            mode,
+            years: Array.from(years),
+            data: grouped
+        };
+        
+        console.log("✅ Transform output:", result);
+        return result;
+    }
+
+    console.log("✅ Data already in correct format");
+    return pagedData;
+};
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;
@@ -505,100 +639,187 @@ function Dashboard() {
         );
     }
 
-    function DataTableRight({ data }) {
-        if (!data || !data.data) return null;
+function DataTableRight({ data, pagination, onPageChange }) {
+    
+    if (!data) {
+        return (
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <p className="text-center text-gray-500">No data available</p>
+            </div>
+        );
+    }
 
-        const { mode, years, lembaga } = data;
+    if (!data.data) {
+        return (
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <p className="text-center text-gray-500">Invalid data structure</p>
+            </div>
+        );
+    }
 
-        const getHeaders = () => {
-            switch (mode) {
-                case "default_year":
-                    return ["Tahun", "Total Peminjaman"];
-                case "per_lembaga":
-                    return ["Tahun", "Lembaga", "Total Peminjaman"];
-                case "per_program":
-                    return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
-                default:
-                    return ["Tahun", "Info", "Total"];
-            }
-        };
+    const { mode = "default_year", years = [], lembaga = [] } = data;
 
-        const headers = getHeaders();
+    const getHeaders = () => {
+        switch (mode) {
+            case "default_year":
+                return ["Tahun", "Total Peminjaman"];
+            case "per_lembaga":
+                return ["Tahun", "Lembaga", "Total Peminjaman"];
+            case "per_program":
+                return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
+            default:
+                return ["Tahun", "Info", "Total"];
+        }
+    };
 
-        const renderRows = () => {
-            const sortedYears = [...years].sort((a, b) => b - a);
+    const headers = getHeaders();
 
-            if (mode === "default_year") {
-                return sortedYears.map((year) => (
+    const renderRows = () => {
+        if (!years || years.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                        No data available
+                    </td>
+                </tr>
+            );
+        }
+
+        const sortedYears = [...years].sort((a, b) => b - a);
+
+        if (mode === "default_year") {
+            return sortedYears.map((year) => {
+                if (!data.data[year] || !data.data[year][0]) return null;
+                
+                return (
                     <tr key={year} className="border-b hover:bg-gray-50">
                         <td className="p-3 font-semibold">{year}</td>
                         <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
                     </tr>
+                );
+            }).filter(Boolean);
+        }
+
+        if (mode === "per_lembaga") {
+            return sortedYears.flatMap((year) => {
+                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+                
+                return data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga || '-'}</td>
+                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                    </tr>
                 ));
-            }
+            });
+        }
 
-            if (mode === "per_lembaga") {
-                return sortedYears.map((year) =>
-                    data.data[year].map((item, i) => (
-                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga}</td>
-                            <td className="p-3">{item.total.toLocaleString()}</td>
-                        </tr>
-                    ))
-                );
-            }
-
-            if (mode === "per_program") {
-                return sortedYears.map((year) =>
-                    data.data[year].map((item, i) => (
-                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga}</td> {/* ✅ TAMBAH Kolom Lembaga */}
-                            <td className="p-3">{item.program}</td>
-                            <td className="p-3">{item.total.toLocaleString()}</td>
-                        </tr>
-                    ))
-                );
-            }
-
-            return null;
-        };
-
-        const getTitle = () => {
-            switch (mode) {
-                case "default_year":
-                    return "Data Peminjaman Per Tahun";
-                case "per_lembaga":
-                    return "Data Peminjaman Per Lembaga";
-                case "per_program":
-                    return "Data Peminjaman Per Program Studi";
-                default:
-                    return "Data Peminjaman";
-            }
-        };
+        if (mode === "per_program") {
+            return sortedYears.flatMap((year) => {
+                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+                
+                return data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga || '-'}</td>
+                        <td className="p-3">{item.program || '-'}</td>
+                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                    </tr>
+                ));
+            });
+        }
 
         return (
-            <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-medium text-left">
-                                        {header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>{renderRows()}</tbody>
-                    </table>
-                </div>
-            </div>
+            <tr>
+                <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                    Unknown data mode
+                </td>
+            </tr>
         );
-    }
+    };
+
+    const getTitle = () => {
+        switch (mode) {
+            case "default_year":
+                return "Data Peminjaman Per Tahun";
+            case "per_lembaga":
+                return "Data Peminjaman Per Lembaga";
+            case "per_program":
+                return "Data Peminjaman Per Program Studi";
+            default:
+                return "Data Peminjaman";
+        }
+    };
+
+    return (
+        <div className="bg-white p-6 mt-8 rounded-xl shadow">
+            <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
+
+            <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            {headers.map((header, idx) => (
+                                <th key={idx} className="p-3 border font-medium text-left">
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {renderRows()}
+                    </tbody>
+                </table>
+            </div>
+
+            {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 px-4">
+                    <div className="text-sm text-gray-600">
+                        Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
+                        {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
+                        {pagination.totalItems} entries
+                    </div>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => onPageChange(1)}
+                            disabled={!pagination.hasPrevPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            First
+                        </button>
+                        <button
+                            onClick={() => onPageChange(pagination.currentPage - 1)}
+                            disabled={!pagination.hasPrevPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+
+                        <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
+                            Page {pagination.currentPage} of {pagination.totalPages}
+                        </span>
+
+                        <button
+                            onClick={() => onPageChange(pagination.currentPage + 1)}
+                            disabled={!pagination.hasNextPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                        <button
+                            onClick={() => onPageChange(pagination.totalPages)}
+                            disabled={!pagination.hasNextPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Last
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 
 
@@ -991,7 +1212,6 @@ function Dashboard() {
                     }
                 });
 
-                // Set table data sama dengan chart data (awalnya)
                 const tableDataFormat = {
                     years: [2025],
                     data: {
@@ -1013,28 +1233,90 @@ function Dashboard() {
         }
     }, []);
 
-    const fetchChartDataRight = useCallback(async () => {
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8080/api/loan/summary`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
-
-            const chart = autoBuildChartDataRight(data);
-
-            setChartDataR({
-                lineChart: chart,
-                barChart: chart,
-                pieChart: chart,
-                doughnutChart: chart
-            });
-
-            setTableDataRight(data);
-        } catch (err) {
-            console.error("❌ Error fetching right chart data:", err);
+    const fetchChartDataRight = useCallback(async (pageNum = 1) => {
+    try {
+        const token = localStorage.getItem("token");
+        const query = new URLSearchParams();
+        
+        if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+        if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+        if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+        
+        if (pageNum) {
+            query.append("page", pageNum);
+            query.append("limit", tableLimitRight);
         }
-    });
+        
+        const res = await fetch(`http://localhost:8080/api/loan/summary${query.toString() ? '?' + query.toString() : ''}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const apiData = await res.json();
+        
+        console.log("📊 Initial Chart Data:", apiData);
+        
+        if (!apiData || !apiData.data) {
+            console.error("Invalid data structure:", apiData);
+            setChartDataR({
+                lineChart: { labels: [], datasets: [] },
+                barChart: { labels: [], datasets: [] },
+                pieChart: { labels: [], datasets: [] },
+                doughnutChart: { labels: [], datasets: [] }
+            });
+            setTableDataRight({
+                mode: "default_year",
+                years: [],
+                data: {}
+            });
+            return;
+        }
+
+        const transformedData = transformPagedDataForChart(apiData);
+        console.log("🔄 Transformed Data:", transformedData);
+
+        const chart = autoBuildChartDataRight(transformedData);
+
+        setChartDataR({
+            lineChart: chart,
+            barChart: chart,
+            pieChart: chart,
+            doughnutChart: chart
+        });
+
+        setTableDataRight(transformedData);
+
+        if (apiData.totalPages) {
+            setTablePaginationRight({
+                currentPage: apiData.page || 1,
+                totalPages: apiData.totalPages,
+                totalItems: apiData.totalRows,
+                itemsPerPage: apiData.limit || tableLimitRight,
+                hasPrevPage: (apiData.page || 1) > 1,
+                hasNextPage: (apiData.page || 1) < apiData.totalPages
+            });
+        }
+    } catch (err) {
+        console.error("❌ Error fetching right chart data:", err);
+        
+        setChartDataR({
+            lineChart: { labels: [], datasets: [] },
+            barChart: { labels: [], datasets: [] },
+            pieChart: { labels: [], datasets: [] },
+            doughnutChart: { labels: [], datasets: [] }
+        });
+        
+        setTableDataRight({
+            mode: "default_year",
+            years: [],
+            data: {}
+        });
+    }
+}, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+
 
     return (
         <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
@@ -1497,12 +1779,13 @@ function Dashboard() {
                             <div className="mb-4 h-[32px]"></div>
                             <div className="bg-white p-6">
                                 <div className="relative">
-
                                     <div className="overflow-x-auto">
                                         {tableDataRight && (
-                                            <div className="xl:col-span-2">
-                                                <DataTableRight data={tableDataRight} />
-                                            </div>
+                                            <DataTableRight
+                                                data={tableDataRight}
+                                                pagination={tablePaginationRight}
+                                                onPageChange={fetchTableDataRight}
+                                            />
                                         )}
                                     </div>
                                 </div>

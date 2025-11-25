@@ -78,6 +78,13 @@ exports.getSummaryReport = async (req, res) => {
   try {
     const { tahun, lembaga, program } = req.query;
 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 8;
+    const offset = (page - 1) * limit;
+
+    const sort = req.query.sort || "desc";
+    const sortDirection = sort === "asc" ? "ASC" : "DESC";
+
     const tahunList = tahun ? tahun.split(",") : [];
     const lembagaList = lembaga ? lembaga.split(",") : [];
     const programList = program ? program.split(",") : [];
@@ -87,106 +94,70 @@ exports.getSummaryReport = async (req, res) => {
       FROM summary_loan_jurusan
       WHERE 1=1
     `;
-
+    
     const params = [];
+    let countSql = `SELECT COUNT(*) AS total FROM summary_loan_jurusan WHERE 1=1`;
+    const countParams = [];
 
+ 
     if (tahunList.length > 0) {
-      sql += ` AND tahun IN (${tahunList.map(() => "?").join(",")})`;
+      const placeholders = tahunList.map(() => "?").join(",");
+      sql += ` AND tahun IN (${placeholders})`;
+      countSql += ` AND tahun IN (${placeholders})`;
       params.push(...tahunList);
+      countParams.push(...tahunList); 
     }
 
     if (lembagaList.length > 0) {
-      sql += ` AND lembaga IN (${lembagaList.map(() => "?").join(",")})`;
+      const placeholders = lembagaList.map(() => "?").join(",");
+      sql += ` AND lembaga IN (${placeholders})`;
+      countSql += ` AND lembaga IN (${placeholders})`;
       params.push(...lembagaList);
+      countParams.push(...lembagaList);
     }
 
     if (programList.length > 0) {
-      sql += ` AND programs_studi IN (${programList.map(() => "?").join(",")})`;
+      const placeholders = programList.map(() => "?").join(",");
+      sql += ` AND programs_studi IN (${placeholders})`;
+      countSql += ` AND programs_studi IN (${placeholders})`;
       params.push(...programList);
+      countParams.push(...programList); 
     }
+
+    const [countRows] = await bebaspustaka.query(countSql, countParams);
+    const totalRows = countRows[0].total;
+    const totalPages = Math.ceil(totalRows / limit);
+
+    sql += ` ORDER BY total_pinjam ${sortDirection}`;
+    sql += ` LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
 
     const [rows] = await bebaspustaka.query(sql, params);
 
-    if (!tahun && !lembaga && !program) {
-      const group = {};
+    console.log("📊 Query result:", {
+      totalRows,
+      totalPages,
+      currentPage: page,
+      dataLength: rows.length
+    });
 
-      rows.forEach(r => {
-        if (!group[r.tahun]) group[r.tahun] = 0;
-        group[r.tahun] += r.total_pinjam;
-      });
-
-      return res.json({
-        mode: "default_year",
-        years: Object.keys(group),
-        data: Object.keys(group).reduce((acc, year) => {
-          acc[year] = [{ total: group[year] }];
-          return acc;
-        }, {})
-      });
-    }
-
-
-    if (tahunList.length > 0 && lembagaList.length === 0 && programList.length === 0) {
-      const group = {};
-
-      rows.forEach(r => {
-        if (!group[r.tahun]) group[r.tahun] = {};
-        if (!group[r.tahun][r.lembaga]) group[r.tahun][r.lembaga] = 0;
-        group[r.tahun][r.lembaga] += r.total_pinjam;
-      });
-
-      return res.json({
-        mode: "per_lembaga",
-        years: tahunList,
-        data: Object.keys(group).reduce((acc, year) => {
-          acc[year] = Object.keys(group[year]).map(lem => ({
-            lembaga: lem,
-            total: group[year][lem]
-          }));
-          return acc;
-        }, {})
-      });
-    }
-
-
-if (lembagaList.length > 0) {
-  const group = {};
-
-  rows.forEach(r => {
-    if (!group[r.tahun]) group[r.tahun] = {};
-    
-    const key = `${r.program}|${r.lembaga}`;
-    
-    if (!group[r.tahun][key]) {
-      group[r.tahun][key] = {
-        program: r.program,
-        lembaga: r.lembaga,
-        total: 0
-      };
-    }
-    
-    group[r.tahun][key].total += r.total_pinjam;
-  });
-
-  return res.json({
-    mode: "per_program",
-    years: tahunList,
-    lembaga: lembagaList,
-    data: Object.keys(group).reduce((acc, year) => {
-      acc[year] = Object.values(group[year]);
-      return acc;
-    }, {})
-  });
-}
-
-    res.json({
-      mode: "raw",
+    return res.json({
+      mode: "paged",
+      page,
+      limit,
+      sort,
+      totalRows,
+      totalPages,
       data: rows
     });
 
   } catch (err) {
     console.error("❌ Error getSummaryReport:", err);
-    res.status(500).json({ message: "Server error" });
+    console.error("❌ Error details:", err.message);
+    res.status(500).json({ 
+      message: "Server error",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };
 
