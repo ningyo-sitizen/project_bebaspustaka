@@ -1412,11 +1412,11 @@ function DataTableRight({ data, pagination, onPageChange }) {
                                 <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
                                 <path d="M15 19l2 2l4 -4" />
                             </svg>
-
+                        <Link to="/approval">
                             <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                 Konfirmasi Data
                             </h2>
-
+                        </Link>
                         </div>
                     </div>
 

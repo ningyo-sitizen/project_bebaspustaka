@@ -15,7 +15,7 @@ exports.register = async (req, res) => {
   try {
     const hashed = await bcrypt.hash(password, 10);
     const sql = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-    await bebaspustaka.query(sql, [name, hashed, role]); // ✅ pakai await
+    await bebaspustaka.query(sql, [name, hashed, role]);
     console.log(`✅ User registered: ${name} (${role})`);
     res.json({ message: '✅ User registered successfully' });
   } catch (err) {

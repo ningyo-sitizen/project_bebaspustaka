@@ -2,6 +2,7 @@ import { Routes, Route } from "react-router-dom";
 import Login from "./Login.jsx";
 import Dashboard from "./Dashboard.jsx";
 import Analytic from "./Analytic.jsx";
+import Approval from "./Approval.jsx";
 
 export default function App() {
   return (
@@ -10,6 +11,7 @@ export default function App() {
       <Route path="/login" element={<Login />}/>
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/analytic" element={<Analytic />}></Route>
+      <Route path="/approval" element={<Approval />} />
     </Routes>
   );
 }
