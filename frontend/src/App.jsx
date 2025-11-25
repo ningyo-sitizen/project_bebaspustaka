@@ -1,15 +1,18 @@
 import { Routes, Route } from "react-router-dom";
-import Login from "./Login.jsx";
-import Dashboard from "./Dashboard.jsx";
-import Analytic from "./Analytic.jsx";
+// import Login from "./Login.jsx";
+// import Dashboard from "./Dashboard.jsx";
+// import Analytic from "./Analytic.jsx";
+import Profile from "./Profile";
 
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      {/* <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />}/>
       <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/analytic" element={<Analytic />}></Route>
+      <Route path="/analytic" element={<Analytic />}></Route> */}
+      <Route path="/" element={<Profile />} />
+      
     </Routes>
   );
 }
