@@ -6,79 +6,65 @@ import {
   IconLogout,
   IconUser,
   IconChevronDown,
-  IconPencil, // Ikon untuk edit
-  IconEye, // Ikon untuk password
+  IconPencil,
+  IconEye,
+  IconEyeOff,
 } from "@tabler/icons-react";
 
-// Tentukan menu aktif, sekarang kembali ke 'dashboard'
-const activeMenu = 'dashboard';
-
-const EditProfile = () => { 
+const EditProfile = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-
+  const [showPassword, setShowPassword] = useState(false); 
+  
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
-  
-  // Fungsi helper untuk menentukan gaya sidebar
-  const getSidebarItemClass = (menuName) => {
-    const baseClasses = "flex items-center gap-3 p-3 rounded-md font-medium transition-colors";
-    
-    // Logika gaya diperbarui (seperti di image_01d891.png)
-    if (menuName === activeMenu) {
-      // Item Aktif: Latar belakang abu-biru terang, Teks putih/gelap tergantung desain final Anda.
-      // Saya menggunakan gaya biru tua/abu-abu terang seperti gambar pertama.
-      return `${baseClasses} bg-[#627C94] text-white shadow-sm`; 
-    } else {
-      // Item Non-aktif: Teks abu-abu
-      return `${baseClasses} text-[#667790] hover:bg-gray-100`;
-    }
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const getSidebarItemClass = () => {
+    const baseClasses = "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
+    return `${baseClasses} text-[#667790] hover:bg-gray-100`;
   };
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
       
-      {/* SIDEBAR - Menggunakan gaya aktif untuk Dashboard */}
+      {/* SIDEBAR */}
       <aside className="w-64 bg-white border-r">
         <div className="flex flex-col h-full">
-          
+
           {/* Logo Bebas Pustaka */}
           <div className="p-6">
-            <div className="flex items-center gap-2 mb-4"> 
-              {/* DIV dengan Background Image yang Disediakan */}
+            <div className="flex items-center gap-4 mb-6">
               <div 
-                className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"
-              ></div>
+                className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"> 
+              </div>
               <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
             </div>
-            <div className="border-b border-gray-200"></div> 
+            <div className="w-full border-b border-gray-200"></div>
           </div>
-          
+
           {/* Menu */}
           <nav className="flex-1 px-6 space-y-4 pb-6">
-            
-            {/* Dashboard (Active) */}
             <a
               href="/dashboard"
-              className={getSidebarItemClass('dashboard')} 
+              className={getSidebarItemClass()}
             >
               <IconHome size={20} />
               Dashboard
             </a>
-
-            {/* Data Analitik (Inactive) */}
             <a
               href="/analytic"
-              className={getSidebarItemClass('analytic')}
+              className={getSidebarItemClass()}
             >
               <IconChartBar size={20} />
               Data Analitik
             </a>
-
-            {/* Konfirmasi Data (Inactive) */}
             <a
               href="/konfirmasi"
-              className={getSidebarItemClass('konfirmasi')}
+              className={getSidebarItemClass()}
             >
               <IconBell size={20} />
               Konfirmasi Data
@@ -89,29 +75,30 @@ const EditProfile = () => {
 
       {/* MAIN AREA */}
       <div className="flex-1">
-        
-        {/* NAVBAR (Tetap sama) */}
+
+        {/* NAVBAR */}
         <header className="w-full bg-white border-b p-4 flex justify-end relative">
-          
+
           <div
             className="flex items-center gap-2 cursor-pointer pr-4 relative"
             onClick={toggleDropdown}
           >
-            <IconChevronDown size={18} className="text-gray-600" /> 
-            
+            <IconChevronDown size={18} className="text-gray-600" />
+
             <p className="font-semibold text-sm text-[#023048] select-none">
               Hai, Zahrah Purnama
             </p>
 
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                <IconUser size={24} className="text-gray-500" />
+              <IconUser size={24} className="text-gray-500" />
             </div>
           </div>
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
-              
+
+              {/* Header Profile Dropdown */}
               <div className="flex items-center gap-3 p-4 border-b">
                 <IconUser size={24} className="text-gray-500" />
                 <div>
@@ -122,16 +109,18 @@ const EditProfile = () => {
                 </div>
               </div>
 
+              {/* Menu Dropdown */}
               <div className="p-2 space-y-1">
                 <a
                   href="/profile"
-                  className="flex items-center gap-3 p-2 text-sm text-[#023048] hover:bg-gray-100 rounded-md"
+                  className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
                   onClick={() => setIsDropdownOpen(false)}
                 >
-                  <IconUser size={18} className="text-gray-500" />
+                  <IconUser size={18} className="text-white" />
                   Profile
                 </a>
 
+                {/* Keluar (Logout) Link */}
                 <a
                   href="/logout"
                   className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
@@ -145,20 +134,21 @@ const EditProfile = () => {
           )}
         </header>
 
-        {/* CONTENT EDIT PROFILE - MODIFIKASI DIMULAI DI SINI */}
+        {/* CONTENT EDIT PROFILE */}
         <div className="p-8">
-          
-          {/* Breadcrumb */}
-          <div className="text-sm text-gray-500 mb-6">
-            <span className="text-[#023048] font-medium">Profile</span>
-            <span className="mx-2">&gt;</span>
-            <span className="text-[#023048] font-medium">Edit Profile</span>
-          </div>
 
+          {/* Breadcrumb */}
+          <div className="text-md text-gray-500 mb-6 flex items-center">
+            <span className="text-gray-400 mr-2">&gt;</span>
+            <a href="/profile" className="text-[#667790] text-2xl font-semibold hover:underline">Profile</a>
+            <span className="mx-2 text-gray-400">&gt;</span>
+            <span className="text-[#023048] font-semibold text-2xl">Edit Profile</span>
+          </div>
+          
           <div className="bg-white rounded-xl shadow-sm p-6 border">
-            
-            {/* Header Profile Card (Tetap sama) */}
-            <div className="flex items-center gap-4 pb-5 border-b">
+
+            {/* Header Profile Card - Hapus border-b dan sesuaikan padding */}
+            <div className="flex items-center gap-4 pb-5"> 
               <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
                 <IconUser size={50} className="text-gray-500" />
               </div>
@@ -171,20 +161,25 @@ const EditProfile = () => {
               </div>
             </div>
 
-            {/* Tabs (Edit Profile Aktif) */}
-            <div className="flex gap-8 mt-5 border-b">
-              <button className="pb-2 text-gray-500 hover:text-gray-700">
+            {/* Tabs (Edit Profile Aktif) - Hapus mt-5 */}
+            <div className="flex gap-8 border-b"> 
+              {/* Rincian Saya (Non-Aktif) */}
+              <a 
+                href="/profile" 
+                className="pb-2 text-gray-500 hover:text-gray-700 text-sm"
+              >
                 Rincian Saya
-              </button>
+              </a>
 
-              <button className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium">
+              {/* Edit Profile (Aktif) */}
+              <span className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium text-sm">
                 Edit Profile
-              </button>
+              </span>
             </div>
 
             {/* FORMULIR EDIT PROFILE */}
             <div className="mt-6 space-y-8">
-              
+
               {/* Edit Profile Utama */}
               <div className="space-y-6">
                 <h3 className="text-lg font-semibold mb-4 text-[#023048]">
@@ -194,7 +189,7 @@ const EditProfile = () => {
                 {/* Nama */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">
-                    Nama*
+                    Nama<span className="text-[#FF1515]">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -222,7 +217,7 @@ const EditProfile = () => {
                 {/* Username */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">
-                    Username*
+                    Username<span className="text-[#FF1515]">*</span>
                   </label>
                   <div className="relative">
                     <input
@@ -244,36 +239,62 @@ const EditProfile = () => {
                 {/* Password Baru */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">
-                    Password Baru*
+                    Password Baru<span className="text-[#FF1515]">*</span>
                   </label>
                   <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       defaultValue="***********"
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-[#023048] focus:border-[#023048]"
                     />
-                    <IconEye size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" />
+                    {/* Toggle Eye Icon */}
+                    {showPassword ? (
+                      <IconEyeOff 
+                        size={18} 
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" 
+                        onClick={togglePasswordVisibility}
+                      />
+                    ) : (
+                      <IconEye 
+                        size={18} 
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" 
+                        onClick={togglePasswordVisibility}
+                      />
+                    )}
                   </div>
                 </div>
 
                 {/* Konfirmasi Password */}
                 <div className="space-y-1">
                   <label className="text-sm font-medium text-gray-700">
-                    Konfirmasi Password*
+                    Konfirmasi Password<span className="text-[#FF1515]">*</span>
                   </label>
                   <div className="relative">
                     <input
-                      type="password"
+                      type={showPassword ? 'text' : 'password'}
                       defaultValue="***********"
                       className="w-full p-2 border border-gray-300 rounded-md focus:ring-[#023048] focus:border-[#023048]"
                     />
-                    <IconEye size={18} className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" />
+                    {/* Toggle Eye Icon */}
+                    {showPassword ? (
+                      <IconEyeOff 
+                        size={18} 
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" 
+                        onClick={togglePasswordVisibility}
+                      />
+                    ) : (
+                      <IconEye 
+                        size={18} 
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 cursor-pointer" 
+                        onClick={togglePasswordVisibility}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
 
-              {/* Tombol Aksi */}
-              <div className="pt-4 flex justify-end gap-3 border-t">
+              {/* Tombol Aksi - Sesuaikan padding atas */}
+              <div className="pt-6 flex justify-end gap-5">
                 <button className="px-6 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50">
                   Batal
                 </button>
@@ -290,4 +311,4 @@ const EditProfile = () => {
   );
 };
 
-export default Editprofile;
+export default EditProfile;

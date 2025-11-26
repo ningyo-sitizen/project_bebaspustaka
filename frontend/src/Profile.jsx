@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   IconHome,
@@ -14,46 +15,37 @@ const Profile = () => {
   const toggleDropdown = () => {
     setIsDropdownOpen(!isDropdownOpen);
   };
-  
+
   // Fungsi helper untuk menentukan gaya sidebar
   const getSidebarItemClass = () => {
     const baseClasses = "flex items-center gap-3 p-3 rounded-md font-medium transition-colors";
-    
+
     // SEMUA MENU SIDEBAR NON-AKTIF (PUTIH/DEFAULT)
-    return `${baseClasses} text-[#667790] hover:bg-gray-100`; 
+    return `${baseClasses} text-[#667790] hover:bg-gray-100`;
   };
 
   return (
     <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
-      
-      {/* SIDEBAR - SEMUA MENU NON-AKTIF */}
       <aside className="w-64 bg-white border-r">
         <div className="flex flex-col h-full">
-          
-          {/* Logo Bebas Pustaka */}
           <div className="flex flex-col items-center p-6">
             <div className="flex items-center gap-4 mb-6">
-              <div 
-                className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"
-              ></div>
+              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center">       
+                </div>
               <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
             </div>
-            <div className="w-full border-b border-gray-200"></div> 
+            <div className="w-full border-b border-gray-200"></div>
           </div>
-          
+
           {/* Menu */}
           <nav className="flex-1 px-6 pt-3 space-y-6 pb-6">
-            
-            {/* Dashboard (NON-AKTIF) */}
             <a
               href="/dashboard"
-              className={getSidebarItemClass('dashboard')} 
+              className={getSidebarItemClass('dashboard')}
             >
               <IconHome size={20} />
               Dashboard
             </a>
-
-            {/* Data Analitik (NON-AKTIF) */}
             <a
               href="/analytic"
               className={getSidebarItemClass('analytic')}
@@ -61,8 +53,6 @@ const Profile = () => {
               <IconChartBar size={20} />
               Data Analitik
             </a>
-
-            {/* Konfirmasi Data (NON-AKTIF) */}
             <a
               href="/konfirmasi"
               className={getSidebarItemClass('konfirmasi')}
@@ -76,29 +66,29 @@ const Profile = () => {
 
       {/* MAIN AREA */}
       <div className="flex-1">
-        
+
         {/* NAVBAR */}
         <header className="w-full bg-white border-b p-4 flex justify-end relative">
-          
+
           <div
             className="flex items-center gap-2 cursor-pointer pr-4 relative"
             onClick={toggleDropdown}
           >
-            <IconChevronDown size={18} className="text-gray-600" /> 
-            
+            <IconChevronDown size={18} className="text-gray-600" />
+
             <p className="font-semibold text-sm text-[#023048] select-none">
               Hai, Zahrah Purnama
             </p>
 
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                <IconUser size={24} className="text-gray-500" />
+              <IconUser size={24} className="text-gray-500" />
             </div>
           </div>
 
           {/* Dropdown Menu */}
           {isDropdownOpen && (
             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
-              
+
               {/* Header Profile Dropdown (Default/Putih) */}
               <div className="flex items-center gap-3 p-4 border-b">
                 <IconUser size={24} className="text-gray-500" />
@@ -114,7 +104,7 @@ const Profile = () => {
               <div className="p-2 space-y-1">
                 <a
                   href="/profile"
-                  className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md" 
+                  className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
                   onClick={() => setIsDropdownOpen(false)}
                 >
                   <IconUser size={18} className="text-white" />
@@ -140,7 +130,7 @@ const Profile = () => {
           <h1 className="text-2xl font-semibold mb-6 text-[#023048]">Profile</h1>
 
           <div className="bg-white rounded-xl shadow-sm p-6 border">
-            
+
             {/* Header Profile Card */}
             <div className="flex items-center gap-4 pb-5">
               <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center">
@@ -157,11 +147,10 @@ const Profile = () => {
 
             {/* Tabs */}
             <div className="flex gap-8 mt-5 border-b">
-              <button className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium">
+              <button className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium text-sm">
                 Rincian Saya
               </button>
-
-              <button className="pb-2 text-gray-500 hover:text-gray-700">
+              <button className="pb-2 text-gray-500 hover:text-gray-700 text-sm">
                 Edit Profile
               </button>
             </div>
