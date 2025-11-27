@@ -28,6 +28,7 @@ function Approval() {
         { id: 15, name: "Echa Sativa Audrey", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
     ]);
 
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
     //ceklis
     const [checkedItems, setCheckedItems] = useState({});

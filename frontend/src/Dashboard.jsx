@@ -11,6 +11,14 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
+import {
+  IconHome,
+  IconChartBar,
+  IconBell,
+  IconLogout,
+  IconUser,
+  IconChevronDown,
+} from "@tabler/icons-react";
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -27,9 +35,14 @@ ChartJS.register(
 );
 
 function Dashboard() {
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [chartData, setChartData] = useState({
         lineChart: null
     });
+
+      const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
 
     const [user, setUser] = useState(null);
     const [visitors, setVisitors] = useState([]);
@@ -92,22 +105,71 @@ function Dashboard() {
     return (
         <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
 
-            <header className="fixed bg-white bg-cover bg-no-repeat bg-center w-full h-20 top-0 z-50">
-                <div class="absolute inline-flex m-2 right-24">
-                    <div className="inline-flex items-center">
+        <header className="w-full bg-white border-b p-4 flex justify-end relative">
+
+          <div
+            className="flex items-center gap-2 cursor-pointer pr-4 relative"
+            onClick={toggleDropdown}
+          >
+            <IconChevronDown size={18} className="text-gray-600" />
+
+            <p className="font-semibold text-sm text-[#023048] select-none">
                         <p>Hai,&nbsp;</p>
                         {user ? (
                             <p className="mr-3 font-semibold">{user.name}</p>
                         ) : (
                             <p className="mr-3 text-gray-500">Loading...</p>
                         )}
+            </p>
 
-                    </div>
-                    <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/0b728be1-b553-4462-b4c9-41c894ee5f79.jpeg')] 
-                   bg-cover bg-center rounded-full w-16 h-16">
-                    </div>
+            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+              <IconUser size={24} className="text-gray-500" />
+            </div>
+          </div>
+
+          {/* Dropdown Menu */}
+          {isDropdownOpen && (
+            <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
+
+              {/* Header Profile Dropdown (Default/Putih) */}
+              <div className="flex items-center gap-3 p-4 border-b">
+                <IconUser size={24} className="text-gray-500" />
+                <div>
+                  <p className="font-semibold text-sm text-[#023048]">
+                        {user ? (
+                            <p className="mr-3 font-semibold">{user.name}</p>
+                        ) : (
+                            <p className="mr-3 text-gray-500">Loading...</p>
+                        )}
+                  </p>
+                  <p className="text-xs text-gray-500">Admin</p>
                 </div>
-            </header>
+              </div>
+
+              {/* Menu Dropdown */}
+              <div className="p-2 space-y-1">
+                <a
+                  href="/profile"
+                  className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <IconUser size={18} className="text-white" />
+                  Profile
+                </a>
+
+                {/* Keluar (Logout) Link */}
+                <a
+                  href="/logout"
+                  className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                  onClick={() => setIsDropdownOpen(false)}
+                >
+                  <IconLogout size={18} />
+                  Keluar
+                </a>
+              </div>
+            </div>
+          )}
+        </header>
 
             <div className="flex pt-20 min-h-screen">
                 {/* intinya ini sidebar */}

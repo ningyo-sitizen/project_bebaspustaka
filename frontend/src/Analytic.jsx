@@ -29,7 +29,7 @@ ChartJS.register(
 );
 
 function Dashboard() {
-
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState(null);
 
     const [tableData, setTableData] = useState(null);
