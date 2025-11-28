@@ -11,9 +11,10 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import InfoCards from '../src/infoCards';
+import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
 import { data, Link } from 'react-router-dom';
-import { useCallback } from 'react';
 import { use } from 'react';
 
 ChartJS.register(
@@ -126,6 +127,7 @@ function Dashboard() {
         setShowFilterR(false);
     };
 
+    
 
     const autoBuildChartData = (data, selectedType) => {
         const monthLabels = [
@@ -1457,7 +1459,7 @@ function DataTableRight({ data, pagination, onPageChange }) {
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
 
-
+                    <InfoCards/>
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
                         <div>

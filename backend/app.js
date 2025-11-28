@@ -26,14 +26,12 @@ app.use('/api/auth', authRoutes);
 app.get('/yearly_visitor', verifyToken, getYearlyVisitors);
 
 app.use('/api/dashboard', require('./routes/web'));
-app.use('/api', require('./routes/web'));
 
 app.use('/api/loan',require('./routes/loanRouts'));
 
 app.use('/api/landing',require('./routes/landing'));
 
-app.use('api/infoCard',require('./routes/infoCardRoutes'));
-
+app.use('/api/infoCard', require('./routes/infoCardRoutes'));
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
