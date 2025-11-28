@@ -12,12 +12,12 @@ import {
     Legend
 } from 'chart.js';
 import {
-  IconHome,
-  IconChartBar,
-  IconBell,
-  IconLogout,
-  IconUser,
-  IconChevronDown,
+    IconHome,
+    IconChartBar,
+    IconBell,
+    IconLogout,
+    IconUser,
+    IconChevronDown,
 } from "@tabler/icons-react";
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
@@ -40,9 +40,9 @@ function Dashboard() {
         lineChart: null
     });
 
-      const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
 
     const [user, setUser] = useState(null);
     const [visitors, setVisitors] = useState([]);
@@ -103,77 +103,78 @@ function Dashboard() {
     };
 
     return (
-        <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
+        <main className="font-jakarta bg-[#EDF1F3] w-screen min-h-screen">
 
-        <header className="w-full bg-white border-b p-4 flex justify-end relative">
+            <header className="w-full bg-white border-b p-4 flex justify-end relative">
 
-          <div
-            className="flex items-center gap-2 cursor-pointer pr-4 relative"
-            onClick={toggleDropdown}
-          >
-            <IconChevronDown size={18} className="text-gray-600" />
+                <div
+                    className="flex items-center gap-2 cursor-pointer pr-4 relative"
+                    onClick={toggleDropdown}
+                >
+                    <IconChevronDown size={18} className="text-gray-600" />
 
-            <p className="font-semibold text-sm text-[#023048] select-none">
+                    <p className="font-semibold text-sm text-[#023048] select-none">
                         <p>Hai,&nbsp;</p>
                         {user ? (
                             <p className="mr-3 font-semibold">{user.name}</p>
                         ) : (
                             <p className="mr-3 text-gray-500">Loading...</p>
                         )}
-            </p>
+                    </p>
 
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-              <IconUser size={24} className="text-gray-500" />
-            </div>
-          </div>
-
-          {/* Dropdown Menu */}
-          {isDropdownOpen && (
-            <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
-
-              {/* Header Profile Dropdown (Default/Putih) */}
-              <div className="flex items-center gap-3 p-4 border-b">
-                <IconUser size={24} className="text-gray-500" />
-                <div>
-                  <p className="font-semibold text-sm text-[#023048]">
-                        {user ? (
-                            <p className="mr-3 font-semibold">{user.name}</p>
-                        ) : (
-                            <p className="mr-3 text-gray-500">Loading...</p>
-                        )}
-                  </p>
-                  <p className="text-xs text-gray-500">Admin</p>
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                        <IconUser size={24} className="text-gray-500" />
+                    </div>
                 </div>
-              </div>
 
-              {/* Menu Dropdown */}
-              <div className="p-2 space-y-1">
-                <a
-                  href="/profile"
-                  className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
-                  <IconUser size={18} className="text-white" />
-                  Profile
-                </a>
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                    <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
 
-                {/* Keluar (Logout) Link */}
-                <a
-                  href="/logout"
-                  className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                  onClick={() => setIsDropdownOpen(false)}
-                >
-                  <IconLogout size={18} />
-                  Keluar
-                </a>
-              </div>
-            </div>
-          )}
-        </header>
+                        {/* Header Profile Dropdown (Default/Putih) */}
+                        <div className="flex items-center gap-3 p-4 border-b">
+                            <IconUser size={24} className="text-gray-500" />
+                            <div>
+                                <p className="font-semibold text-sm text-[#023048]">
+                                    {user ? (
+                                        <p className="mr-3 font-semibold">{user.name}</p>
+                                    ) : (
+                                        <p className="mr-3 text-gray-500">Loading...</p>
+                                    )}
+                                </p>
+                                <p className="text-xs text-gray-500">Admin</p>
+                            </div>
+                        </div>
+
+                        {/* Menu Dropdown */}
+                        <div className="p-2 space-y-1">
+                            <a
+                                href="/profile"
+                                className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
+                                onClick={() => setIsDropdownOpen(false)}
+                            >
+                                <IconUser size={18} className="text-white" />
+                                Profile
+                            </a>
+
+                            {/* Keluar (Logout) Link */}
+                            <a
+                                href="/logout"
+                                className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                onClick={() => setIsDropdownOpen(false)}
+                            >
+                                <IconLogout size={18} />
+                                Keluar
+                            </a>
+                        </div>
+                    </div>
+                )}
+            </header>
 
             <div className="flex pt-20 min-h-screen">
                 {/* intinya ini sidebar */}
-                <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
+                <aside className="fixed flex flex-col top-0 left-0 w-64 md:w-64 sm:w-52 h-screen bg-white border-[2px] border-black-2 z-50">
+
                     <div className="flex items-center ml-4">
                         <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] 
                       w-[29px] h-[29px] bg-cover bg-center m-4"></div>
@@ -200,11 +201,11 @@ function Dashboard() {
                                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                             </svg>
-                        <Link to="/dashboard">
-                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                Dashboard
-                            </h2>
-                        </Link>
+                            <Link to="/dashboard">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    Dashboard
+                                </h2>
+                            </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -224,11 +225,11 @@ function Dashboard() {
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M4 20h14" />
                             </svg>
-                        <Link to="/analytic">
-                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                Data Analitik
-                            </h2>
-                        </Link>
+                            <Link to="/analytic">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    Data Analitik
+                                </h2>
+                            </Link>
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -248,11 +249,11 @@ function Dashboard() {
                                 <path d="M15 19l2 2l4 -4" />
                             </svg>
 
-                        <Link to="/approval">
-                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                Konfirmasi Data
-                            </h2>
-                        </Link>
+                            <Link to="/approval">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    Konfirmasi Data
+                                </h2>
+                            </Link>
 
                         </div>
                     </div>
@@ -286,19 +287,20 @@ function Dashboard() {
 
                 <main className="ml-64 flex-1 p-8">
 
-                    <div className="w-full h-48 bg-[url('https://cdn.designfast.io/image/2025-10-30/db2f71c9-29cb-42eb-a2eb-47ec9e3bdb1c.png')] 
-                                bg-cover bg-center rounded-2xl mb-8 shadow-sm">
+                    <div className="relative w-full max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-sm mb-8">
+                        <div className="w-full pb-[25%] bg-[url('https://cdn.designfast.io/image/2025-10-30/db2f71c9-29cb-42eb-a2eb-47ec9e3bdb1c.png')] bg-contain bg-no-repeat bg-center">
+                        </div>
                     </div>
 
-                    <p className="font-semibold text-2xl text-black mb-8">
+                    <p className="font-semibold text-2xl text-left text-black mb-8">
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
 
-
-                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-                        <div className="relative">
-                            <div className="relative inline-flex justify-between items-center mb-6">
-                                <h3 className="font-semibold text-lg">Data Analitik Mahasiswa</h3>
+                    {/* ini chart */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                        <div className="flex flex-col">
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                                <h3 className="font-semibold text-lg mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
                                 <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline">
                                     Lihat data &gt;
                                 </p>
@@ -307,7 +309,7 @@ function Dashboard() {
                             <div className=" bg-white p-6">
 
                                 {chartData.lineChart && (
-                                    <div className="w-full h-80">
+                                    <div className="w-full aspect-[2/1]">
                                         <Line
                                             data={chartData.lineChart}
                                             options={{
@@ -362,68 +364,74 @@ function Dashboard() {
 
 
 
-                        <div className="relative inline-flex justify-between items-center">
-                            <h3 className="font-semibold text-lg">Setujui Data Bebas Pustaka</h3>
-                            <p className="font-light text-[#9A9A9A] cursor-pointer hover:text-blue-600 transition-colors">
-                                Lihat data &gt;
-                            </p>
-                        </div>
-                        {/* Right Column - Table */}
-                        <div className="bg-white rounded-2xl shadow-sm p-6">
+                            {/* tabel kanan */}
+                        <div className="flex flex-col">
 
-
-                            <div className='text-[#616161] text-sm font-light text-center mb-6'>
-                                <p>Data bebas pustaka mencatat status pengajuan</p>
-                                <p>yang telah di-approve oleh admin.</p>
+                            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                                <h3 className="font-semibold text-lg mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
+                                <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline">
+                                    Lihat data &gt;
+                                </p>
                             </div>
 
-                            <div className="overflow-x-auto">
-                                <table className="w-full border-collapse">
-                                    <thead>
-                                        <tr className="bg-gray-50 border-b-2 border-gray-200">
-                                            <th className="text-left p-4 font-semibold text-gray-600">Nama</th>
-                                            <th className="text-left p-4 font-semibold text-gray-600">Nim</th>
-                                            <th className="text-left p-4 font-semibold text-gray-600">Jurusan</th>
-                                            <th className="text-left p-4 font-semibold text-gray-600">Status</th>
-                                            <th className="text-left p-4 font-semibold text-gray-600">Tindakan</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        <tr className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="p-4">John Doe</td>
-                                            <td className="p-4">12345678</td>
-                                            <td className="p-4">Teknik Informatika</td>
-                                            <td className="p-4">
-                                                <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                                                    Pending
-                                                </span>
-                                            </td>
-                                            <td className="p-4">
-                                                <button className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm'>
-                                                    Setuju
-                                                </button>
-                                            </td>
-                                        </tr>
-                                        <tr className="border-b border-gray-100 hover:bg-gray-50">
-                                            <td className="p-4">Jane Smith</td>
-                                            <td className="p-4">87654321</td>
-                                            <td className="p-4">Sistem Informasi</td>
-                                            <td className="p-4">
-                                                <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                                    Disetujui
-                                                </span>
-                                            </td>
-                                            <td className="p-4">
-                                                <button className='px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm' disabled>
-                                                    Selesai
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                            <div className="bg-white rounded-2xl shadow-sm p-6">
+
+                                <div className='text-[#616161] text-sm font-light text-center mb-6'>
+                                    <p>Data bebas pustaka mencatat status pengajuan</p>
+                                    <p>yang telah di-approve oleh admin.</p>
+                                </div>
+
+                                <div className="overflow-x-auto">
+                                    <table className="w-full border-collapse">
+                                        <thead>
+                                            <tr className="bg-gray-50 border-b-2 border-gray-200">
+                                                <th className="text-left p-4 font-semibold text-gray-600">Nama</th>
+                                                <th className="text-left p-4 font-semibold text-gray-600">Nim</th>
+                                                <th className="text-left p-4 font-semibold text-gray-600">Jurusan</th>
+                                                <th className="text-left p-4 font-semibold text-gray-600">Status</th>
+                                                <th className="text-left p-4 font-semibold text-gray-600">Tindakan</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                                <td className="p-4">John Doe</td>
+                                                <td className="p-4">12345678</td>
+                                                <td className="p-4">Teknik Informatika</td>
+                                                <td className="p-4">
+                                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
+                                                        Pending
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <button className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm'>
+                                                        Setuju
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            <tr className="border-b border-gray-100 hover:bg-gray-50">
+                                                <td className="p-4">Jane Smith</td>
+                                                <td className="p-4">87654321</td>
+                                                <td className="p-4">Sistem Informasi</td>
+                                                <td className="p-4">
+                                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
+                                                        Disetujui
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <button className='px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm' disabled>
+                                                        Selesai
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
                             </div>
+                            
                         </div>
                     </div>
+                    
                 </main>
             </div>
 
@@ -433,7 +441,7 @@ function Dashboard() {
                     <p className="text-sm">© 2024 Bebas Pustaka - Sistem Manajemen Perpustakaan</p>
                 </div>
             </footer>
-        </div>
+        </main>
     );
 }
 
