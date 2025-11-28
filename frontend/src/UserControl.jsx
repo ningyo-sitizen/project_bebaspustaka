@@ -1,285 +1,618 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; 
+import axios from "axios";
 import {
-  IconHome,
-  IconChartBar,
-  IconBell,
-  IconLogout,
-  IconUser,
-  IconChevronDown,
-  IconMenu2,
-  IconTrash, 
-  IconUsers,
-  IconHistory, 
-  IconPlus,
-  IconLayoutGrid, 
-  IconList,
+    IconHome,
+    IconChartBar,
+    IconBell,
+    IconLogout,
+    IconUser,
+    IconChevronDown,
+    IconMenu2,
+    IconTrash,
+    IconUsers,
+    IconHistory,
+    IconPlus,
+    IconLayoutGrid,
+    IconList,
+    IconX,
+    IconEye,
+    IconEyeOff,
+    IconCheck, 
 } from "@tabler/icons-react";
 
-const UserControl = () => {
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(false); 
-  
-  const [viewMode, setViewMode] = useState('grid'); 
+// Counter ID untuk simulasi penambahan user baru
+let nextUserId = 5;
 
-  const [users, setUsers] = useState([
-    { id: 1, name: "Zahrah Purnama Alam", username: "zhrahprnm", role: "Admin" },
-    { id: 2, name: "Budi Santoso", username: "budis", role: "Admin" },
-    { id: 3, name: "Citra Dewi", username: "citrad", role: "Admin" },
-    { id: 4, name: "Doni Pratama", username: "donip", role: "Editor" },
-    { id: 5, name: "Eka Putri", username: "ekap", role: "Viewer" },
-  ]);
-  
-  const [profileData, setProfileData] = useState({
-      name: "Zahrah Purnama",
-      role: "Admin",
-      photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg", 
-  });
+// --- KOMPONEN NOTIFIKASI BERHASIL (Toast) --- 
+const SuccessNotification = ({ isVisible, message, onClose }) => {
+    useEffect(() => {
+        if (isVisible) {
+            const timer = setTimeout(() => {
+                onClose();
+            }, 5000); 
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, onClose]);
 
-  const navigate = useNavigate();
-  
-  // --- HANDLERS ---
-  
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-  
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
+    const notificationClass = isVisible
+        ? "translate-x-0 opacity-100" 
+        : "translate-x-full opacity-0"; 
 
-  const handleDeleteUser = async (userId) => {
-      if (window.confirm(`Apakah Anda yakin ingin menghapus user ID ${userId}?`)) {
-          setUsers(users.filter(user => user.id !== userId));
-          alert(`User ID ${userId} berhasil dihapus.`);
-      }
-  };
-
-  // --- UTILITY CLASS ---
-  
-  const getSidebarItemClass = (isActive = false) => {
-    const baseClasses =
-      "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
-    return isActive 
-      ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold` 
-      : `${baseClasses} text-[#667790] hover:bg-gray-100`; 
-  };
-
-  // --- RENDER COMPONENT ---
-
-  if (loading) {
-      return (
-          <div className="flex justify-center items-center min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
-              <p>Memuat Data...</p>
-          </div>
-      );
-  }
-
-  return (
-    <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
-      
-      {/* SIDEBAR */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:static lg:h-auto`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="flex flex-col items-center p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
-              <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
-            </div>
-            <div className="w-full border-b border-gray-200"></div>
-          </div>
-
-          <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-            <a href="/dashboard" className={getSidebarItemClass()}>
-              <IconHome size={20} />
-              Dashboard
-            </a>
-            <a href="/analytic" className={getSidebarItemClass()}>
-              <IconChartBar size={20} />
-              Data Analitik
-            </a>
-            <a href="/konfirmasi" className={getSidebarItemClass()}>
-              <IconBell size={20} />
-              Konfirmasi Data
-            </a>
-            <a href="/user-control" className={getSidebarItemClass(true)}>
-              <IconUsers size={20} />
-              User Control
-            </a>
-            <a href="/history" className={getSidebarItemClass()}>
-              <IconHistory size={20} />
-              History
-            </a>
-          </nav>
-        </div>
-      </aside>
-      
-      {/* OVERLAY */}
-      {isSidebarOpen && (
+    return (
         <div
-          className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"
-          onClick={toggleSidebar}
-        ></div>
-      )}
+            className={`fixed top-4 right-4 z-50 transition-all duration-500 ease-in-out ${notificationClass}`}
+        >
+            <div className="bg-white border-l-4 border-green-500 p-4 rounded-lg shadow-xl max-w-sm w-full flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-full bg-green-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <IconCheck size={20} className="text-white" /> 
+                </div>
+                <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-800">Berhasil!</h3>
+                    <p className="text-sm text-gray-600 mt-1">{message}</p>
+                </div>
+                <button 
+                    onClick={onClose} 
+                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full flex-shrink-0"
+                    aria-label="Tutup notifikasi"
+                >
+                    <IconX size={20} />
+                </button>
+            </div>
+        </div>
+    );
+};
 
-      {/* MAIN AREA */}
-      <div className="flex-1 lg:ml-0"> 
+//pop up delete
+const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, username }) => {
+    if (!isOpen) return null;
 
-        {/* NAVBAR */}
-        <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
-            <button
-                className="lg:hidden text-[#023048]"
-                onClick={toggleSidebar}
-                aria-label="Toggle menu"
-            >
-                <IconMenu2 size={24} />
-            </button>
-            <div
-            className="flex items-center gap-2 cursor-pointer pr-4 relative"
-            onClick={toggleDropdown}
-            >
-                <IconChevronDown size={18} className="text-gray-600" />
-                <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block"> 
-                Hai, {profileData.name.split(" ")[0]} 
-                </p>
-                <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                    <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
+    return (
+        // Backdrop Overlay (Latar Belakang Gelap) 
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50 font-['Plus_Jakarta_Sans'] transition-opacity duration-300">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 transform transition-transform duration-300 scale-100 relative overflow-hidden">
+                
+                {/* Header Merah  */}
+                <div className="w-full bg-red-500 py-8 flex items-center justify-center relative">
+                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center">
+                        {/* Ikon Tempat Sampah Putih di dalam lingkaran putih */}
+                        <IconTrash size={40} className="text-red-500" />
+                    </div>
+                    <button 
+                        onClick={onClose} 
+                        className="absolute top-4 right-4 text-white hover:text-gray-200 p-1"
+                        aria-label="Tutup modal"
+                    >
+                        <IconX size={24} />
+                    </button>
+                </div>
+
+                {/* Body Modal */}
+                <div className="px-8 pt-6 pb-8 text-center"> 
+                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Hapus Account?</h2>
+                    <p className="text-sm text-gray-600 mt-4 mb-6">
+                        Setelah akun dihapus, tindakan ini bersifat permanen dan tidak dapat dibatalkan.
+                        {username && <span className="block mt-1 font-medium">({username})</span>}
+                    </p>
+                    
+                    {/* Grup Tombol Aksi */}
+                    <div className="flex flex-col gap-3">
+                        <button
+                            type="button"
+                            onClick={onConfirm} 
+                            className="w-full px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 font-semibold"
+                        >
+                            Setujui
+                        </button>
+                        
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="w-full px-4 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150 font-medium"
+                        >
+                            Batal
+                        </button>
+                    </div>
                 </div>
             </div>
-            {isDropdownOpen && (
-                <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30"> 
-                    <div className="flex items-center gap-3 p-4 border-b">
-                        <IconUser size={24} className="text-gray-500" />
-                        <div>
-                            <p className="font-semibold text-sm text-[#023048]">
-                                {profileData.name}
-                            </p>
-                            <p className="text-xs text-gray-500">{profileData.role}</p>
+        </div>
+    );
+};
+
+
+// --- KOMPONEN MODAL TAMBAH AKUN BARU 
+const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => { 
+    if (!isOpen) return null;
+
+    const [formData, setFormData] = useState({
+        name: "",
+        role: "Admin",
+        username: "",
+        password: "",
+        confirmPassword: ""
+    });
+    
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = (e) => {
+        e.preventDefault(); 
+
+        if (formData.password !== formData.confirmPassword) {
+            alert("Password dan Konfirmasi Password tidak cocok!");
+            return;
+        }
+        
+        const newUser = {
+            id: nextUserId++,
+            name: formData.name,
+            username: formData.username,
+            role: formData.role
+        };
+        
+        if (onAddSuccess) {
+            onAddSuccess(newUser); 
+        }
+
+        setFormData({
+            name: "",
+            role: "Admin",
+            username: "",
+            password: "",
+            confirmPassword: ""
+        });
+    };
+
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 font-['Plus_Jakarta_Sans'] transition-opacity duration-300">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
+                
+                {/* Header Modal */}
+                <div className="flex items-center justify-between p-6 border-b">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-[#E7EBF1] flex items-center justify-center">
+                            <IconUsers size={24} className="text-[#023048]" />
+                        </div>
+                        <h2 className="text-xl font-semibold text-[#023048]">Tambah Akun Baru</h2>
+                    </div>
+                    <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+                        <IconX size={24} />
+                    </button>
+                </div>
+
+                {/* Body/Form Modal */}
+                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                    
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama*</label>
+                        <input
+                            type="text"
+                            name="name"
+                            value={formData.name}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            placeholder="Nama"
+                            required
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Peran*</label>
+                        <select
+                            name="role"
+                            value={formData.role}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            required
+                        >
+                            <option value="Admin">Admin</option>
+                            <option value="Super Admin">Super Admin</option>
+                            <option value="Dosen">Dosen</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Username*</label>
+                        <input
+                            type="text"
+                            name="username"
+                            value={formData.username}
+                            onChange={handleChange}
+                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            placeholder="Username"
+                            required
+                        />
+                    </div>
+
+                    {/* Password Fields */}
+                    <div className="flex space-x-4">
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Password Baru*</label>
+                            <div className="relative">
+                                <input
+                                    type={showPassword ? "text" : "password"} 
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
+                                    placeholder="********"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                    aria-label={showPassword ? "Sembunyikan password" : "Tampilkan password"}
+                                >
+                                    {showPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                </button>
+                            </div>
+                        </div>
+
+                        <div className="flex-1">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password*</label>
+                            <div className="relative">
+                                <input
+                                    type={showConfirmPassword ? "text" : "password"}
+                                    name="confirmPassword"
+                                    value={formData.confirmPassword}
+                                    onChange={handleChange}
+                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
+                                    placeholder="********"
+                                    required
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 p-1"
+                                    aria-label={showConfirmPassword ? "Sembunyikan konfirmasi password" : "Tampilkan konfirmasi password"}
+                                >
+                                    {showConfirmPassword ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+                                </button>
+                            </div>
                         </div>
                     </div>
-                    <div className="p-2 space-y-1">
-                        <button 
-                            onClick={() => navigate("/profile")}
-                            className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                        >
-                            <IconUser size={18} />
-                            Profile
-                        </button>
-                        <a
-                            href="/logout"
-                            className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                        >
-                            <IconLogout size={18} />
-                            Keluar
-                        </a>
-                    </div>
+                </form>
+
+                {/* Footer Modal */}
+                <div className="flex justify-end gap-3 p-6 border-t bg-gray-50 rounded-b-xl">
+                    <button
+                        type="button"
+                        onClick={onClose}
+                        className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150"
+                    >
+                        Batal
+                    </button>
+                    <button
+                        type="submit" 
+                        onClick={handleSubmit} 
+                        className="px-4 py-2 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150"
+                    >
+                        Tambah Akun
+                    </button>
                 </div>
+            </div>
+        </div>
+    );
+};
+
+// --- KOMPONEN UTAMA USER CONTROL ---
+const UserControl = () => {
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+    const [userToDelete, setUserToDelete] = useState(null);
+    const [viewMode, setViewMode] = useState('grid');
+    
+    // Data Dummy
+    const [users, setUsers] = useState([
+        { id: 1, name: "Zahrah Purnama Alam", username: "zhrahprnm", role: "Admin" },
+        { id: 2, name: "Budi Santoso", username: "budis", role: "Super Admin" },
+        { id: 3, name: "Citra Dewi", username: "citrad", role: "Admin" },
+        { id: 4, name: "Doni Pratama", username: "donip", role: "Super Admin" },
+    ]);
+    const [profileData] = useState({
+        name: "Zahrah Purnama",
+        role: "Admin",
+        photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
+    });
+    
+    // STATE NOTIFIKASI
+    const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+    const [notificationMessage, setNotificationMessage] = useState("");
+
+    const navigate = useNavigate();
+
+    // --- HANDLERS UTAMA ---
+    const toggleDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const openAddModal = () => setIsAddModalOpen(true);
+    const closeAddModal = () => setIsAddModalOpen(false);
+    const closeNotification = () => setShowSuccessNotification(false);
+
+    // Buka Modal Hapus Konfirmasi
+    const openDeleteModal = (user) => {
+        setUserToDelete(user);
+        setIsDeleteModalOpen(true); // INI YANG MUNCULKAN MODAL KUSTOM TAILWIND
+    };
+
+    // Tutup Modal Hapus Konfirmasi
+    const closeDeleteModal = () => {
+        setIsDeleteModalOpen(false);
+        setUserToDelete(null);
+    };
+
+    // Proses Konfirmasi Hapus Akun
+    const handleConfirmDelete = () => {
+        if (userToDelete) {
+            const username = userToDelete.username;
+
+            // Hapus user dari state
+            setUsers(users.filter(user => user.id !== userToDelete.id));
+
+            // Tutup modal hapus
+            closeDeleteModal();
+
+            // Tampilkan notifikasi sukses
+            setNotificationMessage(`Kamu telah berhasil menghapus akun ${username}.`);
+            setShowSuccessNotification(true);
+        }
+    };
+    
+    // Handler untuk menampilkan notifikasi setelah sukses tambah
+    const handleAddUserSuccess = (newUser) => {
+        // Tambahkan user baru ke state users
+        setUsers(prevUsers => [...prevUsers, newUser]);
+        
+        setIsAddModalOpen(false); 
+        setNotificationMessage(`Akun ${newUser.username} berhasil ditambahkan.`);
+        setShowSuccessNotification(true); 
+    };
+
+
+    // --- UTILITY CLASS ---
+    const getSidebarItemClass = (isActive = false) => {
+        const baseClasses =
+            "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
+        return isActive
+            ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold`
+            : `${baseClasses} text-[#667790] hover:bg-gray-100`;
+    };
+
+    // --- RENDER COMPONENT ---
+    return (
+        <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
+
+            {/* SIDEBAR */}
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    } lg:static lg:h-auto`}
+            >
+                <div className="flex flex-col h-full">
+                    <div className="flex flex-col items-center p-6">
+                        <div className="flex items-center gap-4 mb-6">
+                            {/* Icon Bebas Pustaka */}
+                            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+                            <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+                        </div>
+                        <div className="w-full border-b border-gray-200"></div>
+                    </div>
+
+                    <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
+                        <a href="/dashboard" className={getSidebarItemClass()}>
+                            <IconHome size={20} />
+                            Dashboard
+                        </a>
+                        <a href="/analytic" className={getSidebarItemClass()}>
+                            <IconChartBar size={20} />
+                            Data Analitik
+                        </a>
+                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                            <IconBell size={20} />
+                            Konfirmasi Data
+                        </a>
+                        <a href="/user-control" className={getSidebarItemClass(true)}>
+                            <IconUsers size={20} />
+                            User Control
+                        </a>
+                        <a href="/history" className={getSidebarItemClass()}>
+                            <IconHistory size={20} />
+                            History
+                        </a>
+                    </nav>
+                </div>
+            </aside>
+
+            {/* OVERLAY */}
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"
+                    onClick={toggleSidebar}
+                ></div>
             )}
-        </header>
 
-        {/* MAIN USER CONTROL CONTENT */}
-        <div className="p-4 sm:p-8"> 
+            {/* MAIN AREA */}
+            <div className="flex-1 lg:ml-0">
+
+                {/* NAVBAR */}
+                <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
+                    <button
+                        className="lg:hidden text-[#023048]"
+                        onClick={toggleSidebar}
+                        aria-label="Toggle menu"
+                    >
+                        <IconMenu2 size={24} />
+                    </button>
+                    <div
+                        className="flex items-center gap-2 cursor-pointer pr-4 relative"
+                        onClick={toggleDropdown}
+                    >
+                        <IconChevronDown size={18} className="text-gray-600" />
+                        <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                            Hai, {profileData.name.split(" ")[0]}
+                        </p>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
+                            <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
+                        </div>
+                    </div>
+                    {isDropdownOpen && (
+                        <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
+                            <div className="flex items-center gap-3 p-4 border-b">
+                                <IconUser size={24} className="text-gray-500" />
+                                <div>
+                                    <p className="font-semibold text-sm text-[#023048]">
+                                        {profileData.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{profileData.role}</p>
+                                </div>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                <button
+                                    onClick={() => navigate("/profile")}
+                                    className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
+                                >
+                                    <IconUser size={18} />
+                                    Profile
+                                </button>
+                                <a
+                                    href="/logout"
+                                    className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                >
+                                    <IconLogout size={18} />
+                                    Keluar
+                                </a>
+                            </div>
+                        </div>
+                    )}
+                </header>
+
+                {/* MAIN USER CONTROL CONTENT */}
+                <div className="p-4 sm:p-8">
+
+                    <div className="flex justify-between items-start mb-6">
+                        {/* Judul dan deskripsi */}
+                        <div>
+                            <h1 className="text-xl font-semibold text-[#023048]">Kontrol Pengguna</h1>
+                            <p className="text-sm text-gray-600 mt-1">
+                                Fitur User Control memungkinkan admin menambah dan menghapus akun pengguna sesuai kebutuhan sistem.
+                            </p>
+                        </div>
+                        {/* IKON TAMPILAN DATA */}
+                        <div className="flex-shrink-0 flex items-center mt-2 sm:mt-0">
+                            {/* Tombol Grid */}
+                            <button
+                                onClick={() => setViewMode('grid')}
+                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ${viewMode === 'grid'
+                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                    } transition duration-150`}
+                                aria-label="Tampilan Grid"
+                            >
+                                <IconLayoutGrid size={20} />
+                            </button>
+                            {/* Tombol List */}
+                            <button
+                                onClick={() => setViewMode('list')}
+                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 ${viewMode === 'list'
+                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                    } transition duration-150`}
+                                aria-label="Tampilan List"
+                            >
+                                <IconList size={20} />
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* USER CARD GRID/LIST */}
+                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+                        {users.map(user => (
+                            <div key={user.id} className="relative bg-white rounded-md shadow-sm border border-gray-200 p-4 flex items-center justify-between min-h-[120px]">
+                                
+                                {/* Garis biru di kiri */}
+                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#667790] rounded-l-md"></div>
+
+                                {/* Kontainer Utama Konten */}
+                                <div className="flex items-start w-full pl-2">
+                                    
+                                    {/* Kiri: Icon dan Teks Detail */}
+                                    <div className="flex items-start flex-grow">
+                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3">
+                                            <IconUser size={20} className="text-gray-500" />
+                                        </div>
+                                        <div>
+                                            {/* Username */}
+                                            <p className="font-semibold text-base text-[#023048] leading-tight mb-1"> 
+                                                {user.username}
+                                            </p>
+                                            {/* Nama Panjang */}
+                                            <p className="text-sm text-gray-700 leading-snug">
+                                                {user.name}
+                                            </p>
+                                            {/* Role */}
+                                            <p className="text-xs text-[#667790] font-medium leading-snug mt-0.5">
+                                                Role : {user.role}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Kanan: Tombol Hapus */}
+                                    <button
+                                        onClick={() => openDeleteModal(user)} 
+                                        className="w-10 h-10 text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-150 flex-shrink-0 flex items-center justify-center ml-4 relative z-20"
+                                        aria-label={`Hapus user ${user.username}`}
+                                    >
+                                        <IconTrash size={20} />
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+
+                    {/* TOMBOL TAMBAH AKUN BARU */}
+                    <div className="mt-8 flex justify-end">
+                        <button
+                            onClick={openAddModal} 
+                            className="flex items-center gap-2 px-6 py-3 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150 font-normal"
+                        >
+                            <IconPlus size={20} />
+                            Tambah Account Baru
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+            {/* MODAL TAMBAH AKUN BARU */}
+            <AddUserModal 
+                isOpen={isAddModalOpen} 
+                onClose={closeAddModal} 
+                onAddSuccess={handleAddUserSuccess} 
+            />
+
+            {/* MODAL KONFIRMASI HAPUS AKUN (POPP-UP MERAH) */}
+            <DeleteConfirmModal
+                isOpen={isDeleteModalOpen}
+                onClose={closeDeleteModal}
+                onConfirm={handleConfirmDelete}
+                username={userToDelete ? userToDelete.username : ""}
+            />
             
-          <div className="flex justify-between items-start mb-6"> 
-            <div>
-                <h1 className="text-xl font-semibold text-[#023048]">Kontrol Pengguna</h1>
-                <p className="text-sm text-gray-600 mt-1">
-                    Fitur User Control memungkinkan admin menambah dan menghapus akun pengguna sesuai kebutuhan sistem.
-                </p>
-            </div>
-
-            {/* IKON TAMPILAN DATA */}
-            <div className="flex-shrink-0 flex items-center mt-2 sm:mt-0"> 
-              <button 
-                  onClick={() => setViewMode('grid')}
-                  className={`w-10 h-10 border rounded-lg flex items-center justify-center ${
-                      viewMode === 'grid' 
-                      ? 'bg-[#023048] text-white border-[#023048] shadow-sm' 
-                      : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
-                  } transition duration-150`}
-                  aria-label="Tampilan Grid"
-              >
-                <IconLayoutGrid size={20} />
-              </button>
-              <button 
-                  onClick={() => setViewMode('list')}
-                  className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 ${
-                      viewMode === 'list' 
-                      ? 'bg-[#023048] text-white border-[#023048] shadow-sm' 
-                      : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
-                  } transition duration-150`}
-                  aria-label="Tampilan List"
-              >
-                <IconList size={20} />
-              </button>
-            </div>
-          </div>
-          
-          {/* USER CARD GRID/LIST */}
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
-              {users.map(user => (
-                  // ⭐️ CARD REVISI FINAL ANTI BERANTAKAN ⭐️
-                  <div key={user.id} className="relative bg-white rounded-md shadow-sm border border-gray-200 pl-4 pr-4 py-3 flex items-start justify-between">
-                      {/* Garis biru di kiri */}
-                      <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#667790] rounded-l-md"></div> 
-                      
-                      <div className="flex ml-2 w-full"> 
-                          
-                          {/* Kontainer Foto & Teks (Menggunakan Flex Row untuk baris pertama) */}
-                          <div className="flex items-start">
-                              
-                              {/* FOTO PROFIL */}
-                              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3 mt-1"> {/* Tambahkan mt-1 untuk vertical alignment */}
-                                  <IconUser size={20} className="text-gray-500" />
-                              </div>
-                              
-                              {/* KONTEN TEKS: Username, Nama, Role (Menumpuk) */}
-                              <div className="flex flex-col pt-1"> 
-                                  {/* Username */}
-                                  <p className="font-semibold text-sm text-[#023048] leading-tight">{user.username}</p>
-                                  
-                                  {/* Nama Panjang */}
-                                  <p className="text-sm text-gray-700 mt-1 leading-snug">{user.name}</p> 
-                                  
-                                  {/* Role */}
-                                  <p className="text-xs text-[#667790] font-medium leading-snug">Role : {user.role}</p> 
-                              </div>
-                          </div>
-                      </div>
-                      
-                      {/* Tombol Hapus */}
-                      <button 
-                          onClick={() => handleDeleteUser(user.id)}
-                          className="p-3 text-white bg-red-500 rounded-lg hover:bg-red-600 transition duration-150 flex-shrink-0 self-start mt-1"
-                          aria-label={`Hapus user ${user.username}`}
-                      >
-                          <IconTrash size={20} />
-                      </button>
-                  </div>
-              ))}
-          </div>
-
-          {/* TOMBOL TAMBAH AKUN BARU */}
-          <div className="mt-8 flex justify-end">
-              <button
-                  onClick={() => alert("Menuju halaman Tambah Akun Baru...")}
-                  className="flex items-center gap-2 px-6 py-2 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150 font-medium"
-              >
-                  <IconPlus size={20} />
-                  Tambah Account Baru
-              </button>
-          </div>
+            {/* KOMPONEN NOTIFIKASI SUKSES */}
+            <SuccessNotification 
+                isVisible={showSuccessNotification}
+                message={notificationMessage}
+                onClose={closeNotification}
+            />
 
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default UserControl;
