@@ -1,4 +1,4 @@
-const { bebaspustaka } = require('../config');
+const { bebaspustaka, opac } = require('../config');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
@@ -232,3 +232,4 @@ exports.getYears = async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 };
+
