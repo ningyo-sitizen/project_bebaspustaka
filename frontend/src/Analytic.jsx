@@ -1,4 +1,6 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import axios from 'axios';
+
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -16,7 +18,14 @@ import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
 import { data, Link } from 'react-router-dom';
 import { use } from 'react';
-
+import {
+    IconHome,
+    IconChartBar,
+    IconBell,
+    IconLogout,
+    IconUser,
+    IconChevronDown,
+} from "@tabler/icons-react";
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -98,7 +107,15 @@ function Dashboard() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
 
+        const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
 
+          const [profileData, setProfileData] = useState({
+        name: "Loading...",
+        username: "Loading...",
+        role: "Admin",
+      });
     const handleResetFilters = () => {
         setSelectedYears([]);
         setSelectedType("");
@@ -1080,9 +1097,37 @@ function DataTableRight({ data, pagination, onPageChange }) {
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
-        if (savedUser) {
-            setUser(JSON.parse(savedUser));
-        }
+            const fetchProfile = async () => {
+              const user = JSON.parse(localStorage.getItem('user'))
+              const user_id = user.user_id;
+              const token = localStorage.getItem('token')
+              try {
+                // Ganti URL sesuai endpoint backend Anda
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
+                  headers : {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                  }
+                });
+        
+                setProfileData(response.data);
+        
+                
+              } catch (error) {
+                console.error("Gagal mengambil data profil:", error);
+                // Tampilkan pesan default jika gagal
+                setProfileData({
+                    name: "Gagal memuat",
+                    username: "N/A",
+                    role: "N/A",
+                });
+                // Tambahkan alert jika perlu
+                // alert("Gagal terhubung ke server untuk memuat data profil.");
+              } finally {
+                setLoading(false);
+              }
+            };
+        fetchProfile();
         fetchYears();
         fetchChartDataLeft();
         fetchChartDataRight();
@@ -1323,22 +1368,63 @@ function DataTableRight({ data, pagination, onPageChange }) {
     return (
         <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
 
-            <header className="fixed bg-white bg-cover bg-no-repeat bg-center w-full h-20 top-0 z-50">
-                <div class="absolute inline-flex m-2 right-24">
-                    <div className="inline-flex items-center">
+            <header className="w-full bg-white border-b p-4 flex justify-end relative">
+
+                <div
+                    className="flex items-center gap-2 cursor-pointer pr-4 relative"
+                    onClick={toggleDropdown}
+                >
+                    <IconChevronDown size={18} className="text-gray-600" />
+
+                    <p className="font-semibold text-sm text-[#023048] select-none">
                         <p>Hai,&nbsp;</p>
-                        {user ? (
-                            <p className="mr-3 font-semibold">{user.name}</p>
-                        ) : (
-                            <p className="mr-3 text-gray-500">Loading...</p>
-                        )}
-                    </div>
-                    <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/0b728be1-b553-4462-b4c9-41c894ee5f79.jpeg')] 
-                   bg-cover bg-center rounded-full w-16 h-16">
+                        {profileData.username}
+                    </p>
+
+                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                        <IconUser size={24} className="text-gray-500" />
                     </div>
                 </div>
-            </header>
 
+                {/* Dropdown Menu */}
+                {isDropdownOpen && (
+                    <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
+
+                        {/* Header Profile Dropdown (Default/Putih) */}
+                        <div className="flex items-center gap-3 p-4 border-b">
+                            <IconUser size={24} className="text-gray-500" />
+                            <div>
+                                <p className="font-semibold text-sm text-[#023048]">
+                                {profileData.username}
+                                </p>
+                                <p className="text-xs text-gray-500">{profileData.role}</p>
+                            </div>
+                        </div>
+
+                        {/* Menu Dropdown */}
+                        <div className="p-2 space-y-1">
+                            <a
+                                href="/profile"
+                                className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
+                                onClick={() => setIsDropdownOpen(false)}
+                            >
+                                <IconUser size={18} className="text-white" />
+                                Profile
+                            </a>
+
+                            {/* Keluar (Logout) Link */}
+                            <a
+                                href="/logout"
+                                className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                onClick={() => setIsDropdownOpen(false)}
+                            >
+                                <IconLogout size={18} />
+                                Keluar
+                            </a>
+                        </div>
+                    </div>
+                )}
+            </header>
             <div className="flex pt-20 min-h-screen">
                 <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
                     <div className="flex items-center ml-4">

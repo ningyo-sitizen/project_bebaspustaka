@@ -22,7 +22,12 @@ function Login() {
       if (res.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        navigate("/dashboard");
+        if(data.user.role == "super admin"){
+          navigate("/approval")
+
+        }else{
+          navigate("/dashboard");
+        }
       } else {
         alert(data.message || "Login gagal");
       }

@@ -7,21 +7,45 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 
 
 
+// ✅ TANPA user_id (auto increment dari database)
 exports.register = async (req, res) => {
-  const { name, password, role } = req.body;
-  if (!name || !password || !role)
-    return res.status(400).json({ message: 'All fields required' });
-
-  try {
-    const hashed = await bcrypt.hash(password, 10);
-    const sql = 'INSERT INTO users (username, password, role) VALUES (?, ?, ?)';
-    await bebaspustaka.query(sql, [name, hashed, role]);
-    console.log(`✅ User registered: ${name} (${role})`);
-    res.json({ message: '✅ User registered successfully' });
-  } catch (err) {
-    console.error('❌ Register error:', err);
-    res.status(500).json({ message: 'Database or server error' });
-  }
+    const { name, username, password, role } = req.body;
+    
+    if (!name || !username || !password || !role) {
+        return res.status(400).json({ message: 'All fields required' });
+    }
+    
+    try {
+        // Cek username sudah ada atau belum
+        const checkSql = 'SELECT username FROM users WHERE username = ?';
+        const [existing] = await bebaspustaka.query(checkSql, [username]);
+        
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+        
+        const hashed = await bcrypt.hash(password, 10);
+        
+        // ✅ TIDAK PERLU INSERT user_id (auto increment)
+        const sql = 'INSERT INTO users (name, username, PASSWORD, role) VALUES (?, ?, ?, ?)';
+        const [result] = await bebaspustaka.query(sql, [name, username, hashed, role]);
+        
+        // ✅ Ambil user_id yang baru dibuat (auto increment ID)
+        const insertedId = result.insertId;
+        
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            user: { 
+                user_id: insertedId, 
+                name, 
+                username, 
+                role 
+            }
+        });
+    } catch (err) {
+        console.error('Register error:', err);
+        res.status(500).json({ message: 'Database error' });
+    }
 };
 
 exports.login = async (req, res) => {
@@ -64,7 +88,7 @@ exports.login = async (req, res) => {
     console.log('✅ Login success for', name);
 
     return res.status(200).json({
-      message: '✅ Login successful',
+      message: 'berhasil',
       token,
       user: {
         user_id : user.user_id,

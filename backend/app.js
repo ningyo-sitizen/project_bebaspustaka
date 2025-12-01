@@ -13,13 +13,15 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 
 const app = express();
 const PORT = process.env.PORT || 8080;
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 app.use(cors({
   origin: "http://localhost:5173", 
   credentials: true,
   allowedHeaders: ["Content-Type", "Authorization"]
 }));
-app.use(express.json());
+
 
 app.use('/api/auth', authRoutes);
 
@@ -32,6 +34,8 @@ app.use('/api/loan',require('./routes/loanRouts'));
 app.use('/api/landing',require('./routes/landing'));
 
 app.use('/api/infoCard', require('./routes/infoCardRoutes'));
+
+app.use('/api/profile',require('./routes/UserInfoRoutes'))
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
