@@ -1,31 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-    IconHome,
-    IconChartBar,
-    IconBell,
-    IconLogout,
-    IconUser,
-    IconChevronDown,
-    IconMenu2,
-    IconTrash,
-    IconUsers,
-    IconHistory,
-    IconPlus,
-    IconLayoutGrid,
-    IconList,
-    IconX,
-    IconEye,
-    IconEyeOff,
-    IconCheck, 
+    IconHome,IconChartBar,IconBell, IconLogout,IconUser,IconChevronDown,IconMenu2,IconTrash,IconUsers,IconHistory,IconPlus,IconLayoutGrid,
+    IconList, IconX, IconEye, IconEyeOff, IconCheck, 
 } from "@tabler/icons-react";
 
 // Counter ID untuk simulasi penambahan user baru
 let nextUserId = 5;
 
-// =================================================================
-// 🚨 KOMPONEN NOTIFIKASI GAGAL (TOAST MERAH BARU) 🚨
-// =================================================================
+// Notifikasi gagal
+
 const ErrorNotification = ({ isVisible, message, onClose }) => {
     useEffect(() => {
         if (isVisible) {
@@ -67,9 +51,7 @@ const ErrorNotification = ({ isVisible, message, onClose }) => {
     );
 };
 
-// =================================================================
 // KOMPONEN NOTIFIKASI BERHASIL (Toast HIJAU)
-// =================================================================
 const SuccessNotification = ({ isVisible, message, onClose }) => {
     useEffect(() => {
         if (isVisible) {
@@ -108,9 +90,7 @@ const SuccessNotification = ({ isVisible, message, onClose }) => {
     );
 };
 
-// =================================================================
 // KOMPONEN MODAL KONFIRMASI DELETE (POPP-UP MERAH TENGAH)
-// =================================================================
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, username }) => {
     if (!isOpen) return null;
 
@@ -168,11 +148,8 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, username }) => {
     );
 };
 
-
-// =================================================================
 // KOMPONEN MODAL TAMBAH AKUN BARU 
-// onAddSuccess diubah menjadi onActionComplete
-// =================================================================
+
 const AddUserModal = ({ isOpen, onClose, onActionComplete }) => { 
     if (!isOpen) return null;
 
@@ -222,8 +199,6 @@ const AddUserModal = ({ isOpen, onClose, onActionComplete }) => {
             password: "",
             confirmPassword: ""
         });
-        // Catatan: Modal TIDAK ditutup di sini. Penutupan dilakukan di handleAddUserAction di UserControl
-        // agar data user baru dapat diakses untuk ditampilkan di notifikasi sukses.
     };
 
     return (
@@ -359,9 +334,7 @@ const AddUserModal = ({ isOpen, onClose, onActionComplete }) => {
     );
 };
 
-// =================================================================
 // KOMPONEN UTAMA USER CONTROL 
-// =================================================================
 const UserControl = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -435,26 +408,11 @@ const UserControl = () => {
         setNotificationMessage(message);
         
         if (isSuccess) {
-             // Karena AddUserModal tidak mengembalikan object user,
-             // kita perlu logic untuk menambahkannya (meskipun di kode ini sudah
-             // disimulasikan di handleSubmit AddUserModal). 
-             // Jika data user baru harus dikelola di sini, 
-             // prop onActionComplete harus membawa objek newUser.
-             // Untuk saat ini, kita asumsikan data sudah diupdate secara internal
-             // atau diabaikan karena ini hanya simulasi front-end.
-             
-             // Karena ada logic nextUserId++ di modal, kita tidak bisa
-             // menambahkannya di sini, mari kita kembali ke logic lama:
-             
-             // REVISI: Karena AddUserModal hanya menerima onActionComplete(isSuccess, message)
-             // dan sudah ada logic penambahan user di dalam AddUserModal, 
-             // kita hanya perlu mengurus tampilan notifikasi di sini.
-             
              setShowSuccessNotification(true);
              setIsAddModalOpen(false); // Tutup modal jika sukses
         } else {
             setShowErrorNotification(true);
-            // Modal TIDAK ditutup jika GAGAL (Agar user bisa langsung memperbaiki)
+            // Modal TIDAK ditutup jika GAGAL 
         }
     };
 
@@ -622,17 +580,13 @@ const UserControl = () => {
 
                                 {/* Kontainer Utama Konten (Menggunakan struktur baru untuk penempatan) */}
                                 <div className="flex w-full pl-2">
-                                    
-                                    {/* Kiri: Ikon & Detail Teks */}
                                     <div className="flex flex-col flex-grow">
                                         
                                         {/* Baris 1: Ikon & Username (Sejajar) */}
                                         <div className="flex items-center">
-                                            {/* Icon */}
                                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3">
                                                 <IconUser size={20} className="text-gray-500" />
                                             </div>
-                                            {/* Username */}
                                             <p className="font-semibold text-base text-[#023048] leading-tight"> 
                                                 {user.username}
                                             </p>
@@ -640,11 +594,10 @@ const UserControl = () => {
                                         
                                         {/* Baris 2 & 3: Nama Panjang dan Role (Di bawah ikon) */}
                                         <div className="mt-1 pt-2 border-t border-gray-100 pl-0 sm:pl-2 ">
-                                            {/* Nama Panjang */}
+
                                             <p className="text-sm text-gray-700 leading-snug">
                                                 {user.name}
                                             </p>
-                                            {/* Role */}
                                             <p className="text-xs text-[#667790] font-medium leading-snug mt-0.5">
                                                 Role : {user.role}
                                             </p>
@@ -685,7 +638,7 @@ const UserControl = () => {
                 onActionComplete={handleAddUserAction} // <-- MENGIRIM HANDLER AKSI
             />
 
-            {/* MODAL KONFIRMASI HAPUS AKUN (POPP-UP MERAH) */}
+            {/*Hapus akun) */}
             <DeleteConfirmModal
                 isOpen={isDeleteModalOpen}
                 onClose={closeDeleteModal}
@@ -693,14 +646,14 @@ const UserControl = () => {
                 username={userToDelete ? userToDelete.username : ""}
             />
             
-            {/* KOMPONEN NOTIFIKASI SUKSES (HIJAU) */}
+            {/*Notifikasi Berhasil */}
             <SuccessNotification 
                 isVisible={showSuccessNotification}
                 message={notificationMessage}
                 onClose={closeSuccessNotification}
             />
             
-            {/* 🚨 KOMPONEN NOTIFIKASI GAGAL (MERAH BARU) 🚨 */}
+            {/*Notifikasi gagal*/}
             <ErrorNotification 
                 isVisible={showErrorNotification}
                 message={notificationMessage}
