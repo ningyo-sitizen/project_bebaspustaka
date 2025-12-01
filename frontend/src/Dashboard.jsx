@@ -1,4 +1,5 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import axios from 'axios';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -35,6 +36,11 @@ ChartJS.register(
 );
 
 function Dashboard() {
+      const [profileData, setProfileData] = useState({
+        name: "Loading...",
+        username: "Loading...",
+        role: "Admin",
+      });
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [chartData, setChartData] = useState({
         lineChart: null
@@ -44,14 +50,40 @@ function Dashboard() {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-    const [user, setUser] = useState(null);
     const [visitors, setVisitors] = useState([]);
 
     useEffect(() => {
-        const saveduser = localStorage.getItem("user")
-        if (saveduser) {
-            setUser(JSON.parse(saveduser));
-        }
+    const fetchProfile = async () => {
+      const user = JSON.parse(localStorage.getItem('user'))
+      const user_id = user.user_id;
+      const token = localStorage.getItem('token')
+      try {
+        // Ganti URL sesuai endpoint backend Anda
+        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
+          headers : {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+          }
+        });
+
+        setProfileData(response.data);
+
+        
+      } catch (error) {
+        console.error("Gagal mengambil data profil:", error);
+        // Tampilkan pesan default jika gagal
+        setProfileData({
+            name: "Gagal memuat",
+            username: "N/A",
+            role: "N/A",
+        });
+        // Tambahkan alert jika perlu
+        // alert("Gagal terhubung ke server untuk memuat data profil.");
+      } finally {
+        setLoading(false);
+      }
+    };
+        fetchProfile();
         fetchChartData();
     }, []);
 
@@ -115,11 +147,7 @@ function Dashboard() {
 
                     <p className="font-semibold text-sm text-[#023048] select-none">
                         <p>Hai,&nbsp;</p>
-                        {user ? (
-                            <p className="mr-3 font-semibold">{user.name}</p>
-                        ) : (
-                            <p className="mr-3 text-gray-500">Loading...</p>
-                        )}
+                        {profileData.username}
                     </p>
 
                     <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
@@ -136,13 +164,9 @@ function Dashboard() {
                             <IconUser size={24} className="text-gray-500" />
                             <div>
                                 <p className="font-semibold text-sm text-[#023048]">
-                                    {user ? (
-                                        <p className="mr-3 font-semibold">{user.name}</p>
-                                    ) : (
-                                        <p className="mr-3 text-gray-500">Loading...</p>
-                                    )}
+                                {profileData.username}
                                 </p>
-                                <p className="text-xs text-gray-500">Admin</p>
+                                <p className="text-xs text-gray-500">{profileData.role}</p>
                             </div>
                         </div>
 

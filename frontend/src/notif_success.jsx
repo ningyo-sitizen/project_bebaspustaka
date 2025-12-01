@@ -8,7 +8,7 @@ export default function Notif({ type, message, onClose }) {
     setClosing(true);
     setTimeout(() => {
       onClose();
-    }, 350); // samain sama durasi animasi
+    }, 350); 
   };
 
   return (
