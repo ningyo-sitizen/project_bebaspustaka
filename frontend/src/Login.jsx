@@ -23,7 +23,7 @@ function Login() {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
         if(data.user.role == "super admin"){
-          navigate("/approval")
+          navigate("/dashboardSA")
 
         }else{
           navigate("/dashboard");
