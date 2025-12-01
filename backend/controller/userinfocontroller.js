@@ -78,6 +78,24 @@ exports.getAllUsers = async (req, res) => {
     }
 };
 
+exports.deleteUser = async (req, res) => {
+    const user_id = req.query.user_id;
+    
+    if (!user_id) {
+        return res.status(400).json({ message: 'user_id required' });
+    }
+    
+    try {
+        const deleteSql = 'DELETE FROM users WHERE user_id = ?';
+        await bebaspustaka.query(deleteSql, [user_id]);
+        
+        res.json({ message: 'User deleted successfully' });
+    } catch (err) {
+        console.error('Delete error:', err);
+        res.status(500).json({ message: 'Server error' });
+    }
+};
+
 
 
 

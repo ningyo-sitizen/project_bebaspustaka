@@ -316,6 +316,20 @@ const UserControl = () => {
         photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
     });
     
+    const deleteUserAcc = async (useridIN) => {
+        const userid = JSON.parse(useridIN)
+        const token = localStorage.getItem('token')
+        try{
+          const response = await axios.delete(`http://localhost:8080/api/profile/userInfo?user_id=${userid}`,{
+          headers : {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+          }
+        });
+        }catch{
+
+        }
+    } 
 
     useEffect(() => {
     const fetchProfile = async () => {
@@ -399,21 +413,32 @@ const UserControl = () => {
     };
 
     // Proses Konfirmasi Hapus Akun
-    const handleConfirmDelete = () => {
-        if (userToDelete) {
-            const username = userToDelete.username;
+const handleConfirmDelete = async () => {
+    if (!userToDelete) return;
 
-            // Hapus user dari state
-            setUsers(users.filter(user => user.id !== userToDelete.id));
+    try {
+        const token = localStorage.getItem('token');
+        
+        // ✅ DELETE request
+        await axios.delete(
+            `http://localhost:8080/api/profile/userInfo?user_id=${userToDelete.user_id}`,
+            {
+                headers: { "Authorization": `Bearer ${token}` }
+            }
+        );
 
-            // Tutup modal hapus
-            closeDeleteModal();
-
-            // Tampilkan notifikasi sukses
-            setNotificationMessage(`Kamu telah berhasil menghapus akun ${username}.`);
-            setShowSuccessNotification(true);
-        }
-    };
+        // Update UI
+        setUsers(users.filter(user => user.user_id !== userToDelete.user_id));
+        closeDeleteModal();
+        
+        setNotificationMessage(`Akun ${userToDelete.username} berhasil dihapus.`);
+        setShowSuccessNotification(true);
+        
+    } catch (error) {
+        console.error("Error deleting user:", error);
+        alert("Gagal menghapus user.");
+    }
+};
     
     // Handler untuk menampilkan notifikasi setelah sukses tambah
     const handleAddUserSuccess = (newUser) => {
