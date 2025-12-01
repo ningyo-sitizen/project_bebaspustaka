@@ -95,6 +95,46 @@ exports.deleteUser = async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 };
+exports.register = async (req, res) => {
+    const { name, username, password, role } = req.body;
+    
+    if (!name || !username || !password || !role) {
+        return res.status(400).json({ message: 'All fields required' });
+    }
+    
+    try {
+        // Cek username sudah ada atau belum
+        const checkSql = 'SELECT username FROM users WHERE username = ?';
+        const [existing] = await bebaspustaka.query(checkSql, [username]);
+        
+        if (existing.length > 0) {
+            return res.status(400).json({ message: 'Username already exists' });
+        }
+        
+        const hashed = await bcrypt.hash(password, 10);
+        
+        // ✅ TIDAK PERLU INSERT user_id (auto increment)
+        const sql = 'INSERT INTO users (name, username, PASSWORD, role) VALUES (?, ?, ?, ?)';
+        const [result] = await bebaspustaka.query(sql, [name, username, hashed, role]);
+        
+        // ✅ Ambil user_id yang baru dibuat (auto increment ID)
+        const insertedId = result.insertId;
+        
+        res.status(201).json({ 
+            message: 'User registered successfully',
+            user: { 
+                user_id: insertedId, 
+                name, 
+                username, 
+                role 
+            }
+        });
+    } catch (err) {
+        console.error('Register error:', err);
+        res.status(500).json({ message: 'Database error' });
+    }
+};
+
 
 
 
