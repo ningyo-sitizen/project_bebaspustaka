@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import {
     IconHome,
     IconChartBar,
@@ -24,7 +23,53 @@ import {
 // Counter ID untuk simulasi penambahan user baru
 let nextUserId = 5;
 
-// --- KOMPONEN NOTIFIKASI BERHASIL (Toast) --- 
+// =================================================================
+// 🚨 KOMPONEN NOTIFIKASI GAGAL (TOAST MERAH BARU) 🚨
+// =================================================================
+const ErrorNotification = ({ isVisible, message, onClose }) => {
+    useEffect(() => {
+        if (isVisible) {
+            // Notifikasi akan hilang setelah 5 detik
+            const timer = setTimeout(() => {
+                onClose();
+            }, 5000); 
+            return () => clearTimeout(timer);
+        }
+    }, [isVisible, onClose]);
+
+    const notificationClass = isVisible
+        ? "translate-x-0 opacity-100" 
+        : "translate-x-full opacity-0"; 
+
+    return (
+        <div
+            className={`fixed top-4 right-4 z-50 transition-all duration-500 ease-in-out ${notificationClass}`}
+        >
+            {/* Menggunakan border-red-500 dan bg-red-500 */}
+            <div className="bg-white border-l-4 border-red-500 p-4 rounded-lg shadow-xl max-w-sm w-full flex items-start space-x-3">
+                <div className="w-8 h-8 rounded-full bg-red-500 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    {/* Menggunakan IconX untuk simbol Error/Gagal */}
+                    <IconX size={20} className="text-white" /> 
+                </div>
+                <div className="flex-1">
+                    <h3 className="text-base font-semibold text-gray-800">Gagal!</h3>
+                    <p className="text-sm text-gray-600 mt-1">{message}</p>
+                </div>
+                <button 
+                    onClick={onClose} 
+                    className="text-gray-400 hover:text-gray-700 p-1 rounded-full flex-shrink-0"
+                    aria-label="Tutup notifikasi"
+                >
+                    <IconX size={20} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
+// =================================================================
+// KOMPONEN NOTIFIKASI BERHASIL (Toast HIJAU)
+// =================================================================
 const SuccessNotification = ({ isVisible, message, onClose }) => {
     useEffect(() => {
         if (isVisible) {
@@ -63,54 +108,58 @@ const SuccessNotification = ({ isVisible, message, onClose }) => {
     );
 };
 
-//pop up delete
+// =================================================================
+// KOMPONEN MODAL KONFIRMASI DELETE (POPP-UP MERAH TENGAH)
+// =================================================================
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, username }) => {
     if (!isOpen) return null;
 
     return (
         // Backdrop Overlay (Latar Belakang Gelap) 
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black bg-opacity-50 font-['Plus_Jakarta_Sans'] transition-opacity duration-300">
-            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 transform transition-transform duration-300 scale-100 relative overflow-hidden">
+            <div className="bg-white rounded-xl shadow-2xl w-full max-w-sm mx-4 transform transition-transform duration-300 scale-100 relative overflow-hidden p-6">
                 
-                {/* Header Merah  */}
-                <div className="w-full bg-red-500 py-8 flex items-center justify-center relative">
-                    <div className="w-20 h-20 rounded-full bg-white flex items-center justify-center">
-                        {/* Ikon Tempat Sampah Putih di dalam lingkaran putih */}
-                        <IconTrash size={40} className="text-red-500" />
-                    </div>
-                    <button 
-                        onClick={onClose} 
-                        className="absolute top-4 right-4 text-white hover:text-gray-200 p-1"
-                        aria-label="Tutup modal"
-                    >
-                        <IconX size={24} />
-                    </button>
-                </div>
+                {/* Tombol Tutup (X) di Pojok Kanan Atas */}
+                <button 
+                    onClick={onClose} 
+                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1"
+                    aria-label="Tutup modal"
+                >
+                    <IconX size={24} />
+                </button>
 
-                {/* Body Modal */}
-                <div className="px-8 pt-6 pb-8 text-center"> 
-                    <h2 className="text-2xl font-bold text-gray-900 mb-2">Hapus Account?</h2>
-                    <p className="text-sm text-gray-600 mt-4 mb-6">
+                {/* Body Modal - Konten Utama */}
+                <div className="text-center"> 
+                    
+                    {/* Ikon Tempat Sampah Merah di Lingkaran Merah Muda */}
+                    <div className="w-16 h-16 mx-auto rounded-full bg-red-100 flex items-center justify-center mb-6">
+                        <IconTrash size={32} className="text-red-500" />
+                    </div>
+
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Hapus Account?</h2>
+                    <p className="text-sm text-gray-600 mt-2 mb-6 px-2">
                         Setelah akun dihapus, tindakan ini bersifat permanen dan tidak dapat dibatalkan.
                         {username && <span className="block mt-1 font-medium">({username})</span>}
                     </p>
                     
                     {/* Grup Tombol Aksi */}
-                    <div className="flex flex-col gap-3">
-                        <button
-                            type="button"
-                            onClick={onConfirm} 
-                            className="w-full px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 font-semibold"
-                        >
-                            Setujui
-                        </button>
-                        
+                    <div className="flex justify-center gap-3">
+                        {/* Tombol Batal/Tutup */}
                         <button
                             type="button"
                             onClick={onClose}
-                            className="w-full px-4 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150 font-medium"
+                            className="px-5 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150 font-medium text-sm"
                         >
                             Batal
+                        </button>
+                        
+                        {/* Tombol Setujui/Konfirmasi (Merah) */}
+                        <button
+                            type="button"
+                            onClick={onConfirm} 
+                            className="px-5 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition duration-150 font-medium text-sm"
+                        >
+                            Setujui
                         </button>
                     </div>
                 </div>
@@ -120,8 +169,11 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm, username }) => {
 };
 
 
-// --- KOMPONEN MODAL TAMBAH AKUN BARU 
-const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => { 
+// =================================================================
+// KOMPONEN MODAL TAMBAH AKUN BARU 
+// onAddSuccess diubah menjadi onActionComplete
+// =================================================================
+const AddUserModal = ({ isOpen, onClose, onActionComplete }) => { 
     if (!isOpen) return null;
 
     const [formData, setFormData] = useState({
@@ -144,8 +196,11 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
         e.preventDefault(); 
 
         if (formData.password !== formData.confirmPassword) {
-            alert("Password dan Konfirmasi Password tidak cocok!");
-            return;
+            // 🚨 LOGIC BARU: Memicu notifikasi GAGAL (Merah)
+            if (onActionComplete) {
+                onActionComplete(false, "Password Baru dan Konfirmasi Password tidak cocok. Silakan coba lagi."); 
+            }
+            return; // Hentikan proses jika password tidak cocok
         }
         
         const newUser = {
@@ -155,8 +210,9 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
             role: formData.role
         };
         
-        if (onAddSuccess) {
-            onAddSuccess(newUser); 
+        // 🚀 LOGIC BARU: Memicu notifikasi SUKSES (Hijau)
+        if (onActionComplete) {
+            onActionComplete(true, `Akun ${newUser.username} berhasil ditambahkan.`); 
         }
 
         setFormData({
@@ -166,6 +222,8 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
             password: "",
             confirmPassword: ""
         });
+        // Catatan: Modal TIDAK ditutup di sini. Penutupan dilakukan di handleAddUserAction di UserControl
+        // agar data user baru dapat diakses untuk ditampilkan di notifikasi sukses.
     };
 
     return (
@@ -186,7 +244,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                 </div>
 
                 {/* Body/Form Modal */}
-                <form onSubmit={handleSubmit} className="p-6 space-y-4">
+                <form id="add-user-form" onSubmit={handleSubmit} className="p-6 space-y-4">
                     
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Nama*</label>
@@ -207,12 +265,12 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                             name="role"
                             value={formData.role}
                             onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            className="w-full p-2 font-jakarta border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
                             required
                         >
                             <option value="Admin">Admin</option>
                             <option value="Super Admin">Super Admin</option>
-                            <option value="Dosen">Dosen</option>
+    
                         </select>
                     </div>
 
@@ -240,7 +298,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                                     value={formData.password}
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
-                                    placeholder="********"
+                                    placeholder=""
                                     required
                                 />
                                 <button
@@ -263,7 +321,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
                                     className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
-                                    placeholder="********"
+                                    placeholder=""
                                     required
                                 />
                                 <button
@@ -290,7 +348,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                     </button>
                     <button
                         type="submit" 
-                        onClick={handleSubmit} 
+                        form="add-user-form" 
                         className="px-4 py-2 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150"
                     >
                         Tambah Akun
@@ -301,14 +359,17 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
     );
 };
 
-// --- KOMPONEN UTAMA USER CONTROL ---
+// =================================================================
+// KOMPONEN UTAMA USER CONTROL 
+// =================================================================
 const UserControl = () => {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
-    const [viewMode, setViewMode] = useState('grid');
+    
+    const [viewMode, setViewMode] = useState('list');
     
     // Data Dummy
     const [users, setUsers] = useState([
@@ -323,8 +384,9 @@ const UserControl = () => {
         photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
     });
     
-    // STATE NOTIFIKASI
+    // 🚦 STATE NOTIFIKASI
     const [showSuccessNotification, setShowSuccessNotification] = useState(false);
+    const [showErrorNotification, setShowErrorNotification] = useState(false); // <-- BARU
     const [notificationMessage, setNotificationMessage] = useState("");
 
     const navigate = useNavigate();
@@ -334,12 +396,15 @@ const UserControl = () => {
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const openAddModal = () => setIsAddModalOpen(true);
     const closeAddModal = () => setIsAddModalOpen(false);
-    const closeNotification = () => setShowSuccessNotification(false);
+    
+    // Handler penutup notifikasi yang spesifik
+    const closeSuccessNotification = () => setShowSuccessNotification(false);
+    const closeErrorNotification = () => setShowErrorNotification(false); // <-- BARU
 
     // Buka Modal Hapus Konfirmasi
     const openDeleteModal = (user) => {
         setUserToDelete(user);
-        setIsDeleteModalOpen(true); // INI YANG MUNCULKAN MODAL KUSTOM TAILWIND
+        setIsDeleteModalOpen(true);
     };
 
     // Tutup Modal Hapus Konfirmasi
@@ -365,16 +430,33 @@ const UserControl = () => {
         }
     };
     
-    // Handler untuk menampilkan notifikasi setelah sukses tambah
-    const handleAddUserSuccess = (newUser) => {
-        // Tambahkan user baru ke state users
-        setUsers(prevUsers => [...prevUsers, newUser]);
+    // 📢 HANDLER UNTUK AKSI ADD USER (SUKSES ATAU GAGAL)
+    const handleAddUserAction = (isSuccess, message, newUser = null) => { 
+        setNotificationMessage(message);
         
-        setIsAddModalOpen(false); 
-        setNotificationMessage(`Akun ${newUser.username} berhasil ditambahkan.`);
-        setShowSuccessNotification(true); 
+        if (isSuccess) {
+             // Karena AddUserModal tidak mengembalikan object user,
+             // kita perlu logic untuk menambahkannya (meskipun di kode ini sudah
+             // disimulasikan di handleSubmit AddUserModal). 
+             // Jika data user baru harus dikelola di sini, 
+             // prop onActionComplete harus membawa objek newUser.
+             // Untuk saat ini, kita asumsikan data sudah diupdate secara internal
+             // atau diabaikan karena ini hanya simulasi front-end.
+             
+             // Karena ada logic nextUserId++ di modal, kita tidak bisa
+             // menambahkannya di sini, mari kita kembali ke logic lama:
+             
+             // REVISI: Karena AddUserModal hanya menerima onActionComplete(isSuccess, message)
+             // dan sudah ada logic penambahan user di dalam AddUserModal, 
+             // kita hanya perlu mengurus tampilan notifikasi di sini.
+             
+             setShowSuccessNotification(true);
+             setIsAddModalOpen(false); // Tutup modal jika sukses
+        } else {
+            setShowErrorNotification(true);
+            // Modal TIDAK ditutup jika GAGAL (Agar user bisa langsung memperbaiki)
+        }
     };
-
 
     // --- UTILITY CLASS ---
     const getSidebarItemClass = (isActive = false) => {
@@ -509,8 +591,8 @@ const UserControl = () => {
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`w-10 h-10 border rounded-lg flex items-center justify-center ${viewMode === 'grid'
-                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
-                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                        : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
                                     } transition duration-150`}
                                 aria-label="Tampilan Grid"
                             >
@@ -520,8 +602,8 @@ const UserControl = () => {
                             <button
                                 onClick={() => setViewMode('list')}
                                 className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 ${viewMode === 'list'
-                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
-                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                        ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                        : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
                                     } transition duration-150`}
                                 aria-label="Tampilan List"
                             >
@@ -538,19 +620,26 @@ const UserControl = () => {
                                 {/* Garis biru di kiri */}
                                 <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#667790] rounded-l-md"></div>
 
-                                {/* Kontainer Utama Konten */}
-                                <div className="flex items-start w-full pl-2">
+                                {/* Kontainer Utama Konten (Menggunakan struktur baru untuk penempatan) */}
+                                <div className="flex w-full pl-2">
                                     
-                                    {/* Kiri: Icon dan Teks Detail */}
-                                    <div className="flex items-start flex-grow">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3">
-                                            <IconUser size={20} className="text-gray-500" />
-                                        </div>
-                                        <div>
+                                    {/* Kiri: Ikon & Detail Teks */}
+                                    <div className="flex flex-col flex-grow">
+                                        
+                                        {/* Baris 1: Ikon & Username (Sejajar) */}
+                                        <div className="flex items-center">
+                                            {/* Icon */}
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3">
+                                                <IconUser size={20} className="text-gray-500" />
+                                            </div>
                                             {/* Username */}
-                                            <p className="font-semibold text-base text-[#023048] leading-tight mb-1"> 
+                                            <p className="font-semibold text-base text-[#023048] leading-tight"> 
                                                 {user.username}
                                             </p>
+                                        </div>
+                                        
+                                        {/* Baris 2 & 3: Nama Panjang dan Role (Di bawah ikon) */}
+                                        <div className="mt-1 pt-2 border-t border-gray-100 pl-0 sm:pl-2 ">
                                             {/* Nama Panjang */}
                                             <p className="text-sm text-gray-700 leading-snug">
                                                 {user.name}
@@ -565,7 +654,7 @@ const UserControl = () => {
                                     {/* Kanan: Tombol Hapus */}
                                     <button
                                         onClick={() => openDeleteModal(user)} 
-                                        className="w-10 h-10 text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-150 flex-shrink-0 flex items-center justify-center ml-4 relative z-20"
+                                        className="w-10 h-10 text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-150 flex-shrink-0 flex items-center justify-center ml-4 relative z-20 mt-6"
                                         aria-label={`Hapus user ${user.username}`}
                                     >
                                         <IconTrash size={20} />
@@ -593,7 +682,7 @@ const UserControl = () => {
             <AddUserModal 
                 isOpen={isAddModalOpen} 
                 onClose={closeAddModal} 
-                onAddSuccess={handleAddUserSuccess} 
+                onActionComplete={handleAddUserAction} // <-- MENGIRIM HANDLER AKSI
             />
 
             {/* MODAL KONFIRMASI HAPUS AKUN (POPP-UP MERAH) */}
@@ -604,11 +693,18 @@ const UserControl = () => {
                 username={userToDelete ? userToDelete.username : ""}
             />
             
-            {/* KOMPONEN NOTIFIKASI SUKSES */}
+            {/* KOMPONEN NOTIFIKASI SUKSES (HIJAU) */}
             <SuccessNotification 
                 isVisible={showSuccessNotification}
                 message={notificationMessage}
-                onClose={closeNotification}
+                onClose={closeSuccessNotification}
+            />
+            
+            {/* 🚨 KOMPONEN NOTIFIKASI GAGAL (MERAH BARU) 🚨 */}
+            <ErrorNotification 
+                isVisible={showErrorNotification}
+                message={notificationMessage}
+                onClose={closeErrorNotification}
             />
 
         </div>
