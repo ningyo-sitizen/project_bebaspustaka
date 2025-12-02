@@ -1,5 +1,6 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
+import { useNavigate } from "react-router-dom";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -36,53 +37,68 @@ ChartJS.register(
 );
 
 function Dashboard() {
-      const [profileData, setProfileData] = useState({
+    //data dummy
+    const [data, setData] = useState([
+        { id: 1, name: "Hoshimi Miyabi", nim: "1234", jurusan: "TIK", statusbebaspustakanya: 0 },
+        { id: 2, name: "Oscar Pramudyas Astra Ozora", nim: "5678", jurusan: "TIK", statusbebaspustakanya: 0 },
+        { id: 3, name: "Zahra Byanka Anggrita Widagdo", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
+        { id: 4, name: "Zuriel Joseph Jowy Mone", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
+        { id: 5, name: "Zahrah Purnama Alam", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
+    ]);
+
+    //goto
+    const goto = useNavigate();
+
+    const [profileData, setProfileData] = useState({
         name: "Loading...",
         username: "Loading...",
         role: "Admin",
-      });
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [chartData, setChartData] = useState({
-        lineChart: null
     });
-
+    //dropdown
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
+    const [chartData, setChartData] = useState({
+        lineChart: null
+    });
+
+
     const [visitors, setVisitors] = useState([]);
 
+    //ambil data apapun (user, chart)
     useEffect(() => {
-    const fetchProfile = async () => {
-      const user = JSON.parse(localStorage.getItem('user'))
-      const user_id = user.user_id;
-      const token = localStorage.getItem('token')
-      try {
-        // Ganti URL sesuai endpoint backend Anda
-        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
-          headers : {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-          }
-        });
+        const fetchProfile = async () => {
+            const user = JSON.parse(localStorage.getItem('user'))
+            const user_id = user.user_id;
+            const token = localStorage.getItem('token')
+            try {
+                // Ganti URL sesuai endpoint backend Anda
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
 
-        setProfileData(response.data);
+                setProfileData(response.data);
 
-        
-      } catch (error) {
-        console.error("Gagal mengambil data profil:", error);
-        // Tampilkan pesan default jika gagal
-        setProfileData({
-            name: "Gagal memuat",
-            username: "N/A",
-            role: "N/A",
-        });
-        // Tambahkan alert jika perlu
-        // alert("Gagal terhubung ke server untuk memuat data profil.");
-      } finally {
-        setLoading(false);
-      }
-    };
+
+            } catch (error) {
+                console.error("Gagal mengambil data profil:", error);
+                // Tampilkan pesan default jika gagal
+                setProfileData({
+                    name: "Gagal memuat",
+                    username: "N/A",
+                    role: "N/A",
+                });
+                // Tambahkan alert jika perlu
+                // alert("Gagal terhubung ke server untuk memuat data profil.");
+            } finally {
+                setLoading(false);
+            }
+        };
         fetchProfile();
         fetchChartData();
     }, []);
@@ -146,7 +162,7 @@ function Dashboard() {
                     <IconChevronDown size={18} className="text-gray-600" />
 
                     <p className="font-semibold text-sm text-[#023048] select-none">
-                        <p>Hai,&nbsp;</p>
+                        <span>Hai,&nbsp;</span>
                         {profileData.username}
                     </p>
 
@@ -164,7 +180,7 @@ function Dashboard() {
                             <IconUser size={24} className="text-gray-500" />
                             <div>
                                 <p className="font-semibold text-sm text-[#023048]">
-                                {profileData.username}
+                                    {profileData.username}
                                 </p>
                                 <p className="text-xs text-gray-500">{profileData.role}</p>
                             </div>
@@ -247,9 +263,9 @@ function Dashboard() {
                                 <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M9 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 20h14" />
+                                <path d="M4 20h14" />
                             </svg>
-                            <Link to="/analytic">
+                            <Link to="/Analytic">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Data Analitik
                                 </h2>
@@ -320,9 +336,10 @@ function Dashboard() {
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
 
-                    {/* ini chart */}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                        <div className="flex flex-col">
+                        {/* ini chart */}
+                        <div className="flex flex-col h-full">
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                 <h3 className="font-semibold text-lg mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
                                 <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline">
@@ -330,15 +347,15 @@ function Dashboard() {
                                 </p>
                             </div>
 
-                            <div className=" bg-white p-6">
+                            <div className="shadow-sm bg-white p-2 flex-1 overflow-x-auto">
 
                                 {chartData.lineChart && (
-                                    <div className="w-full aspect-[2/1]">
+                                    <div className="w-full min-w-[500px]">
                                         <Line
                                             data={chartData.lineChart}
                                             options={{
                                                 responsive: true,
-                                                maintainAspectRatio: false,
+                                                maintainAspectRatio: true,
                                                 plugins: {
                                                     legend: {
                                                         position: 'top',
@@ -386,19 +403,19 @@ function Dashboard() {
                             </div>
                         </div>
 
-
-
-                            {/* tabel kanan */}
-                        <div className="flex flex-col">
+                        {/* tabel kanan */}
+                        <div className="flex flex-col h-full">
 
                             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                 <h3 className="font-semibold text-lg mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
-                                <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline">
+                                <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline"
+                                    onClick={() => goto('/approval')}
+                                >
                                     Lihat data &gt;
                                 </p>
                             </div>
 
-                            <div className="bg-white rounded-2xl shadow-sm p-6">
+                            <div className="bg-white shadow-sm p-6">
 
                                 <div className='text-[#616161] text-sm font-light text-center mb-6'>
                                     <p>Data bebas pustaka mencatat status pengajuan</p>
@@ -408,54 +425,57 @@ function Dashboard() {
                                 <div className="overflow-x-auto">
                                     <table className="w-full border-collapse">
                                         <thead>
-                                            <tr className="bg-gray-50 border-b-2 border-gray-200">
-                                                <th className="text-left p-4 font-semibold text-gray-600">Nama</th>
-                                                <th className="text-left p-4 font-semibold text-gray-600">Nim</th>
-                                                <th className="text-left p-4 font-semibold text-gray-600">Jurusan</th>
-                                                <th className="text-left p-4 font-semibold text-gray-600">Status</th>
-                                                <th className="text-left p-4 font-semibold text-gray-600">Tindakan</th>
+                                            <tr className="bg-[#667790] border-b-2 border-gray-200">
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">No</th>
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">Nama</th>
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">Nim</th>
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">Jurusan</th>
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">Status</th>
+                                                <th className="text-left px-2 font-thin text-center text-sm text-white">Tindakan</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            <tr className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="p-4">John Doe</td>
-                                                <td className="p-4">12345678</td>
-                                                <td className="p-4">Teknik Informatika</td>
-                                                <td className="p-4">
-                                                    <span className="px-2 py-1 bg-yellow-100 text-yellow-800 rounded-full text-xs">
-                                                        Pending
-                                                    </span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <button className='px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm'>
-                                                        Setuju
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                            <tr className="border-b border-gray-100 hover:bg-gray-50">
-                                                <td className="p-4">Jane Smith</td>
-                                                <td className="p-4">87654321</td>
-                                                <td className="p-4">Sistem Informasi</td>
-                                                <td className="p-4">
-                                                    <span className="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs">
-                                                        Disetujui
-                                                    </span>
-                                                </td>
-                                                <td className="p-4">
-                                                    <button className='px-4 py-2 bg-gray-300 text-gray-600 rounded-lg cursor-not-allowed text-sm' disabled>
-                                                        Selesai
-                                                    </button>
-                                                </td>
-                                            </tr>
+                                            {data.map((item, index) => (
+                                                <tr
+                                                    key={item.id}
+                                                    className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50"
+                                                >
+                                                    <td className="p-1">{index + 1}</td>
+                                                    <td className="p-3 text-left whitespace-nowrap">{item.name}</td>
+                                                    <td className="p-1">{item.nim}</td>
+                                                    <td className="p-1">{item.jurusan}</td>
+                                                    <td className="p-1">
+                                                        <span
+                                                            className={`px-2 py-1 rounded-full text-xs ${item.statusbebaspustakanya === 0
+                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                : "bg-green-100 text-green-800"
+                                                                }`}
+                                                        >
+                                                            {item.statusbebaspustakanya === 0 ? "Pending" : "Disetujui"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="p-1">
+                                                        <button
+                                                            className={`px-4 py-2 rounded-lg text-sm transition-colors ${item.statusbebaspustakanya === 0
+                                                                ? "bg-blue-600 text-white hover:bg-blue-700"
+                                                                : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                                                }`}
+                                                            disabled={item.statusbebaspustakanya !== 0}
+                                                        >
+                                                            {item.statusbebaspustakanya === 0 ? "Setuju" : "Selesai"}
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
                                         </tbody>
+
                                     </table>
                                 </div>
-
                             </div>
-                            
                         </div>
+
                     </div>
-                    
+
                 </main>
             </div>
 

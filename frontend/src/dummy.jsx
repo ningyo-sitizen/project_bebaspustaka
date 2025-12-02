@@ -1,16 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
 import { DayPicker } from "react-day-picker";
 import 'react-day-picker/dist/style.css';
-import {
-    IconHome,
-    IconChartBar,
-    IconBell,
-    IconLogout,
-    IconUser,
-    IconChevronDown,
-} from "@tabler/icons-react";
 
 import { data, Link } from 'react-router-dom';
 import "./App.css";
@@ -19,7 +10,6 @@ import axios from "axios";
 
 function Approval() {
     const [data, setData] = useState([]);
-    const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [checkedItems, setCheckedItems] = useState({});
     const [approvedAll, setApprovedAll] = useState(false);
@@ -28,8 +18,7 @@ function Approval() {
 
     const fetchData = useCallback(async () => {
         try {
-            setLoading(true);
-            const res = await axios.get("http://localhost:8080/api/approval/data", {
+            const res = await axios.get("http://localhost:8080/api/bepus/data", {
                 params: { search }
             });
 
@@ -50,22 +39,8 @@ function Approval() {
         } catch (err) {
             console.error(err);
             alert("Gagal mengambil data.");
-        } finally {
-            setLoading(false);
         }
     }, [search]);
-
-    //GET login user
-    const [profileData, setProfileData] = useState({
-        name: "Loading...",
-        username: "Loading...",
-        role: "Admin",
-    });
-
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
 
     //ceklis
     const cekAll = () => {
@@ -202,96 +177,31 @@ function Approval() {
         console.log("Update BEPUS ID:", selectedIDs);
     };
 
+
+
     useEffect(() => {
         fetchData();
     }, [fetchData]);
 
-    useEffect(() => {
-        const fetchProfile = async () => {
-            const user = JSON.parse(localStorage.getItem('user'))
-            const user_id = user.user_id;
-            const token = localStorage.getItem('token')
-            try {
-                // Ganti URL sesuai endpoint backend Anda
-                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
 
-                setProfileData(response.data);
-
-
-            } catch (error) {
-                console.error("Gagal mengambil data profil:", error);
-                // Tampilkan pesan default jika gagal
-                setProfileData({
-                    name: "Gagal memuat",
-                    username: "N/A",
-                    role: "N/A",
-                });
-                // Tambahkan alert jika perlu
-                // alert("Gagal terhubung ke server untuk memuat data profil.");
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProfile();
-    }, []);
 
     return (
-
         <main className="font-jakarta bg-[#EDF1F3] w-screen min-h-screen">
 
-            <header className="w-full bg-white border-b p-4 flex justify-end flex-wrap relative">
-                <div
-                    className="flex items-center gap-2 cursor-pointer pr-4 relative"
-                    onClick={toggleDropdown}
-                >
-                    <IconChevronDown size={18} className="text-gray-600" />
-                    <p className="font-semibold text-sm text-[#023048] select-none truncate max-w-[120px] sm:max-w-[100px]"> Hai,&nbsp;{profileData.username} </p>
-
-                    <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                        <IconUser size={24} className="text-gray-500" />
+            <header className="fixed bg-white bg-cover bg-no-repeat bg-center w-full h-20 top-0 z-50">
+                <div className="absolute inline-flex m-2 right-24">
+                    <div className="inline-flex items-center">
+                        <p>Hai,&nbsp;</p>
+                        {/* ini nanti terhubung sama database akun pustakawan */}
+                        <p className="mr-3">misal sini Zahra</p>
+                    </div>
+                    <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/0b728be1-b553-4462-b4c9-41c894ee5f79.jpeg')] 
+                   bg-cover bg-center rounded-full w-16 h-16">
                     </div>
                 </div>
-
-                {isDropdownOpen && (
-                    <div className="absolute right-4 sm:right-2 top-full mt-2 w-64 sm:w-52 bg-white rounded-md shadow-lg border z-10">
-
-                        <div className="flex items-center gap-3 p-4 border-b">
-                            <IconUser size={24} className="text-gray-500" />
-                            <div className="truncate">
-                                <p className="font-semibold text-sm text-[#023048] truncate">{profileData.username}</p>
-                                <p className="text-xs text-gray-500 truncate">{profileData.role}</p>
-                            </div>
-
-                        </div>
-
-                        <div className="p-2 space-y-1">
-                            <a
-                                href="/profile"
-                                className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
-                                onClick={() => setIsDropdownOpen(false)}
-                            >
-                                <IconUser size={18} className="text-white" /> Profile
-                            </a>
-                            <a
-                                href="/logout"
-                                className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                onClick={() => setIsDropdownOpen(false)}
-                            >
-                                <IconLogout size={18} /> Keluar
-                            </a>
-
-                        </div>
-                    </div>
-                )}
             </header>
 
-
-            <div className="flex min-h-screen">
+            <div className="flex pt-20 min-h-screen">
                 {/* intinya ini sidebar */}
                 <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
                     <div className="flex items-center ml-4">
@@ -402,10 +312,10 @@ function Approval() {
 
 
                 {/* TABLE APPROVAL */}
-                <main className="ml-0 md:ml-64 flex-1 p-4 md:p-8 overflow-x-auto">
+                <main className="ml-64 flex-1 p-8">
 
-                    <p className="font-semibold text-2xl text-black mb-8 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
-                    <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium">
+                    <p className="font-semibold text-2xl text-black mb-8"> Konfirmasi Data Bebas Pustaka </p>
+                    <div className="inline-flex items-center font-medium text-lg text-[#9A9A9A]">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             width="18"
                             height="18"
@@ -415,6 +325,7 @@ function Approval() {
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
+                            className="icon icon-tabler icons-tabler-outline icon-tabler-users"
                         >
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
@@ -422,15 +333,12 @@ function Approval() {
                             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                             <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                         </svg>
-                        <div className="flex">
-                            <p className="text-lg ml-1">xxxx &nbsp;</p>
-                            <p className="text-lg m-0">permohonan bebas pustaka</p>
-                        </div>
+                        {/* mainin db ini */}
+                        <p className="ml-1">xxxx &nbsp;</p>
+                        <p className="mr-3">permohonan bebas pustaka</p>
                     </div>
 
-
-
-                    <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
+                    <div className="flex justify-between items-center mt-4 relative">
                         <div className="flex items-center text-[#9A9A9A] font-semibold">
 
                             <p className="mr-2">Tunjukkan</p>
@@ -660,8 +568,8 @@ function Approval() {
 
                     <div className='grid grid-cols-1 gap-8 '>
 
-                        <div className="overflow-x-auto w-full">
-                            <table className="min-w-full border-collapse mt-7">
+                        <div className="overflow-x-auto relative bottom-0">
+                            <table className="w-full border-collapse mt-7">
                                 <thead>
                                     <tr className="bg-gray-50 border-b-2 border-black">
                                         <th className="text-left p-4 font-normal text-gray-600 bg-[#667790]">
@@ -748,8 +656,8 @@ function Approval() {
                                                     className="relative bg-[url('https://cdn.designfast.io/image/2025-11-21/b89ae749-b5b2-40e4-967d-18be9ef8aed8.png')] bg-cover bg-no-repeat bg-center w-12 h-12">
                                                 </div>
                                             </td>
-                                            <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name}</td>
-                                            <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim}</td>
+                                            <td className="p-4 whitespace-nowrap overflow-x-auto">{item.name}</td>
+                                            <td className="p-4 whitespace-nowrap overflow-x-auto">{item.nim}</td>
 
                                             {/* status pengembalian dan bebas pustaka
 
@@ -820,10 +728,10 @@ function Approval() {
 
                     </div>
                     <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                        onClick={() => console.log("PDF clicked")}>Cetak ke PDF
+                        onClick={''}>Cetak ke PDF
                     </button>
 
-                    <div className="flex flex-wrap gap-2 justify-center mt-4 items-center">
+                    <div className="flex gap-2 justify-center mt-4 items-center">
                         {/* Prev */}
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -842,6 +750,7 @@ function Approval() {
                                         ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
                                         : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
                                     }`}
+
                             >
                                 {num}
                             </button>
