@@ -89,7 +89,7 @@ exports.deleteUser = async (req, res) => {
         const deleteSql = 'DELETE FROM users WHERE user_id = ?';
         await bebaspustaka.query(deleteSql, [user_id]);
         
-        res.json({ message: 'User deleted successfully' });
+        res.status(201).json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error('Delete error:', err);
         res.status(500).json({ message: 'Server error' });
