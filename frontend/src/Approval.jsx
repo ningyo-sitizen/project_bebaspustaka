@@ -242,7 +242,7 @@ function Approval() {
 
     return (
 
-        <main className="font-jakarta bg-[#EDF1F3] w-screen min-h-screen">
+        <main className="font-jakarta bg-[#F5F6FA] w-screen min-h-screen">
 
             <header className="w-full bg-white border-b p-4 flex justify-end flex-wrap relative">
                 <div
