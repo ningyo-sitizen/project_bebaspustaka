@@ -259,7 +259,7 @@ const handleSubmit = async (e) => {
           >
             <IconChevronDown size={18} className="text-gray-600" />
             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-              Hai, {formData.name.split(" ")[0]}
+              Hai, {profileData.username}
             </p>
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
               <IconUser size={24} className="text-gray-500" />

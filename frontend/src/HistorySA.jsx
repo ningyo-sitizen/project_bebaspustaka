@@ -499,7 +499,7 @@ const History = () => {
                         <a href="/analytic" className={getSidebarItemClass()}>
                             <IconChartBar size={20} /> Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/approval" className={getSidebarItemClass()}>
                             <IconBell size={20} /> Konfirmasi Data
                         </a>
                         <a href="/user-control" className={getSidebarItemClass()}>
@@ -556,7 +556,7 @@ const History = () => {
                             </div>
                             <div className="p-2 space-y-1">
                                 <button
-                                    onClick={() => navigate("/profile")}
+                                    onClick={() => navigate("/profileSA")}
                                     className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                 >
                                     <IconUser size={18} /> Profile

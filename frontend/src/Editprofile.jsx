@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";;
 import axios from "axios";
 import {
+  IconUsers,
+  IconHistory,
   IconHome,
   IconChartBar,
   IconBell,
@@ -11,23 +13,75 @@ import {
   IconEye,
   IconEyeOff,
   IconMenu2,
+
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-const EditProfile = () => {
+
+export default function EditProfile() {
   // --- STATE MANAGEMENT ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // State untuk data formulir
-  const [formData, setFormData] = useState({
-    name: "Zahrah Purnama Alam",
-    username: "zhrahprnm",
-    newPassword: "",
-    confirmPassword: "",
+
+
+    const [profileData, setProfileData] = useState({
+      name: "Loading...",
+      username: "Loading...",
+      role: "Loading...",
+    });
+
+      const [formData, setFormData] = useState({
+      name: `${profileData.name}`,
+      username: "zhrahprnm",
+      role : "",
+      newPassword: "",
+     confirmPassword: "",
   });
 
-  
+    useEffect(() => {
+    const fetchProfile = async () => {
+      const user = JSON.parse(localStorage.getItem('user'))
+      const user_id = user.user_id;
+      const token = localStorage.getItem('token')
+      try {
+        // Ganti URL sesuai endpoint backend Anda
+        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
+          headers : {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+          }
+        });
+
+        setProfileData(response.data);
+
+        
+      } catch (error) {
+        console.error("Gagal mengambil data profil:", error);
+        // Tampilkan pesan default jika gagal
+        setProfileData({
+            name: "Gagal memuat",
+            username: "N/A",
+            role: "N/A",
+        });
+
+      }
+    };
+    
+    fetchProfile();
+  }, []);
+
+  useEffect(() => {
+  if (profileData && profileData.name !== "Loading...") {
+    setFormData(prev => ({
+      ...prev,
+      name: profileData.name,
+      username: profileData.username,
+      role: profileData.role
+    }));
+  }
+}, [profileData]);
 
   const navigate = useNavigate();
 
@@ -113,7 +167,7 @@ const handleSubmit = async (e) => {
         confirmPassword: ""
       }));
 
-      navigate("/profile");
+      navigate("/profileSA");
     }
 
   } catch (error) {
@@ -136,37 +190,36 @@ const handleSubmit = async (e) => {
     <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
 
       {/* SIDEBAR (RESPONSIVE) */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:static lg:h-auto`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
-              <h1 className="text-lg font-medium text-[#023048]">
-                Bebas Pustaka
-              </h1>
-            </div>
-            <div className="w-full border-b border-gray-200"></div>
-          </div>
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    } lg:static lg:h-auto`}
+            >
+                <div className="flex flex-col h-full">
+                    <div className="flex flex-col items-center p-6">
+                        <div className="flex items-center gap-4 mb-6">
+                            {/* Icon Bebas Pustaka */}
+                            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+                            <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+                        </div>
+                        <div className="w-full border-b border-gray-200"></div>
+                    </div>
 
-          <nav className="flex-1 px-6 space-y-4 pb-6">
-            <a href="/dashboard" className={getSidebarItemClass()}>
-              <IconHome size={20} />
-              Dashboard
-            </a>
-            <a href="/analytic" className={getSidebarItemClass()}>
-              <IconChartBar size={20} />
-              Data Analitik
-            </a>
-            <a href="/konfirmasi" className={getSidebarItemClass()}>
-              <IconBell size={20} />
-              Konfirmasi Data
-            </a>
-          </nav>
-        </div>
-      </aside>
+                    <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
+                        <a href="/dashboard" className={getSidebarItemClass()}>
+                            <IconHome size={20} />
+                            Dashboard
+                        </a>
+                        <a href="/analytic" className={getSidebarItemClass()}>
+                            <IconChartBar size={20} />
+                            Data Analitik
+                        </a>
+                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                            <IconBell size={20} />
+                            Konfirmasi Data
+                        </a>
+                    </nav>
+                </div>
+            </aside>
 
       {/* Overlay untuk Mobile */}
       {isSidebarOpen && (
@@ -198,7 +251,7 @@ const handleSubmit = async (e) => {
           >
             <IconChevronDown size={18} className="text-gray-600" />
             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-              Hai, {formData.name.split(" ")[0]}
+              Hai, {profileData.username}
             </p>
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
               <IconUser size={24} className="text-gray-500" />
@@ -214,13 +267,13 @@ const handleSubmit = async (e) => {
                   <p className="font-semibold text-sm text-[#023048]">
                     {formData.name}
                   </p>
-                  <p className="text-xs text-gray-500">Admin</p>
+                  <p className="text-xs text-gray-500">{profileData.role}</p>
                 </div>
               </div>
 
               <div className="p-2 space-y-1">
                 <button
-                  onClick={() => navigate("/profile")}
+                  onClick={() => navigate("/profileSA")}
                   className="flex items-center gap-3 p-2 w-full text-left text-sm bg-[#667790] text-white rounded-md"
                 >
                   <IconUser size={18} />
@@ -269,7 +322,7 @@ const handleSubmit = async (e) => {
                 <h2 className="text-lg sm:text-xl font-semibold text-[#023048]">
                   {formData.name}
                 </h2>
-                <p className="text-sm text-gray-500">Admin</p>
+                <p className="text-sm text-gray-500">{profileData.role}</p>
               </div>
             </div>
 
@@ -328,7 +381,7 @@ const handleSubmit = async (e) => {
                       <input
                         type="text"
                         readOnly
-                        defaultValue="Admin"
+                        Value={profileData.role}
                         className="w-full p-2 border border-gray-200 bg-gray-50 rounded-md text-gray-600 text-sm"
                       />
                     </div>
@@ -444,5 +497,3 @@ const handleSubmit = async (e) => {
     </div>
   );
 };
-
-export default EditProfile;

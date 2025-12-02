@@ -4,6 +4,17 @@ import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 import { data, Link } from 'react-router-dom';
 import "./App.css";
+import {
+  IconHome,
+  IconUsers,
+  IconHistory,
+  IconChartBar,
+  IconBell,
+  IconLogout,
+  IconUser,
+  IconChevronDown,
+  IconMenu2, 
+} from "@tabler/icons-react";
 
 import axios from "axios";
 
@@ -29,6 +40,14 @@ export default function Approval() {
     ]);
 
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+      const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen);
+  };
+    const [profileData, setProfileData] = useState({
+      name: "Loading...",
+      username: "Loading...",
+      role: "Admin",
+    });
 
     //ceklis
     const [checkedItems, setCheckedItems] = useState({});
@@ -165,9 +184,46 @@ export default function Approval() {
         //sisanya tar taro UPDATE status bebas pustaka ya
     };
 
+      useEffect(() => {
+    const fetchProfile = async () => {
+      const user = JSON.parse(localStorage.getItem('user'))
+      const user_id = user.user_id;
+      const token = localStorage.getItem('token')
+      try {
+        // Ganti URL sesuai endpoint backend Anda
+        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
+          headers : {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${token}`
+          }
+        });
+
+        setProfileData(response.data);
+
+        
+      } catch (error) {
+        console.error("Gagal mengambil data profil:", error);
+        // Tampilkan pesan default jika gagal
+        setProfileData({
+            name: "Gagal memuat",
+            username: "N/A",
+            role: "N/A",
+        });
+        // Tambahkan alert jika perlu
+        // alert("Gagal terhubung ke server untuk memuat data profil.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchProfile();
+  }, []); 
+  
     useEffect(() => {
         setCurrentPage(1);
     }, [search]);
+
+
 
 
     return (

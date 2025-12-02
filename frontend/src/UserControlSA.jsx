@@ -463,6 +463,8 @@ export default function UserControl(){
             setNotificationMessage(`Akun ${userToDelete.username} berhasil dihapus.`);
             setShowSuccessNotification(true);
 
+            
+
         } catch (error) {
             console.error("Error deleting user:", error);
             alert("Gagal menghapus user.");
