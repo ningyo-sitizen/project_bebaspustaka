@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react"; // ⭐️ Import useEffect
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // ⭐️ Import axios
 import {
-  IconHome,
   IconUsers,
   IconHistory,
+  IconHome,
   IconChartBar,
   IconBell,
   IconLogout,
@@ -13,7 +13,7 @@ import {
   IconMenu2, 
 } from "@tabler/icons-react";
 
-const Profile = () => {
+export default function Profile () {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [loading, setLoading] = useState(true); // ⭐️ State untuk loading
@@ -93,44 +93,44 @@ const Profile = () => {
     <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
       
       {/* SIDEBAR (RESPONSIVE) */}
-            <aside
-                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                    } lg:static lg:h-auto`}
-            >
-                <div className="flex flex-col h-full">
-                    <div className="flex flex-col items-center p-6">
-                        <div className="flex items-center gap-4 mb-6">
-                            {/* Icon Bebas Pustaka */}
-                            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
-                            <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
-                        </div>
-                        <div className="w-full border-b border-gray-200"></div>
-                    </div>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } lg:static lg:h-auto`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex flex-col items-center p-6">
+            <div className="flex items-center gap-4 mb-6">
+              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+              <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+            </div>
+            <div className="w-full border-b border-gray-200"></div>
+          </div>
 
-                    <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
+          <nav className="flex-1 px-6 pt-3 space-y-4 pb-6"> 
+                        <a href="/dashboardSA" className={getSidebarItemClass()}>
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/konfirmasiSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>
-                        <a href="/user-control" className={getSidebarItemClass(true)}>
+                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
                             <IconUsers size={20} />
                             User Control
                         </a>
-                        <a href="/history" className={getSidebarItemClass()}>
+                        <a href="/historySA" className={getSidebarItemClass()}>
                             <IconHistory size={20} />
                             History
                         </a>
-                    </nav>
-                </div>
-            </aside>
+          </nav>
+        </div>
+      </aside>
       
       {/* OVERLAY untuk Mobile Sidebar */}
       {isSidebarOpen && (
@@ -231,7 +231,7 @@ const Profile = () => {
 
               {/* GOTO EDIT PROFILE */}
               <button
-                onClick={() => navigate("/edit-profile")} 
+                onClick={() => navigate("/edit-profileSA")} 
                 className="pb-2 text-gray-500 hover:text-gray-700 text-sm"
               >
                 Edit Profile
@@ -268,5 +268,3 @@ const Profile = () => {
     </div>
   );
 };
-
-export default Profile;

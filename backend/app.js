@@ -39,6 +39,8 @@ app.use('/api/infoCard', require('./routes/infoCardRoutes'));
 
 app.use('/api/profile',require('./routes/UserInfoRoutes'))
 
+app.use('/api/logger',require('./routes/loggerRoutse'));
+
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });

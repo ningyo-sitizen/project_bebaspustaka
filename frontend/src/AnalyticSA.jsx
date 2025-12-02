@@ -13,7 +13,6 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-
 import { useState, useEffect, useCallback } from 'react';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
@@ -27,7 +26,6 @@ import {
     IconUser,
     IconChevronDown,
 } from "@tabler/icons-react";
-
 ChartJS.register(
     CategoryScale,
     LinearScale,
@@ -40,15 +38,8 @@ ChartJS.register(
     Legend
 );
 
-function Analytic() {
+export default function Dashboard() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [limit] = useState(10);
-
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
-
-
     const [user, setUser] = useState(null);
 
     const [tableData, setTableData] = useState(null);
@@ -114,13 +105,17 @@ function Analytic() {
 
     const [loanHistory, setLoanHistory] = useState([]);
     const [page, setPage] = useState(1);
+    const [limit] = useState(10);
 
+        const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
 
-    const [profileData, setProfileData] = useState({
+          const [profileData, setProfileData] = useState({
         name: "Loading...",
         username: "Loading...",
         role: "Admin",
-    });
+      });
     const handleResetFilters = () => {
         setSelectedYears([]);
         setSelectedType("");
@@ -149,7 +144,7 @@ function Analytic() {
         setShowFilterR(false);
     };
 
-
+    
 
     const autoBuildChartData = (data, selectedType) => {
         const monthLabels = [
@@ -231,77 +226,77 @@ function Analytic() {
         }
     }, [selectedYears, selectedType, tableLimitLeft]);
 
-    const fetchTableDataRight = useCallback(async (pageNum) => {
-        try {
-            const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
+const fetchTableDataRight = useCallback(async (pageNum) => {
+    try {
+        const token = localStorage.getItem("token");
+        const query = new URLSearchParams();
 
-            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+        if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+        if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+        if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
 
-            query.append("page", pageNum);
-            query.append("limit", tableLimitRight);
+        query.append("page", pageNum);
+        query.append("limit", tableLimitRight);
 
-            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
-                headers: { Authorization: `Bearer ${token}` }
+        const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        if (!res.ok) {
+            throw new Error(`HTTP error! status: ${res.status}`);
+        }
+        
+        const apiData = await res.json();
+        
+        console.log("📦 Raw API Response:", apiData);
+
+        if (apiData.totalPages) {
+            setTablePaginationRight({
+                currentPage: apiData.page || 1,
+                totalPages: apiData.totalPages || 1,
+                totalItems: apiData.totalRows || 0,
+                itemsPerPage: apiData.limit || tableLimitRight,
+                hasPrevPage: (apiData.page || 1) > 1,
+                hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
+            });
+        }
+
+        setTablePageRight(pageNum);
+
+        const transformedData = transformPagedDataForChart(apiData);
+        console.log("🔄 Transformed Data:", transformedData);
+
+        if (transformedData && transformedData.data && transformedData.years) {
+            const chart = autoBuildChartDataRight(transformedData);
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart,
+                doughnutChart: chart
             });
 
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
-
-            const apiData = await res.json();
-
-            console.log("📦 Raw API Response:", apiData);
-
-            if (apiData.totalPages) {
-                setTablePaginationRight({
-                    currentPage: apiData.page || 1,
-                    totalPages: apiData.totalPages || 1,
-                    totalItems: apiData.totalRows || 0,
-                    itemsPerPage: apiData.limit || tableLimitRight,
-                    hasPrevPage: (apiData.page || 1) > 1,
-                    hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
-                });
-            }
-
-            setTablePageRight(pageNum);
-
-            const transformedData = transformPagedDataForChart(apiData);
-            console.log("🔄 Transformed Data:", transformedData);
-
-            if (transformedData && transformedData.data && transformedData.years) {
-                const chart = autoBuildChartDataRight(transformedData);
-                setChartDataR({
-                    lineChart: chart,
-                    barChart: chart,
-                    pieChart: chart,
-                    doughnutChart: chart
-                });
-
-                setTableDataRight(transformedData);
-            } else {
-                console.error("❌ Invalid transformed data structure");
-                setTableDataRight({
-                    mode: "default_year",
-                    years: [],
-                    data: {}
-                });
-            }
-
-        } catch (err) {
-            console.error("❌ Error fetching table data right:", err);
-
+            setTableDataRight(transformedData);
+        } else {
+            console.error("❌ Invalid transformed data structure");
             setTableDataRight({
                 mode: "default_year",
                 years: [],
                 data: {}
             });
-
-            setTablePaginationRight(null);
         }
-    }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+
+    } catch (err) {
+        console.error("❌ Error fetching table data right:", err);
+        
+        setTableDataRight({
+            mode: "default_year",
+            years: [],
+            data: {}
+        });
+        
+        setTablePaginationRight(null);
+    }
+}, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
 
     const handleApplyFiltersLeft = useCallback(async () => {
         setTempYears(selectedYears);
@@ -342,6 +337,7 @@ function Analytic() {
             setIsLoadingLeft(false);
         }
     }, [selectedYears, selectedType]);
+
 
 const autoBuildChartDataRight = (apiResponse) => {
     console.log("📊 Chart Builder Input:", apiResponse);
@@ -461,7 +457,6 @@ const autoBuildChartDataRight = (apiResponse) => {
     return { labels: [], datasets: [] };
 };
 
->>>>>>> 037b5c0db1e90b4a8fcaf4454acb6c6c3f603843
     const handleApplyFiltersRight = async () => {
         setTempAngkatan(selectedAngkatan);
         setTempLembaga(selectedLembaga);
@@ -469,9 +464,8 @@ const autoBuildChartDataRight = (apiResponse) => {
         setShowFilterR(false);
 
         await fetchChartDataRight(1)
-
+        
     };
-
 const transformPagedDataForChart = (pagedData) => {
     console.log("🔄 Transform input:", pagedData);
     
@@ -498,7 +492,6 @@ const transformPagedDataForChart = (pagedData) => {
     const grouped = {};
     const years = new Set();
 
-    // Group data by year
     dataSource.forEach(row => {
         const year = row.tahun;
         years.add(year);
@@ -507,7 +500,6 @@ const transformPagedDataForChart = (pagedData) => {
             grouped[year] = [];
         }
 
-        // Detect structure and store accordingly
         if (row.program && row.lembaga) {
             grouped[year].push({
                 program: row.program,
@@ -529,7 +521,6 @@ const transformPagedDataForChart = (pagedData) => {
         }
     });
 
-    // Determine mode
     let mode = "default_year";
     const firstRow = dataSource[0];
     if (firstRow.program && firstRow.lembaga) {
@@ -550,7 +541,6 @@ const transformPagedDataForChart = (pagedData) => {
     
     return result;
 };
->>>>>>> 037b5c0db1e90b4a8fcaf4454acb6c6c3f603843
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;
@@ -691,187 +681,187 @@ const transformPagedDataForChart = (pagedData) => {
         );
     }
 
-    function DataTableRight({ data, pagination, onPageChange }) {
-
-        if (!data) {
-            return (
-                <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                    <p className="text-center text-gray-500">No data available</p>
-                </div>
-            );
-        }
-
-        if (!data.data) {
-            return (
-                <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                    <p className="text-center text-gray-500">Invalid data structure</p>
-                </div>
-            );
-        }
-
-        const { mode = "default_year", years = [], lembaga = [] } = data;
-
-        const getHeaders = () => {
-            switch (mode) {
-                case "default_year":
-                    return ["Tahun", "Total Peminjaman"];
-                case "per_lembaga":
-                    return ["Tahun", "Lembaga", "Total Peminjaman"];
-                case "per_program":
-                    return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
-                default:
-                    return ["Tahun", "Info", "Total"];
-            }
-        };
-
-        const headers = getHeaders();
-
-        const renderRows = () => {
-            if (!years || years.length === 0) {
-                return (
-                    <tr>
-                        <td colSpan={headers.length} className="text-center p-4 text-gray-500">
-                            No data available
-                        </td>
-                    </tr>
-                );
-            }
-
-            const sortedYears = [...years].sort((a, b) => b - a);
-
-            if (mode === "default_year") {
-                return sortedYears.map((year) => {
-                    if (!data.data[year] || !data.data[year][0]) return null;
-
-                    return (
-                        <tr key={year} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
-                        </tr>
-                    );
-                }).filter(Boolean);
-            }
-
-            if (mode === "per_lembaga") {
-                return sortedYears.flatMap((year) => {
-                    if (!data.data[year] || !Array.isArray(data.data[year])) return [];
-
-                    return data.data[year].map((item, i) => (
-                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga || '-'}</td>
-                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
-                        </tr>
-                    ));
-                });
-            }
-
-            if (mode === "per_program") {
-                return sortedYears.flatMap((year) => {
-                    if (!data.data[year] || !Array.isArray(data.data[year])) return [];
-
-                    return data.data[year].map((item, i) => (
-                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga || '-'}</td>
-                            <td className="p-3">{item.program || '-'}</td>
-                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
-                        </tr>
-                    ));
-                });
-            }
-
-            return (
-                <tr>
-                    <td colSpan={headers.length} className="text-center p-4 text-gray-500">
-                        Unknown data mode
-                    </td>
-                </tr>
-            );
-        };
-
-        const getTitle = () => {
-            switch (mode) {
-                case "default_year":
-                    return "Data Peminjaman Per Tahun";
-                case "per_lembaga":
-                    return "Data Peminjaman Per Lembaga";
-                case "per_program":
-                    return "Data Peminjaman Per Program Studi";
-                default:
-                    return "Data Peminjaman";
-            }
-        };
-
+function DataTableRight({ data, pagination, onPageChange }) {
+    
+    if (!data) {
         return (
             <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
-
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300">
-                        <thead className="bg-gray-100">
-                            <tr>
-                                {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-medium text-left">
-                                        {header}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {renderRows()}
-                        </tbody>
-                    </table>
-                </div>
-
-                {pagination && pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6 px-4">
-                        <div className="text-sm text-gray-600">
-                            Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
-                            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
-                            {pagination.totalItems} entries
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => onPageChange(1)}
-                                disabled={!pagination.hasPrevPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                First
-                            </button>
-                            <button
-                                onClick={() => onPageChange(pagination.currentPage - 1)}
-                                disabled={!pagination.hasPrevPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Previous
-                            </button>
-
-                            <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
-                                Page {pagination.currentPage} of {pagination.totalPages}
-                            </span>
-
-                            <button
-                                onClick={() => onPageChange(pagination.currentPage + 1)}
-                                disabled={!pagination.hasNextPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Next
-                            </button>
-                            <button
-                                onClick={() => onPageChange(pagination.totalPages)}
-                                disabled={!pagination.hasNextPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Last
-                            </button>
-                        </div>
-                    </div>
-                )}
+                <p className="text-center text-gray-500">No data available</p>
             </div>
         );
     }
+
+    if (!data.data) {
+        return (
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <p className="text-center text-gray-500">Invalid data structure</p>
+            </div>
+        );
+    }
+
+    const { mode = "default_year", years = [], lembaga = [] } = data;
+
+    const getHeaders = () => {
+        switch (mode) {
+            case "default_year":
+                return ["Tahun", "Total Peminjaman"];
+            case "per_lembaga":
+                return ["Tahun", "Lembaga", "Total Peminjaman"];
+            case "per_program":
+                return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
+            default:
+                return ["Tahun", "Info", "Total"];
+        }
+    };
+
+    const headers = getHeaders();
+
+    const renderRows = () => {
+        if (!years || years.length === 0) {
+            return (
+                <tr>
+                    <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                        No data available
+                    </td>
+                </tr>
+            );
+        }
+
+        const sortedYears = [...years].sort((a, b) => b - a);
+
+        if (mode === "default_year") {
+            return sortedYears.map((year) => {
+                if (!data.data[year] || !data.data[year][0]) return null;
+                
+                return (
+                    <tr key={year} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
+                    </tr>
+                );
+            }).filter(Boolean);
+        }
+
+        if (mode === "per_lembaga") {
+            return sortedYears.flatMap((year) => {
+                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+                
+                return data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga || '-'}</td>
+                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                    </tr>
+                ));
+            });
+        }
+
+        if (mode === "per_program") {
+            return sortedYears.flatMap((year) => {
+                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+                
+                return data.data[year].map((item, i) => (
+                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                        <td className="p-3 font-semibold">{year}</td>
+                        <td className="p-3">{item.lembaga || '-'}</td>
+                        <td className="p-3">{item.program || '-'}</td>
+                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                    </tr>
+                ));
+            });
+        }
+
+        return (
+            <tr>
+                <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                    Unknown data mode
+                </td>
+            </tr>
+        );
+    };
+
+    const getTitle = () => {
+        switch (mode) {
+            case "default_year":
+                return "Data Peminjaman Per Tahun";
+            case "per_lembaga":
+                return "Data Peminjaman Per Lembaga";
+            case "per_program":
+                return "Data Peminjaman Per Program Studi";
+            default:
+                return "Data Peminjaman";
+        }
+    };
+
+    return (
+        <div className="bg-white p-6 mt-8 rounded-xl shadow">
+            <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
+
+            <div className="overflow-x-auto">
+                <table className="w-full border-collapse border border-gray-300">
+                    <thead className="bg-gray-100">
+                        <tr>
+                            {headers.map((header, idx) => (
+                                <th key={idx} className="p-3 border font-medium text-left">
+                                    {header}
+                                </th>
+                            ))}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {renderRows()}
+                    </tbody>
+                </table>
+            </div>
+
+            {pagination && pagination.totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 px-4">
+                    <div className="text-sm text-gray-600">
+                        Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
+                        {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
+                        {pagination.totalItems} entries
+                    </div>
+
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => onPageChange(1)}
+                            disabled={!pagination.hasPrevPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            First
+                        </button>
+                        <button
+                            onClick={() => onPageChange(pagination.currentPage - 1)}
+                            disabled={!pagination.hasPrevPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Previous
+                        </button>
+
+                        <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
+                            Page {pagination.currentPage} of {pagination.totalPages}
+                        </span>
+
+                        <button
+                            onClick={() => onPageChange(pagination.currentPage + 1)}
+                            disabled={!pagination.hasNextPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Next
+                        </button>
+                        <button
+                            onClick={() => onPageChange(pagination.totalPages)}
+                            disabled={!pagination.hasNextPage}
+                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            Last
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
 
 
 
@@ -1130,36 +1120,32 @@ const transformPagedDataForChart = (pagedData) => {
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
-        const fetchProfile = async () => {
-            const user = JSON.parse(localStorage.getItem('user'))
-            const user_id = user.user_id;
-            const token = localStorage.getItem('token')
-            try {
-                // Ganti URL sesuai endpoint backend Anda
-                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
-                    headers: {
+            const fetchProfile = async () => {
+              const user = JSON.parse(localStorage.getItem('user'))
+              const user_id = user.user_id;
+              const token = localStorage.getItem('token')
+              try {
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
+                  headers : {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`
-                    }
+                  }
                 });
-
+        
                 setProfileData(response.data);
-
-
-            } catch (error) {
+        
+                
+              } catch (error) {
                 console.error("Gagal mengambil data profil:", error);
-                // Tampilkan pesan default jika gagal
                 setProfileData({
                     name: "Gagal memuat",
                     username: "N/A",
                     role: "N/A",
                 });
-                // Tambahkan alert jika perlu
-                // alert("Gagal terhubung ke server untuk memuat data profil.");
-            } finally {
+              } finally {
                 setLoading(false);
-            }
-        };
+              }
+            };
         fetchProfile();
         fetchYears();
         fetchChartDataLeft();
@@ -1347,8 +1333,9 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
             setChartDataR({
                 lineChart: { labels: [], datasets: [] },
                 barChart: { labels: [], datasets: [] },
-                pieChart: { labels: [], datasets: [] 
+                pieChart: { labels: [], datasets: [] }
             });
+            return;
         }
 
         const transformedData = transformPagedDataForChart(apiData);
@@ -1391,7 +1378,6 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
         });
     }
 }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
->>>>>>> 037b5c0db1e90b4a8fcaf4454acb6c6c3f603843
 
 
     return (
@@ -1406,7 +1392,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                     <IconChevronDown size={18} className="text-gray-600" />
 
                     <p className="font-semibold text-sm text-[#023048] select-none">
-                        <span>Hai,&nbsp;</span>
+                        <p>Hai,&nbsp;</p>
                         {profileData.username}
                     </p>
 
@@ -1424,7 +1410,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                             <IconUser size={24} className="text-gray-500" />
                             <div>
                                 <p className="font-semibold text-sm text-[#023048]">
-                                    {profileData.username}
+                                {profileData.username}
                                 </p>
                                 <p className="text-xs text-gray-500">{profileData.role}</p>
                             </div>
@@ -1433,7 +1419,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                         {/* Menu Dropdown */}
                         <div className="p-2 space-y-1">
                             <a
-                                href="/profile"
+                                href="/profileSA"
                                 className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
                                 onClick={() => setIsDropdownOpen(false)}
                             >
@@ -1455,7 +1441,8 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                 )}
             </header>
             <div className="flex pt-20 min-h-screen">
-                <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
+                <aside className="fixed flex flex-col top-0 left-0 w-64 md:w-64 sm:w-52 h-screen bg-white border-[2px] border-black-2 z-50">
+
                     <div className="flex items-center ml-4">
                         <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] 
                       w-[29px] h-[29px] bg-cover bg-center m-4"></div>
@@ -1482,7 +1469,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                             </svg>
-                            <Link to="/dashboard">
+                            <Link to="/dashboardSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Dashboard
                                 </h2>
@@ -1504,9 +1491,9 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                                 <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M9 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 20h14" />
+                                <path d="M4 20h14" />
                             </svg>
-                            <Link to="/analytic">
+                            <Link to="/analyticSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Data Analitik
                                 </h2>
@@ -1527,13 +1514,63 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
                                 <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
-                                <path d="M15 19l2 2l4 -4" />
+                                <path d="M15 19l2 2l4 -4" />
                             </svg>
-                            <Link to="/approval">
+
+                            <Link to="/approvalSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Konfirmasi Data
                                 </h2>
                             </Link>
+
+                        </div>
+                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#667790"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
+                                <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
+                                <path d="M15 19l2 2l4 -4" />
+                            </svg>
+
+                            <Link to="/usercontrolSA">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    user control
+                                </h2>
+                            </Link>
+
+                        </div>
+                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#667790"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
+                                <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
+                                <path d="M15 19l2 2l4 -4" />
+                            </svg>
+
+                            <Link to="/historySA">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    history
+                                </h2>
+                            </Link>
+
                         </div>
                     </div>
 
@@ -1553,7 +1590,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
                             <path d="M9 12h12l-3 -3" />
-                            <path d="M18 15l3 -3" />
+                            <path d="M18 15l3 -3" />
                         </svg>
 
                         <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
@@ -1574,7 +1611,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
 
-                    <InfoCards />
+                    <InfoCards/>
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
                         <div>
@@ -2007,4 +2044,3 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
     );
 }
 
-export default Analytic;

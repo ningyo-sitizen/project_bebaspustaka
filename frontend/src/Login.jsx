@@ -22,10 +22,37 @@ function Login() {
       if (res.ok) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        if(data.user.role == "super admin"){
-          navigate("/approval")
+        const userk = JSON.parse(localStorage.getItem('user'))
+        console.log("LOCALSTORAGE USER:", localStorage.getItem("user"));
+        console.log("PARSED:", JSON.parse(localStorage.getItem("user")));
+        const user_name = userk.username || userk.name;
+        const user_action = "user malakukan login"
+        const action_status = "berhasil"
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, "0");
+        const token = localStorage.getItem('token');
+        const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-        }else{
+        const time = `${datePart} ${timePart}`;   
+
+        const res = await fetch("http://localhost:8080/api/logger/logging", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ user_name, user_action, action_status, time })
+
+
+        })
+        const logger = await res.json();
+        console.log(logger);
+
+        if (data.user.role == "super admin") {
+          navigate("/dashboardSA")
+
+        } else {
           navigate("/dashboard");
         }
       } else {

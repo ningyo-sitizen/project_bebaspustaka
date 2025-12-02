@@ -205,17 +205,25 @@ const handleSubmit = async (e) => {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
+                        <a href="/dashboardSA" className={getSidebarItemClass()}>
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/konfirmasiSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
+                        </a>
+                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
+                            <IconUsers size={20} />
+                            User Control
+                        </a>
+                        <a href="/historySA" className={getSidebarItemClass()}>
+                            <IconHistory size={20} />
+                            History
                         </a>
                     </nav>
                 </div>

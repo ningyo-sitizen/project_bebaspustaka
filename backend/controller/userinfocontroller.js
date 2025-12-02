@@ -89,7 +89,7 @@ exports.deleteUser = async (req, res) => {
         const deleteSql = 'DELETE FROM users WHERE user_id = ?';
         await bebaspustaka.query(deleteSql, [user_id]);
         
-        res.json({ message: 'User deleted successfully' });
+        res.status(201).json({ message: 'User deleted successfully' });
     } catch (err) {
         console.error('Delete error:', err);
         res.status(500).json({ message: 'Server error' });
@@ -103,7 +103,6 @@ exports.register = async (req, res) => {
     }
     
     try {
-        // Cek username sudah ada atau belum
         const checkSql = 'SELECT username FROM users WHERE username = ?';
         const [existing] = await bebaspustaka.query(checkSql, [username]);
         
@@ -113,11 +112,9 @@ exports.register = async (req, res) => {
         
         const hashed = await bcrypt.hash(password, 10);
         
-        // ✅ TIDAK PERLU INSERT user_id (auto increment)
         const sql = 'INSERT INTO users (name, username, PASSWORD, role) VALUES (?, ?, ?, ?)';
         const [result] = await bebaspustaka.query(sql, [name, username, hashed, role]);
         
-        // ✅ Ambil user_id yang baru dibuat (auto increment ID)
         const insertedId = result.insertId;
         
         res.status(201).json({ 
