@@ -140,72 +140,100 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
 
-    // Basic validation
-    if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
-        alert("Semua field harus diisi!");
-        return;
-    }
+        // Basic validation
+        if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
+            alert("Semua field harus diisi!");
+            return;
+        }
 
-    if (formData.password !== formData.confirmPassword) {
-        alert("Password dan Konfirmasi Password tidak cocok!");
-        return;
-    }
+        if (formData.password !== formData.confirmPassword) {
+            alert("Password dan Konfirmasi Password tidak cocok!");
+            return;
+        }
 
-    if (formData.password.length < 6) {
-        alert("Password harus minimal 6 karakter!");
-        return;
-    }
+        if (formData.password.length < 6) {
+            alert("Password harus minimal 6 karakter!");
+            return;
+        }
 
-    try {
-        const response = await axios.post(
-            'http://localhost:8080/api/profile/register',
-            {
-                name: formData.name.trim(),
-                username: formData.username.trim(),
-                password: formData.password,
-                role: formData.role
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+        try {
+            const response = await axios.post(
+                'http://localhost:8080/api/profile/register',
+                {
+                    name: formData.name.trim(),
+                    username: formData.username.trim(),
+                    password: formData.password,
+                    role: formData.role
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
                 }
+            );
+
+            if (onAddSuccess) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem("user"));
+                    const token = localStorage.getItem("token");
+
+                    const actor = currentUser.username || currentUser.name;
+
+                    const user_action = `user berhasil menambahkan akun baru (${formData.username}) dengan role (${formData.role})`;
+                    const action_status = "berhasil";
+
+                    const now = new Date();
+                    const pad = (n) => n.toString().padStart(2, "0");
+                    const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+                    const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    const time = `${datePart} ${timePart}`;
+
+                    await fetch("http://localhost:8080/api/logger/logging", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ user_name: actor, user_action, action_status, time })
+                    });
+
+                } catch (logError) {
+                    console.error("Gagal mencatat log tambah user:", logError);
+                }
+
+                onAddSuccess(response.data);
             }
-        );
 
-        if (onAddSuccess) {
-            onAddSuccess(response.data);
+            setFormData({
+                name: "",
+                role: "Admin",
+                username: "",
+                password: "",
+                confirmPassword: ""
+            });
+            onClose();
+
+        } catch (error) {
+            console.error("Error adding user:", error);
+
+            if (error.response) {
+                // Server responded with error status
+                const serverMessage = error.response.data.message || error.response.data.error || "Unknown server error";
+                alert(`Gagal menambahkan user: ${serverMessage}`);
+            } else if (error.request) {
+                // No response received
+                alert("Gagal terhubung ke server. Periksa koneksi internet Anda.");
+            } else {
+                // Other errors
+                alert("Terjadi kesalahan: " + error.message);
+            }
         }
-
-        setFormData({
-            name: "",
-            role: "Admin",
-            username: "",
-            password: "",
-            confirmPassword: ""
-        });
-        onClose();
-
-    } catch (error) {
-        console.error("Error adding user:", error);
-        
-        if (error.response) {
-            // Server responded with error status
-            const serverMessage = error.response.data.message || error.response.data.error || "Unknown server error";
-            alert(`Gagal menambahkan user: ${serverMessage}`);
-        } else if (error.request) {
-            // No response received
-            alert("Gagal terhubung ke server. Periksa koneksi internet Anda.");
-        } else {
-            // Other errors
-            alert("Terjadi kesalahan: " + error.message);
-        }
-    }
-};
+    };
 
 
     return (
@@ -342,7 +370,7 @@ const handleSubmit = async (e) => {
 };
 
 // --- KOMPONEN UTAMA USER CONTROL ---
-export default function UserControl(){
+export default function UserControl() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -359,7 +387,20 @@ export default function UserControl(){
         role: "",
         photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
     });
-
+    const fetchProfileList = async () => {
+        const token = localStorage.getItem('token')
+        try {
+            const response = await axios.get(`http://localhost:8080/api/profile/getAllUser`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Gagal mengambil data profil:", error);
+        }
+    };
     useEffect(() => {
         const fetchProfile = async () => {
             const user = JSON.parse(localStorage.getItem('user'))
@@ -385,28 +426,6 @@ export default function UserControl(){
                     username: "N/A",
                     role: "N/A",
                 });
-                // Tambahkan alert jika perlu
-                // alert("Gagal terhubung ke server untuk memuat data profil.");
-            }
-        }
-        const fetchProfileList = async () => {
-            const token = localStorage.getItem('token')
-            try {
-                // Ganti URL sesuai endpoint backend Anda
-                const response = await axios.get(`http://localhost:8080/api/profile/getAllUser`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                setUsers(response.data);
-
-
-            } catch (error) {
-                console.error("Gagal mengambil data profil:", error);
-                // Tampilkan pesan default jika gagal
-
                 // Tambahkan alert jika perlu
                 // alert("Gagal terhubung ke server untuk memuat data profil.");
             }
@@ -448,7 +467,7 @@ export default function UserControl(){
         try {
             const token = localStorage.getItem('token');
 
-            // ✅ DELETE request
+            // 1️⃣ DELETE user
             await axios.delete(
                 `http://localhost:8080/api/profile/userInfo?user_id=${userToDelete.user_id}`,
                 {
@@ -456,14 +475,37 @@ export default function UserControl(){
                 }
             );
 
-            // Update UI
-            setUsers(users.filter(user => user.user_id !== userToDelete.user_id));
-            closeDeleteModal();
+            // 2️⃣ Logging Activity
+            const userk = JSON.parse(localStorage.getItem('user'));
 
+            const user_name = userk.username || userk.name;
+            const user_action = `user berhasil menghapus akun user ${userToDelete.username}`;
+            const action_status = "berhasil";
+
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, "0");
+            const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+            const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            const time = `${datePart} ${timePart}`;
+
+            await fetch("http://localhost:8080/api/logger/logging", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ user_name, user_action, action_status, time })
+            });
+
+            // 3️⃣ Update list user di frontend tanpa reload
+            setUsers(prev => prev.filter(u => u.user_id !== userToDelete.user_id));
+
+            // 4️⃣ Notifikasi berhasil
             setNotificationMessage(`Akun ${userToDelete.username} berhasil dihapus.`);
             setShowSuccessNotification(true);
 
-            
+            // 5️⃣ Tutup modal
+            closeDeleteModal();
 
         } catch (error) {
             console.error("Error deleting user:", error);
@@ -471,15 +513,18 @@ export default function UserControl(){
         }
     };
 
-    // Handler untuk menampilkan notifikasi setelah sukses tambah
-    const handleAddUserSuccess = (newUser) => {
-        // Tambahkan user baru ke state users
-        setUsers(prevUsers => [...prevUsers, newUser]);
 
+
+    // Handler untuk menampilkan notifikasi setelah sukses tambah
+    const handleAddUserSuccess = async (newUser) => {
         setIsAddModalOpen(false);
+
         setNotificationMessage(`Akun ${newUser.username} berhasil ditambahkan.`);
         setShowSuccessNotification(true);
+
+        await fetchProfileList(); // reload list setelah tambah user
     };
+
 
 
     // --- UTILITY CLASS ---
