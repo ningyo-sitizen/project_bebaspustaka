@@ -1,58 +1,75 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import authCheck from "./authCheck";
 import { DayPicker } from "react-day-picker";
-import "react-day-picker/dist/style.css";
+import 'react-day-picker/dist/style.css';
+import {
+    IconHome,
+    IconChartBar,
+    IconBell,
+    IconLogout,
+    IconUser,
+    IconChevronDown,
+} from "@tabler/icons-react";
+
 import { data, Link } from 'react-router-dom';
 import "./App.css";
-import {
-  IconHome,
-  IconUsers,
-  IconHistory,
-  IconChartBar,
-  IconBell,
-  IconLogout,
-  IconUser,
-  IconChevronDown,
-  IconMenu2, 
-} from "@tabler/icons-react";
 
 import axios from "axios";
 
-import authCheck from "./authCheck";
-
-export default function Approval() {
+function Approval() {
     authCheck();
-    const [data, setData] = useState([
-        { id: 1, name: "Hoshimi Miyabi", nim: "1234", pengembalian: 1, status: 0, statusbebaspustakanya: 0 },
-        { id: 2, name: "Jane Doe", nim: "5678", pengembalian: 0, status: 0, statusbebaspustakanya: 0 },
-        { id: 3, name: "Zahra Byanka Anggrita Widagdo", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 4, name: "Zuriel Joseph Jowy Mone", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 5, name: "Zahrah Purnama Alam", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 6, name: "Oscar Pramudyas Astra Ozora", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 7, name: "Dwi Aryo Prakoso Rahardjo", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 8, name: "MOHAMAD MUGHNI HAUNAN", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 9, name: "ZAHRAN PURNAMA ALAM", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 10, name: "Asaba Harumasa", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 11, name: "Yixuan", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 12, name: "Evelyn Chevalier", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 13, name: "MUHAMMAD FAIQ AJI ALGHIFARI", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 14, name: "AZKIA INTAN SAHILA", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-        { id: 15, name: "Echa Sativa Audrey", nim: "2307412035", pengembalian: 1, status: 1, statusbebaspustakanya: 1 },
-    ]);
-
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-      const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen);
-  };
-    const [profileData, setProfileData] = useState({
-      name: "Loading...",
-      username: "Loading...",
-      role: "Admin",
-    });
-
-    //ceklis
+    const [data, setData] = useState([]);
+    
+    const [loading, setLoading] = useState(false);
+    const [search, setSearch] = useState("");
     const [checkedItems, setCheckedItems] = useState({});
     const [approvedAll, setApprovedAll] = useState(false);
+    const [currentPage, setCurrentPage] = useState(1);
+    const rowsPerPage = 10;
+
+    const fetchData = useCallback(async () => {
+        try {
+            setLoading(true);
+            const res = await axios.get("http://localhost:8080/api/approval/data", {
+                params: { search }
+            });
+
+            const result =
+                res.data?.data?.rows || res.data?.data || res.data || [];
+
+            const formatted = result.map(d => ({
+                id: d.id,
+                name: d.nama || d.member_name,
+                nim: d.nim || d.member_id,
+                pengembalian: d.is_return,
+                status: d.approved,
+                statusbebaspustakanya: d.status_bepus,
+                ...d
+            }));
+
+            setData(formatted);
+        } catch (err) {
+            console.error(err);
+            alert("Gagal mengambil data.");
+        } finally {
+            setLoading(false);
+        }
+    }, [search]);
+
+    //GET login user
+    const [profileData, setProfileData] = useState({
+        name: "Loading...",
+        username: "Loading...",
+        role: "Admin",
+    });
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const toggleDropdown = () => {
+        setIsDropdownOpen(!isDropdownOpen);
+    };
+
+    //ceklis
     const cekAll = () => {
         const newValue = !approvedAll;
         setApprovedAll(newValue);
@@ -77,7 +94,6 @@ export default function Approval() {
     };
 
     //search
-    const [search, setSearch] = useState("");
     const filteredData = data.filter(
         item =>
             item.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -85,15 +101,13 @@ export default function Approval() {
     );
 
     //pagination
-    const [currentPage, setCurrentPage] = useState(1);
-    const rowsPerPage = 10;
     const indexOfLastRow = currentPage * rowsPerPage;
     const indexOfFirstRow = indexOfLastRow - rowsPerPage;
     const currentRows = filteredData.slice(indexOfFirstRow, indexOfLastRow);
 
     const totalPages = Math.ceil(filteredData.length / rowsPerPage);
     const pageNumbers = [];
-    const maxVisible = 5; // jumlah angka yang mau ditampilin
+    const maxVisible = 5;
 
     let start = Math.max(1, currentPage - Math.floor(maxVisible / 2));
     let end = start + maxVisible - 1;
@@ -103,9 +117,7 @@ export default function Approval() {
         start = Math.max(1, end - maxVisible + 1);
     }
 
-    for (let i = start; i <= end; i++) {
-        pageNumbers.push(i);
-    }
+    for (let i = start; i <= end; i++) pageNumbers.push(i);
 
     //next page
     const goto = useNavigate();
@@ -115,7 +127,7 @@ export default function Approval() {
     const [showFilter, setShowFilter] = useState(false);
     const [urutkanBy, setUrutkanBy] = useState(false);
 
-
+    //sort by
     const sortAZ = () => {
         const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
         setData(sorted);
@@ -125,6 +137,7 @@ export default function Approval() {
         setData(sorted);
     };
 
+    //pick date
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [rangeText, setRangeText] = useState('');
@@ -172,126 +185,117 @@ export default function Approval() {
             setRangeText("");
         }
     };
-
-    const SetujuiBepus = async () => {
-        setAlertBebasPustaka(false);
-
-        //sisanya tar taro UPDATE status bebas pustaka ya
-    };
-
     const SortByDate = async () => {
         setShowFilter(false);
 
         //sisanya tar taro UPDATE status bebas pustaka ya
     };
+    //acc n
+    const SetujuiBepus = async () => {
+        setAlertBebasPustaka(false);
 
-      useEffect(() => {
-    const fetchProfile = async () => {
-      const user = JSON.parse(localStorage.getItem('user'))
-      const user_id = user.user_id;
-      const token = localStorage.getItem('token')
-      try {
-        // Ganti URL sesuai endpoint backend Anda
-        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
-          headers : {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
-          }
-        });
+        const selectedIDs = Object.keys(checkedItems).filter(id => checkedItems[id]);
 
-        setProfileData(response.data);
+        if (selectedIDs.length === 0) {
+            alert("Ga ada yang dicentang cuy 😭");
+            return;
+        }
 
-        
-      } catch (error) {
-        console.error("Gagal mengambil data profil:", error);
-        // Tampilkan pesan default jika gagal
-        setProfileData({
-            name: "Gagal memuat",
-            username: "N/A",
-            role: "N/A",
-        });
-        // Tambahkan alert jika perlu
-        // alert("Gagal terhubung ke server untuk memuat data profil.");
-      } finally {
-        setLoading(false);
-      }
+        console.log("Update BEPUS ID:", selectedIDs);
     };
-    
-    fetchProfile();
-  }, []); 
-  
+
     useEffect(() => {
-        setCurrentPage(1);
-    }, [search]);
+        fetchData();
+    }, [fetchData]);
+
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const user = JSON.parse(localStorage.getItem('user'))
+            const user_id = user.user_id;
+            const token = localStorage.getItem('token')
+            try {
+                // Ganti URL sesuai endpoint backend Anda
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                setProfileData(response.data);
 
 
-
+            } catch (error) {
+                console.error("Gagal mengambil data profil:", error);
+                // Tampilkan pesan default jika gagal
+                setProfileData({
+                    name: "Gagal memuat",
+                    username: "N/A",
+                    role: "N/A",
+                });
+                // Tambahkan alert jika perlu
+                // alert("Gagal terhubung ke server untuk memuat data profil.");
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProfile();
+    }, []);
 
     return (
-        <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
 
-            <header className="w-full bg-white border-b p-4 flex justify-end relative">
+        <main className="font-jakarta bg-[#F5F6FA] w-screen min-h-screen">
 
+            <header className="w-full bg-white border-b p-4 flex justify-end flex-wrap relative">
                 <div
                     className="flex items-center gap-2 cursor-pointer pr-4 relative"
                     onClick={toggleDropdown}
                 >
                     <IconChevronDown size={18} className="text-gray-600" />
+                    <p className="font-semibold text-sm text-[#023048] select-none truncate max-w-[120px] sm:max-w-[100px]"> Hai,&nbsp;{profileData.username} </p>
 
-                    <p className="font-semibold text-sm text-[#023048] select-none">
-                        <p>Hai,&nbsp;</p>
-                        {profileData.username}
-                    </p>
-
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
+                    <div className="w-10 h-10 sm:w-8 sm:h-8 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
                         <IconUser size={24} className="text-gray-500" />
                     </div>
                 </div>
 
-                {/* Dropdown Menu */}
                 {isDropdownOpen && (
-                    <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
+                    <div className="absolute right-4 sm:right-2 top-full mt-2 w-64 sm:w-52 bg-white rounded-md shadow-lg border z-10">
 
-                        {/* Header Profile Dropdown (Default/Putih) */}
                         <div className="flex items-center gap-3 p-4 border-b">
                             <IconUser size={24} className="text-gray-500" />
-                            <div>
-                                <p className="font-semibold text-sm text-[#023048]">
-                                {profileData.username}
-                                </p>
-                                <p className="text-xs text-gray-500">{profileData.role}</p>
+                            <div className="truncate">
+                                <p className="font-semibold text-sm text-[#023048] truncate">{profileData.username}</p>
+                                <p className="text-xs text-gray-500 truncate">{profileData.role}</p>
                             </div>
+
                         </div>
 
-                        {/* Menu Dropdown */}
                         <div className="p-2 space-y-1">
                             <a
-                                href="/profileSA"
+                                href="/profile"
                                 className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
                                 onClick={() => setIsDropdownOpen(false)}
                             >
-                                <IconUser size={18} className="text-white" />
-                                Profile
+                                <IconUser size={18} className="text-white" /> Profile
                             </a>
-
-                            {/* Keluar (Logout) Link */}
                             <a
                                 href="/logout"
                                 className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
                                 onClick={() => setIsDropdownOpen(false)}
                             >
-                                <IconLogout size={18} />
-                                Keluar
+                                <IconLogout size={18} /> Keluar
                             </a>
+
                         </div>
                     </div>
                 )}
             </header>
 
-            <div className="flex pt-20 min-h-screen">
-                {/* intinya ini sidebar */}
-                <aside className="fixed flex flex-col top-0 left-0 w-64 md:w-64 sm:w-52 h-screen bg-white border-[2px] border-black-2 z-50">
 
+            <div className="flex min-h-screen">
+                {/* intinya ini sidebar */}
+                <aside className="fixed flex flex-col top-0 left-0 w-64 h-screen bg-white border-[2px] border-black-2 z-50">
                     <div className="flex items-center ml-4">
                         <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] 
                       w-[29px] h-[29px] bg-cover bg-center m-4"></div>
@@ -340,13 +344,14 @@ export default function Approval() {
                                 <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M9 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 20h14" />
+                                <path d="M4 20h14" />
                             </svg>
                             <Link to="/analyticSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Data Analitik
                                 </h2>
                             </Link>
+
                         </div>
 
                         <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
@@ -363,9 +368,8 @@ export default function Approval() {
                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                 <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
                                 <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
-                                <path d="M15 19l2 2l4 -4" />
+                                <path d="M15 19l2 2l4-4" />
                             </svg>
-
                             <Link to="/approvalSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Konfirmasi Data
@@ -373,7 +377,7 @@ export default function Approval() {
                             </Link>
 
                         </div>
-                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
+                                                <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
                             <svg
                                 xmlns="http://www.w3.org/2000/svg"
                                 viewBox="0 0 24 24"
@@ -423,8 +427,6 @@ export default function Approval() {
                         </div>
                     </div>
 
-
-
                     <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-auto px-3">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -439,7 +441,7 @@ export default function Approval() {
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
                             <path d="M9 12h12l-3 -3" />
-                            <path d="M18 15l3 -3" />
+                            <path d="M18 15l3-3" />
                         </svg>
 
                     <Link to="/logout">
@@ -452,10 +454,10 @@ export default function Approval() {
 
 
                 {/* TABLE APPROVAL */}
-                <main className="ml-64 flex-1 p-8">
+                <main className="ml-0 md:ml-64 flex-1 p-4 md:p-8 overflow-x-auto">
 
-                    <p className="font-semibold text-2xl text-black mb-8"> Konfirmasi Data Bebas Pustaka </p>
-                    <div className="inline-flex items-center font-medium text-lg text-[#9A9A9A]">
+                    <p className="font-semibold text-2xl text-black mb-8 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
+                    <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium">
                         <svg xmlns="http://www.w3.org/2000/svg"
                             width="18"
                             height="18"
@@ -465,7 +467,6 @@ export default function Approval() {
                             strokeWidth="2"
                             strokeLinecap="round"
                             strokeLinejoin="round"
-                            className="icon icon-tabler icons-tabler-outline icon-tabler-users"
                         >
                             <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                             <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
@@ -473,12 +474,15 @@ export default function Approval() {
                             <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                             <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                         </svg>
-                        {/* mainin db ini */}
-                        <p className="ml-1">xxxx &nbsp;</p>
-                        <p className="mr-3">permohonan bebas pustaka</p>
+                        <div className="flex">
+                            <p className="text-lg ml-1">xxxx &nbsp;</p>
+                            <p className="text-lg m-0">permohonan bebas pustaka</p>
+                        </div>
                     </div>
 
-                    <div className="flex justify-between items-center mt-4 relative">
+
+
+                    <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
                         <div className="flex items-center text-[#9A9A9A] font-semibold">
 
                             <p className="mr-2">Tunjukkan</p>
@@ -493,83 +497,97 @@ export default function Approval() {
                         </div>
 
 
-                        <div className="flex items-center gap-3 relative">
-                            <button
-                                onClick={() => setShowFilter(!showFilter)}
-                                className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
+                        <div className="flex items-center gap-3">
+                            <div className="relative">
+                                <button
+                                    onClick={() => setShowFilter(!showFilter)}
+                                    className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
                                   ${showFilter
-                                        ? 'bg-[#667790] text-white border-[#667790]'
-                                        : 'bg-transparent text-[#667790] border-[#667790]'
-                                    }`}
-                            >
-                                <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="icon icon-tabler"
+                                            ? 'bg-[#667790] text-white border-[#667790]'
+                                            : 'bg-transparent text-[#667790] border-[#667790]'
+                                        }`}
                                 >
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />
-                                </svg>
-                                Filter
-                            </button>
+                                    <svg
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="icon icon-tabler"
+                                    >
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />
+                                    </svg>
+                                    Filter
+                                </button>
+                                {showFilter && (
+                                    <div className="absolute top-12 right-0 bg-white p-3 rounded-md shadow-lg z-50 w-[90vw] max-w-[260px]">
+                                        <p className="text-sm font-semibold text-gray-700 mb-3">Filter</p>
+                                        <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
 
+                                        <div className="calendar-scale w-full max-w-xs px-2 py-3">
+                                            <DayPicker
+                                                mode="range"
+                                                selected={range}
+                                                onSelect={handleRangeChange}
+                                            />
+                                        </div>
 
-                            {showFilter && (
-                                <div className="absolute top-10 left-0 -translate-x-[175px] bg-[#F9FAFB] p-3 rounded-sm shadow z-50 max-w-[300px]">
-                                    <p className="text-xs font-light">Filter</p>
-                                    <div className="w-full h-[2px] mt-3 bg-gray-300"></div>
+                                        <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
 
-                                    <div className="w-60 h-52 mt-3 p-0 inline-block">
-                                        <DayPicker
-                                            mode="range"
-                                            selected={range}
-                                            onSelect={handleRangeChange}
-                                            className="text-xs scale-75"
-                                        />
+                                        {/* Start Date */}
+                                        <div className="text-sm mb-3">
+                                            <label className="block mb-1 font-medium">
+                                                Tanggal Mulai <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={startDate}
+                                                onChange={handleStartInput}
+                                                className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-blue-400"
+                                            />
+                                        </div>
+
+                                        {/* End Date */}
+                                        <div className="text-sm mb-3">
+                                            <label className="block mb-1 font-medium">
+                                                Tanggal Selesai <span className="text-red-500">*</span>
+                                            </label>
+                                            <input
+                                                type="date"
+                                                value={endDate}
+                                                onChange={handleEndInput}
+                                                className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-blue-400"
+                                            />
+                                        </div>
+
+                                        {/* Range Text */}
+                                        <p className="text-[11px] font-semibold text-gray-700 mt-2">Rentang :</p>
+                                        <p className="text-[11px] text-gray-500 mb-4">{rangeText}</p>
+
+                                        {/* Buttons */}
+                                        <div className="flex justify-end gap-2 mt-2">
+                                            <button
+                                                className="px-3 py-2 text-sm border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 active:scale-95 transition"
+                                                onClick={() => setShowFilter(false)}
+                                            >
+                                                Batalkan
+                                            </button>
+
+                                            <button
+                                                className="px-3 py-2 text-sm rounded-md bg-[#023048] text-white hover:bg-[#012C3F] active:scale-95 transition"
+                                                onClick={SortByDate}
+                                            >
+                                                Cari Data
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div className="w-full h-[2px] mt-3 bg-gray-300"></div>
-
-                                    <div className="mt-3 text-xs">
-                                        <label className="block mb-1 font-semibold">
-                                            Tanggal Mulai<span className="text-[#FF1515]">*</span>
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={startDate}
-                                            onChange={handleStartInput}
-                                            className="border px-2 py-1 rounded-sm text-sm w-full"
-                                        />
-                                    </div>
-
-                                    <div className="mt-3 text-xs">
-                                        <label className="block mb-1 font-semibold">
-                                            Tanggal Selesai<span className="text-[#FF1515]">*</span>
-                                        </label>
-                                        <input
-                                            type="date"
-                                            value={endDate}
-                                            onChange={handleEndInput}
-                                            className="border px-2 py-1 rounded-sm text-sm w-full block"
-                                        />
-                                    </div>
-                                    <p className="text-[10px] font-normal mt-2"> Rentang : &nbsp;</p>
-                                    <p className="text-[10px] font-normal text-[#9A9A9A] mt-2">{rangeText}</p>
-                                    <div className="relative flex mt-3 gap-2 text-xs font-normal justify-end">
-                                        <button className='cursor-pointer flex relative items-center p-2 rounded border border-[#757575] text-[#757575] active:scale-90 transition-transform duration-200'
-                                            onClick={() => setShowFilter(false)}>Batalkan</button>
-                                        <button className='cursor-pointer flex relative items-center p-2 rounded border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                                            onClick={SortByDate}>Cari Data</button>
-                                    </div>
-                                </div>
-
-                            )}
+                                )}
+                            </div>
 
 
                             <button
@@ -600,64 +618,66 @@ export default function Approval() {
                                 </svg>
                                 Approve All
                             </button>
-
-                            <button
-                                onClick={() => setUrutkanBy(!urutkanBy)}
-                                className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
+                            <div className="relative">
+                                <button
+                                    onClick={() => setUrutkanBy(!urutkanBy)}
+                                    className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
                                   ${urutkanBy
-                                        ? 'bg-[#667790] text-white border-[#667790]'
-                                        : 'bg-transparent text-[#667790] border-[#667790]'
-                                    }`}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg"
-                                    width="24"
-                                    height="24"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="icon icon-tabler icons-tabler-outline icon-tabler-sort-descending"
+                                            ? 'bg-[#667790] text-white border-[#667790]'
+                                            : 'bg-transparent text-[#667790] border-[#667790]'
+                                        }`}
                                 >
-                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                    <path d="M4 6l9 0" />
-                                    <path d="M4 12l7 0" />
-                                    <path d="M4 18l7 0" />
-                                    <path d="M15 15l3 3l3 -3" />
-                                    <path d="M18 6l0 12" />
-                                </svg>
-                                Urutkan
-                            </button>
-                            {urutkanBy && (
-                                <div className="absolute top-10 right-44 flex flex-col gap-2 bg-[#F9FAFB] rounded-sm shadow z-50 w-40">
-                                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-                                        <p className="text-[#616161] font-bold text-sm">Urutkan</p>
-                                        <p
-                                            className="text-[#616161] font-bold cursor-pointer text-sm"
-                                            onClick={() => setUrutkanBy(false)}
+                                    <svg xmlns="http://www.w3.org/2000/svg"
+                                        width="24"
+                                        height="24"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="icon icon-tabler icons-tabler-outline icon-tabler-sort-descending"
+                                    >
+                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                        <path d="M4 6l9 0" />
+                                        <path d="M4 12l7 0" />
+                                        <path d="M4 18l7 0" />
+                                        <path d="M15 15l3 3l3 -3" />
+                                        <path d="M18 6l0 12" />
+                                    </svg>
+                                    Urutkan
+                                </button>
+                                {urutkanBy && (
+                                    <div className="absolute top-12 right-0 flex flex-col gap-2 bg-[#F9FAFB] rounded-sm shadow z-50 w-40">
+                                        <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+                                            <p className="text-[#616161] font-bold text-sm">Urutkan</p>
+                                            <p
+                                                className="text-[#616161] font-bold cursor-pointer text-sm"
+                                                onClick={() => setUrutkanBy(false)}
+                                            >
+                                                X
+                                            </p>
+                                        </div>
+
+                                        <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terbaru</p>
+                                        <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terlama</p>
+
+                                        <button
+                                            onClick={sortAZ}
+                                            className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
                                         >
-                                            X
-                                        </p>
+                                            A &gt; Z
+                                        </button>
+                                        <button
+                                            onClick={sortZA}
+                                            className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                        >
+                                            Z &gt; A
+                                        </button>
                                     </div>
+                                )}
+                            </div>
 
-                                    <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terbaru</p>
-                                    <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terlama</p>
-
-                                    <button
-                                        onClick={sortAZ}
-                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                    >
-                                        A &gt; Z
-                                    </button>
-                                    <button
-                                        onClick={sortZA}
-                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                    >
-                                        Z &gt; A
-                                    </button>
-                                </div>
-                            )}
                             <div className="relative w-40">
                                 <input
                                     type="text"
@@ -692,8 +712,8 @@ export default function Approval() {
 
                     <div className='grid grid-cols-1 gap-8 '>
 
-                        <div className="overflow-x-auto relative bottom-0">
-                            <table className="w-full border-collapse mt-7">
+                        <div className="overflow-x-auto w-full">
+                            <table className="min-w-full border-collapse mt-7">
                                 <thead>
                                     <tr className="bg-gray-50 border-b-2 border-black">
                                         <th className="text-left p-4 font-normal text-gray-600 bg-[#667790]">
@@ -780,8 +800,8 @@ export default function Approval() {
                                                     className="relative bg-[url('https://cdn.designfast.io/image/2025-11-21/b89ae749-b5b2-40e4-967d-18be9ef8aed8.png')] bg-cover bg-no-repeat bg-center w-12 h-12">
                                                 </div>
                                             </td>
-                                            <td className="p-4 whitespace-nowrap overflow-x-auto">{item.name}</td>
-                                            <td className="p-4 whitespace-nowrap overflow-x-auto">{item.nim}</td>
+                                            <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name}</td>
+                                            <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim}</td>
 
                                             {/* status pengembalian dan bebas pustaka
 
@@ -852,10 +872,10 @@ export default function Approval() {
 
                     </div>
                     <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                        onClick={''}>Cetak ke PDF
+                        onClick={() => console.log("PDF clicked")}>Cetak ke PDF
                     </button>
 
-                    <div className="flex gap-2 justify-center mt-4 items-center">
+                    <div className="flex flex-wrap gap-2 justify-center mt-4 items-center">
                         {/* Prev */}
                         <button
                             onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
@@ -874,7 +894,6 @@ export default function Approval() {
                                         ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
                                         : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
                                     }`}
-                                
                             >
                                 {num}
                             </button>
@@ -958,13 +977,14 @@ export default function Approval() {
             </div >
 
             {/* Footer */}
-            
+
             < footer className='bg-[#023048] text-white py-6 text-center' >
                 <div className="ml-64">
                     <p className="text-sm">blalaalS</p>
                 </div>
             </footer >
-        </div >
+        </main >
     );
 }
 
+export default Approval;
