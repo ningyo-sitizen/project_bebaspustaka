@@ -10,40 +10,7 @@ import {
 const ZAHRAH_PHOTO_URL = "https://i.ibb.co/C07X0Q0/dummy-profile.jpg";
 
 // Data Dummy yang Lebih Realistis (Menggunakan ISO String Timestamp, seperti dari DB)
-const historyDataFromDB = [
-    { 
-        id: 1, 
-        name: "Zahrah Purnama", 
-        role: "Admin", 
-        timestamp: "2025-11-27T09:00:00.000Z", // Timestamp dari DB
-        activity: "Admin sistem telah berhasil menyelesaikan proses persetujuan sebanyak 20 data entri mahasiswa.",
-        photo: null 
-    },
-    { 
-        id: 2, 
-        name: "Zuriel Joseph Jowy", 
-        role: "Admin", 
-        timestamp: "2025-11-27T08:30:00.000Z", 
-        activity: "Admin sistem telah berhasil menyelesaikan proses persetujuan sebanyak 20 data entri mahasiswa.",
-        photo: null 
-    },
-    { 
-        id: 3, 
-        name: "Budi Santoso", 
-        role: "Mahasiswa", 
-        timestamp: "2025-11-26T15:30:00.000Z", 
-        activity: "Pengguna telah berhasil memperbarui informasi profilnya, termasuk alamat dan nomor telepon.",
-        photo: null 
-    },
-    { 
-        id: 4, 
-        name: "Sistem Otomatis", 
-        role: "Maintenance", 
-        timestamp: "2025-11-25T02:00:00.000Z", 
-        activity: "Maintenance rutin database telah berhasil diselesaikan tanpa hambatan.",
-        photo: null 
-    },
-];
+const historyDataFromDB = [];
 
 // Array Nama Bulan
 const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -392,18 +359,37 @@ const History = () => {
     const navigate = useNavigate();
 
     // SIMULASI PENGAMBILAN DATA DARI DATABASE (API)
-    React.useEffect(() => {
-        setIsLoading(true);
-        // Simulasi penundaan API
-        const fetchData = setTimeout(() => {
-            // Ini adalah tempat data dari API/DB Anda dimasukkan
-            setHistoryList(historyDataFromDB); 
+// Ganti useEffect yang ada dengan ini:
+React.useEffect(() => {
+    setIsLoading(true);
+    const token = localStorage.getItem('token')
+    // Fetch data dari API
+    fetch('http://localhost:8080/api/logger/logging',{
+           method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },       
+    }) // Sesuaikan dengan endpoint Anda
+        .then(response => response.json())
+        .then(data => {
+            // Transform data dari DB ke format yang dibutuhkan component
+            const transformedData = data.map((item, index) => ({
+                id: index + 1,
+                name: item.user, // dari kolom 'user' di DB
+                role: item.user === 'Admin' ? 'Admin' : 'Super Admin', // Sesuaikan logic role
+                timestamp: item.time, // dari kolom 'time' di DB
+                activity: item.user_action, // dari kolom 'user_action' di DB
+                photo: null
+            }));
+            setHistoryList(transformedData);
             setIsLoading(false);
-        }, 1000); 
-
-        return () => clearTimeout(fetchData);
-    }, []); 
-
+        })
+        .catch(error => {
+            console.error('Error fetching log data:', error);
+            setIsLoading(false);
+        });
+}, []);
 
     // --- HANDLERS & LOGIC ---
     const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
@@ -440,30 +426,28 @@ const History = () => {
     });
 
     // 2. Logika Filtering
-    const filteredData = sortedData.filter(item => {
-        // Filter Pencarian (Search Term)
-        const searchLower = searchTerm.toLowerCase();
-        const matchesSearch = item.name.toLowerCase().includes(searchLower) ||
-                              item.role.toLowerCase().includes(searchLower) ||
-                              item.activity.toLowerCase().includes(searchLower);
+// Update bagian filteredData untuk include role filter:
+const filteredData = sortedData.filter(item => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch = item.name.toLowerCase().includes(searchLower) ||
+                          item.role.toLowerCase().includes(searchLower) ||
+                          item.activity.toLowerCase().includes(searchLower);
 
-        if (!matchesSearch) return false;
+    if (!matchesSearch) return false;
 
-        // Filter Tanggal
-        if (dateFilter.start && dateFilter.end) {
-            const itemDateOnly = parseDateISO(item.timestamp.substring(0, 10)); // Ambil bagian YYYY-MM-DD
-            
-            // Normalisasi filter date (tanpa waktu)
-            const filterStart = dateFilter.start.getTime();
-            const filterEnd = dateFilter.end.getTime();
-            
-            if (itemDateOnly.getTime() < filterStart || itemDateOnly.getTime() > filterEnd) {
-                return false;
-            }
+    // Filter Tanggal (tetap sama)
+    if (dateFilter.start && dateFilter.end) {
+        const itemDateOnly = parseDateISO(item.timestamp.substring(0, 10));
+        const filterStart = dateFilter.start.getTime();
+        const filterEnd = dateFilter.end.getTime();
+        
+        if (itemDateOnly.getTime() < filterStart || itemDateOnly.getTime() > filterEnd) {
+            return false;
         }
+    }
 
-        return true;
-    });
+    return true;
+});
 
     // --- UTILITY CLASS (Tidak Berubah) ---
     const getSidebarItemClass = (isActive = false) => {
@@ -675,11 +659,15 @@ const History = () => {
                                         {/* Nama Pengguna & Role */}
                                         <div className="flex items-center gap-2 mb-2"> 
                                             <p className="font-semibold text-base text-[#023048]">{item.name}</p>
-                                            <span 
-                                                className="text-xs text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF] px-2 py-0.5 rounded-md font-medium"
-                                            >
-                                                {item.role}
-                                            </span>
+<span 
+    className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+        item.role === 'Super Admin' 
+            ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]' 
+            : 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+    }`}
+>
+    {item.role}
+</span>
                                         </div>
                                         
                                         {/* Card Aktivitas - Full Width */}

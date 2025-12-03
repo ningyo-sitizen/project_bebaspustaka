@@ -25,3 +25,66 @@ exports.postUserInput = async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 };
+
+exports.getLog = async(req, res) => {
+    try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 8;
+        const offset = (page - 1) * limit;
+        
+        // Filter params
+        const search = req.query.search || '';
+        const sortBy = req.query.sortBy || 'time';
+        const sortOrder = req.query.sortOrder || 'DESC';
+        const startDate = req.query.startDate || null;
+        const endDate = req.query.endDate || null;
+        
+        // Build WHERE clause
+        let whereClause = '';
+        let queryParams = [];
+        
+        if (search) {
+            whereClause = 'WHERE (`user` LIKE ? OR user_action LIKE ?)';
+            queryParams.push(`%${search}%`, `%${search}%`);
+        }
+        
+        // Add date filter
+        if (startDate && endDate) {
+            whereClause += whereClause ? ' AND ' : 'WHERE ';
+            whereClause += 'DATE(time) BETWEEN ? AND ?';
+            queryParams.push(startDate, endDate);
+        }
+        
+        // Count total records
+        const countSql = `SELECT COUNT(*) as total FROM logger ${whereClause}`;
+        const [countResult] = await bebaspustaka.query(countSql, queryParams);
+        const totalRecords = countResult[0].total;
+        const totalPages = Math.ceil(totalRecords / limit);
+        
+        // Get paginated data
+        const sql = `
+            SELECT \`user\`, user_action, action_status, time 
+            FROM logger 
+            ${whereClause}
+            ORDER BY ${sortBy} ${sortOrder}
+            LIMIT ? OFFSET ?
+        `;
+        
+        const [rows] = await bebaspustaka.query(sql, [...queryParams, limit, offset]);
+        
+        res.json({
+            data: rows,
+            pagination: {
+                currentPage: page,
+                totalPages: totalPages,
+                totalRecords: totalRecords,
+                limit: limit,
+                hasNextPage: page < totalPages,
+                hasPrevPage: page > 1
+            }
+        });
+    } catch (err) {
+        console.log("SQL ERROR:", err);
+        res.status(500).json({ message: "Server error" });
+    }
+}

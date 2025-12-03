@@ -48,6 +48,14 @@ function Login() {
         })
         const logger = await res.json();
         console.log(logger);
+        
+          const res2 = await fetch("http://localhost:8080/api/summary/sync", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        })
 
         if (data.user.role == "super admin") {
           navigate("/dashboardSA")

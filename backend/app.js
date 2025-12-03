@@ -39,6 +39,8 @@ app.use('/api/profile',require('./routes/UserInfoRoutes'))
 
 app.use('/api/logger',require('./routes/loggerRoutse'));
 
+app.use("/api/summary", require("./routes/syncRoutes"));
+
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
