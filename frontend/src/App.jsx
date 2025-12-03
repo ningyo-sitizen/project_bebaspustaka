@@ -17,7 +17,7 @@ import Logout from "./logout.jsx";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<DashboardSA />} />
+      <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />}/>
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/analytic" element={<Analytic />}></Route>

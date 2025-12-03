@@ -122,14 +122,6 @@ const Profile = () => {
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>
-                        <a href="/user-control" className={getSidebarItemClass(true)}>
-                            <IconUsers size={20} />
-                            User Control
-                        </a>
-                        <a href="/history" className={getSidebarItemClass()}>
-                            <IconHistory size={20} />
-                            History
-                        </a>
                     </nav>
                 </div>
             </aside>
