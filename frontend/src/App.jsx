@@ -16,7 +16,7 @@ import HistorySA from "./HistorySA.jsx";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Login />} />
+      <Route path="/" element={<DashboardSA />} />
       <Route path="/login" element={<Login />}/>
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/analytic" element={<Analytic />}></Route>
