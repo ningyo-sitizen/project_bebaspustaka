@@ -1,16 +1,14 @@
-import React, { useState } from "react";
+// History.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
-    IconX, IconChevronRight, IconChevronLeft, IconCheck, 
+    IconX, IconChevronRight, IconChevronLeft, IconCheck,
 } from "@tabler/icons-react";
 
 // URL Foto Dummy yang digunakan di Navbar dan Timeline
 const ZAHRAH_PHOTO_URL = "https://i.ibb.co/C07X0Q0/dummy-profile.jpg";
-
-// Data Dummy yang Lebih Realistis (Menggunakan ISO String Timestamp, seperti dari DB)
-const historyDataFromDB = [];
 
 // Array Nama Bulan
 const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -26,7 +24,6 @@ const formatDisplayTimestamp = (isoString) => {
     if (!isoString) return '';
     try {
         const date = new Date(isoString);
-        // Gunakan opsi locale untuk format Indonesia
         const datePart = date.toLocaleDateString('id-ID', { 
             weekday: 'long', 
             year: 'numeric', 
@@ -37,8 +34,8 @@ const formatDisplayTimestamp = (isoString) => {
             hour: '2-digit',
             minute: '2-digit',
             hour12: false,
-            timeZone: 'Asia/Jakarta' // Asumsi WIB
-        }).replace(/\./g, ':'); // Ganti titik dengan titik dua jika diperlukan
+            timeZone: 'Asia/Jakarta'
+        }).replace(/\./g, ':');
 
         return `${datePart} | ${timePart} WIB`; 
     } catch (e) {
@@ -60,47 +57,48 @@ const formatDateISO = (date) => {
 const parseDateISO = (isoString) => {
     if (!isoString) return null;
     try {
+        // handle both "YYYY-MM-DD" and full ISO date
+        if (isoString.includes('T')) {
+            return new Date(isoString);
+        }
         const [year, month, day] = isoString.split('-').map(Number);
-        return new Date(Date.UTC(year, month - 1, day));
+        return new Date(year, month - 1, day);
     } catch (e) {
         return null;
     }
 };
 
-// ---------------------------------------------------
+
 // KOMPONEN: Modal Filter Tanggal
-// ---------------------------------------------------
-const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
+
+const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd }) => {
     if (!isOpen) return null;
 
-    // Inisialisasi agar kalender menunjukkan rentang contoh (Nov 2025)
-    const initialStart = parseDateISO('2025-11-21');
-    const initialEnd = parseDateISO('2025-11-30');
-    
-    const [currentDate, setCurrentDate] = useState(new Date(2025, 10, 1)); 
-    const [selectedRange, setSelectedRange] = useState({ start: initialStart, end: initialEnd }); 
-    const [startDateISO, setStartDateISO] = useState(formatDateISO(initialStart));
-    const [endDateISO, setEndDateISO] = useState(formatDateISO(initialEnd));
-    
-    React.useEffect(() => {
-        setStartDateISO(formatDateISO(selectedRange.start));
-        setEndDateISO(formatDateISO(selectedRange.end));
+    const initStart = initialStart ? parseDateISO(formatDateISO(initialStart)) : null;
+    const initEnd = initialEnd ? parseDateISO(formatDateISO(initialEnd)) : null;
+
+    const [currentDate, setCurrentDate] = useState(initStart || new Date());
+    const [selectedRange, setSelectedRange] = useState({ start: initStart, end: initEnd });
+    const [startDateISO, setStartDateISO] = useState(initStart ? formatDateISO(initStart) : '');
+    const [endDateISO, setEndDateISO] = useState(initEnd ? formatDateISO(initEnd) : '');
+
+    useEffect(() => {
+        setStartDateISO(selectedRange.start ? formatDateISO(selectedRange.start) : '');
+        setEndDateISO(selectedRange.end ? formatDateISO(selectedRange.end) : '');
     }, [selectedRange]);
 
-
-    // --- FUNGSI KALENDER ---
     const handleDayClick = (day) => {
+        if (!day) return;
         const dayNormalized = parseDateISO(formatDateISO(day));
-        if (!dayNormalized) return; 
+        if (!dayNormalized) return;
 
-        const dayTime = dayNormalized.getTime();
         const start = selectedRange.start;
         const end = selectedRange.end;
 
         if (!start || (start && end)) {
             setSelectedRange({ start: dayNormalized, end: null });
             setCurrentDate(dayNormalized);
-        } else if (dayTime < start.getTime()) {
+        } else if (dayNormalized.getTime() < start.getTime()) {
             setSelectedRange({ start: dayNormalized, end: start });
         } else {
             setSelectedRange({ start: start, end: dayNormalized });
@@ -111,37 +109,28 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
         const year = date.getFullYear();
         const month = date.getMonth();
         const firstDayOfMonth = new Date(year, month, 1);
-        const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7; 
+        const startDayIndex = (firstDayOfMonth.getDay() + 6) % 7;
         const days = [];
-        
-        for (let i = 0; i < startDayIndex; i++) {
-            days.push(null);
-        }
-        
-        const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
-        for (let i = 1; i <= lastDayOfMonth; i++) {
-            days.push(new Date(year, month, i)); 
-        }
+        for (let i = 0; i < startDayIndex; i++) days.push(null);
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        for (let i = 1; i <= lastDay; i++) days.push(new Date(year, month, i));
         return days;
     };
 
     const getCalendarDayClass = (day) => {
-        let classes = "text-gray-900 hover:bg-gray-100 rounded-full"; 
-
-        if (!day) return "text-gray-900"; 
-        
+        let classes = "text-gray-900 hover:bg-gray-100 rounded-full";
+        if (!day) return "text-gray-900";
         const start = selectedRange.start;
         const end = selectedRange.end;
-        const dayNormalized = parseDateISO(formatDateISO(day));
-        if (!dayNormalized) return classes; 
-        
-        const dayTime = dayNormalized.getTime();
+        const dayNorm = parseDateISO(formatDateISO(day));
+        if (!dayNorm) return classes;
+        const dayTime = dayNorm.getTime();
 
         if (!start || (start && !end)) {
             if (start && dayTime === start.getTime()) {
                 classes = "bg-[#667790] text-white rounded-full";
             } else {
-                classes = "text-gray-900 hover:bg-gray-100 rounded-full"; 
+                classes = "text-gray-900 hover:bg-gray-100 rounded-full";
             }
             return classes;
         }
@@ -152,54 +141,32 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
         if (dayTime >= rangeStart && dayTime <= rangeEnd) {
             const isStart = dayTime === rangeStart;
             const isEnd = dayTime === rangeEnd;
-
-            if (isStart && isEnd) { 
-                classes = "bg-[#667790] text-white rounded-full";
-            } else if (isStart) { 
-                classes = "bg-[#667790] text-white rounded-l-full rounded-r-none";
-            } else if (isEnd) { 
-                classes = "bg-[#667790] text-white rounded-r-full rounded-l-none";
-            } else { 
-                classes = "bg-[#AEC2E6] text-white rounded-none";
-            }
+            if (isStart && isEnd) classes = "bg-[#667790] text-white rounded-full";
+            else if (isStart) classes = "bg-[#667790] text-white rounded-l-full rounded-r-none";
+            else if (isEnd) classes = "bg-[#667790] text-white rounded-r-full rounded-l-none";
+            else classes = "bg-[#AEC2E6] text-white rounded-none";
         } else {
             classes = "text-gray-900 hover:bg-gray-100 rounded-full";
         }
         return classes;
     };
-    
-    const prevMonth = () => {
-        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
-    };
 
-    const nextMonth = () => {
-        setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
-    };
-    
+    const prevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+    const nextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+
     const handleDateInputChange = (field, isoString) => {
-        const newDate = parseDateISO(isoString);
+        const newDate = isoString ? parseDateISO(isoString) : null;
 
         setSelectedRange(prev => {
             const newState = { ...prev };
-            
             if (field === 'start') {
                 newState.start = newDate;
-                if (newDate && newState.end && newState.end.getTime() < newDate.getTime()) {
-                    newState.end = newDate; 
-                }
+                if (newDate && newState.end && newState.end.getTime() < newDate.getTime()) newState.end = newDate;
             } else if (field === 'end') {
                 newState.end = newDate;
-                if (newDate && newState.start && newState.start.getTime() > newDate.getTime()) {
-                    newState.start = newDate; 
-                }
+                if (newDate && newState.start && newState.start.getTime() > newDate.getTime()) newState.start = newDate;
             }
-
-            if (newDate) {
-                setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), 1)); 
-            } else if (isoString === '') {
-                 if (field === 'start') newState.start = null;
-                 if (field === 'end') newState.end = null;
-            }
+            if (newDate) setCurrentDate(new Date(newDate.getFullYear(), newDate.getMonth(), 1));
             return newState;
         });
 
@@ -208,22 +175,18 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
     };
 
     const handleApply = () => {
-        // Panggil fungsi onApplyFilter dari parent
         onApplyFilter(selectedRange.start, selectedRange.end);
         onClose();
     };
-    
+
     const displayMonthYear = `${monthNames[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
     const days = getDaysInMonth(currentDate);
     const currentRangeText = selectedRange.start
         ? `Rentang : ${formatDisplayDate(selectedRange.start)} ${selectedRange.end ? ` - ${formatDisplayDate(selectedRange.end)}` : ''}`
         : 'Rentang :';
 
-
     return (
         <div className="absolute right-0 top-[48px] z-50 w-72 bg-white rounded-lg shadow-xl border p-4 font-['Plus_Jakarta_Sans']">
-            
-            {/* ... (Header, Navigasi Bulan & Grid Kalender, Input Tanggal) ... */}
             <div className="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 className="font-semibold text-base text-gray-800">Filter</h3>
                 <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -237,34 +200,32 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
                     <span className="font-semibold text-gray-800">{displayMonthYear}</span>
                     <button onClick={nextMonth} className="text-gray-600 hover:text-gray-800"><IconChevronRight size={18} /></button>
                 </div>
-                
+
                 <div className="grid grid-cols-7 gap-1">
                     {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(day => (
                         <div key={day} className="font-medium text-gray-500 text-xs">{day}</div>
                     ))}
-                    {days.map((day, index) => {
-                        return (
-                            <div key={index} className="h-6 flex items-center justify-center">
-                                {day && (
-                                    <button
-                                        onClick={() => handleDayClick(day)}
-                                        className={`w-full h-full flex items-center justify-center transition text-xs ${getCalendarDayClass(day)}`}
-                                    >
-                                        {day.getDate()}
-                                    </button>
-                                )}
-                            </div>
-                        );
-                    })}
+                    {days.map((day, index) => (
+                        <div key={index} className="h-6 flex items-center justify-center">
+                            {day && (
+                                <button
+                                    onClick={() => handleDayClick(day)}
+                                    className={`w-full h-full flex items-center justify-center transition text-xs ${getCalendarDayClass(day)}`}
+                                >
+                                    {day.getDate()}
+                                </button>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
 
             <div className="mt-4 space-y-3">
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Tanggal Mulai*</label>
-                    <input 
+                    <input
                         type="date"
-                        value={startDateISO} 
+                        value={startDateISO}
                         onChange={(e) => handleDateInputChange('start', e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg bg-white text-sm focus:border-[#023048] focus:ring-[#023048]"
                         placeholder="Pilih tanggal mulai"
@@ -272,12 +233,12 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
                 </div>
                 <div>
                     <label className="block text-xs font-medium text-gray-700 mb-1">Tanggal Selesai*</label>
-                    <input 
+                    <input
                         type="date"
-                        value={endDateISO} 
+                        value={endDateISO}
                         onChange={(e) => handleDateInputChange('end', e.target.value)}
                         className="w-full p-2 border border-gray-300 rounded-lg bg-white text-sm focus:border-[#023048] focus:ring-[#023048]"
-                        placeholder="Pilih tanggal selesai" 
+                        placeholder="Pilih tanggal selesai"
                     />
                     <p className="text-xs text-gray-500 mt-1">
                         {currentRangeText}
@@ -285,19 +246,17 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
                 </div>
             </div>
 
-
-            {/* Footer Tombol Filter */}
             <div className="flex justify-end gap-3 pt-3 mt-3 border-t">
-                <button 
+                <button
                     onClick={onClose}
                     className="px-3 py-1.5 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-100 transition duration-150 text-xs"
                 >
                     Batalkan
                 </button>
-                <button 
+                <button
                     onClick={handleApply}
                     className="px-3 py-1.5 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150 text-xs"
-                    disabled={!selectedRange.start || !selectedRange.end || selectedRange.start.getTime() > selectedRange.end.getTime()}
+                    disabled={!selectedRange.start || !selectedRange.end || (selectedRange.start && selectedRange.end && selectedRange.start.getTime() > selectedRange.end.getTime())}
                 >
                     Cari data
                 </button>
@@ -307,7 +266,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter }) => {
 };
 
 // ---------------------------------------------------
-// KOMPONEN: Dropdown Urutkan (Tidak Berubah)
+// KOMPONEN: Sort Dropdown
 // ---------------------------------------------------
 const SortDropdown = ({ isOpen, onClose, selectedSort, setSelectedSort }) => {
     if (!isOpen) return null;
@@ -316,7 +275,6 @@ const SortDropdown = ({ isOpen, onClose, selectedSort, setSelectedSort }) => {
 
     return (
         <div className="absolute right-0 top-[48px] z-50 w-36 bg-white rounded-lg shadow-xl border py-2 font-['Plus_Jakarta_Sans']">
-            
             {sortOptions.map((option) => (
                 <button
                     key={option}
@@ -339,16 +297,26 @@ const History = () => {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [isSortOpen, setIsSortOpen] = useState(false);
-    
+
     const [selectedSort, setSelectedSort] = useState("Terbaru");
-    const [searchTerm, setSearchTerm] = useState(''); 
-    
-    // State untuk data yang diambil dari DB
+    const [searchTerm, setSearchTerm] = useState('');
+
+    const [debouncedSearch, setDebouncedSearch] = useState('');
+
     const [historyList, setHistoryList] = useState([]);
-    const [isLoading, setIsLoading] = useState(true); 
-    
-    // State untuk menyimpan filter tanggal yang sudah diterapkan
+    const [isLoading, setIsLoading] = useState(true);
+
     const [dateFilter, setDateFilter] = useState({ start: null, end: null });
+
+    const [currentPage, setCurrentPage] = useState(1);
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalRecords: 0,
+        hasNextPage: false,
+        hasPrevPage: false,
+        limit: 8,
+    });
 
     const [profileData] = useState({
         name: "Zahrah Purnama",
@@ -358,43 +326,99 @@ const History = () => {
 
     const navigate = useNavigate();
 
-    // SIMULASI PENGAMBILAN DATA DARI DATABASE (API)
-// Ganti useEffect yang ada dengan ini:
-React.useEffect(() => {
-    setIsLoading(true);
-    const token = localStorage.getItem('token')
-    // Fetch data dari API
-    fetch('http://localhost:8080/api/logger/logging',{
-           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },       
-    }) // Sesuaikan dengan endpoint Anda
-        .then(response => response.json())
-        .then(data => {
-            // Transform data dari DB ke format yang dibutuhkan component
-            const transformedData = data.map((item, index) => ({
-                id: index + 1,
-                name: item.user, // dari kolom 'user' di DB
-                role: item.user === 'Admin' ? 'Admin' : 'Super Admin', // Sesuaikan logic role
-                timestamp: item.time, // dari kolom 'time' di DB
-                activity: item.user_action, // dari kolom 'user_action' di DB
-                photo: null
-            }));
-            setHistoryList(transformedData);
-            setIsLoading(false);
-        })
-        .catch(error => {
-            console.error('Error fetching log data:', error);
-            setIsLoading(false);
-        });
-}, []);
+    useEffect(() => {
+        const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
+        return () => clearTimeout(t);
+    }, [searchTerm]);
 
-    // --- HANDLERS & LOGIC ---
+    useEffect(() => {
+        let isMounted = true;
+        const fetchLogs = async () => {
+            setIsLoading(true);
+            try {
+                const token = localStorage.getItem('token') || '';
+
+                const params = new URLSearchParams();
+                params.append("page", currentPage);
+                params.append("limit", pagination.limit);
+
+                if (debouncedSearch) params.append("search", debouncedSearch);
+                let sortBy = "time";
+                let sortOrder = "DESC";
+                if (selectedSort === "Terbaru") {
+                    sortBy = "time"; sortOrder = "DESC";
+                } else if (selectedSort === "Terlama") {
+                    sortBy = "time"; sortOrder = "ASC";
+                } else if (selectedSort === "A > Z") {
+                    sortBy = "user"; sortOrder = "ASC";
+                } else if (selectedSort === "Z > A") {
+                    sortBy = "user"; sortOrder = "DESC";
+                }
+                params.append("sortBy", sortBy);
+                params.append("sortOrder", sortOrder);
+
+                if (dateFilter.start && dateFilter.end) {
+                    params.append("startDate", formatDateISO(dateFilter.start));
+                    params.append("endDate", formatDateISO(dateFilter.end));
+                }
+
+                const url = `http://localhost:8080/api/logger/logging?${params.toString()}`;
+                const res = await fetch(url, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                if (!res.ok) {
+                    const errText = await res.text();
+                    throw new Error(`HTTP ${res.status}: ${errText}`);
+                }
+
+                const result = await res.json();
+
+                const rows = result.data || result.rows || [];
+                const paginationFromServer = result.pagination || {
+                    currentPage: currentPage,
+                    totalPages: 1,
+                    totalRecords: rows.length,
+                    limit: pagination.limit,
+                    hasNextPage: false,
+                    hasPrevPage: false
+                };
+
+                if (isMounted) {
+                    const transformedData = rows.map((item, idx) => ({
+                        id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
+                        name: item.user || item.name || '-',
+                        role: item.user === 'Admin' ? 'Admin' : (item.role || 'Super Admin'),
+                        timestamp: item.time || item.timestamp || new Date().toISOString(),
+                        activity: item.user_action || item.activity || '',
+                        photo: item.photo || null
+                    }));
+                    setHistoryList(transformedData);
+                    setPagination(prev => ({ ...prev, ...paginationFromServer }));
+                    setIsLoading(false);
+                }
+            } catch (err) {
+                console.error("Error fetching log data:", err);
+                if (isMounted) {
+                    setHistoryList([]);
+                    setIsLoading(false);
+                }
+            }
+        };
+
+        fetchLogs();
+
+        return () => { isMounted = false; };
+    }, [currentPage, debouncedSearch, selectedSort, dateFilter]); 
+
+    
     const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-    
+
     const toggleFilter = () => {
         setIsFilterOpen(!isFilterOpen);
         setIsSortOpen(false);
@@ -406,50 +430,19 @@ React.useEffect(() => {
     };
 
     const handleApplyDateFilter = (start, end) => {
-        // Fungsi ini akan dipanggil oleh FilterModal saat tombol "Cari data" diklik
         setDateFilter({ start, end });
+        setCurrentPage(1); 
     };
 
-    // 1. Logika Sorting
-    const sortedData = [...historyList].sort((a, b) => {
-        // Sorting berdasarkan string ISO timestamp agar lebih akurat
-        if (selectedSort === "Terbaru") {
-            return b.timestamp.localeCompare(a.timestamp); 
-        } else if (selectedSort === "Terlama") {
-            return a.timestamp.localeCompare(b.timestamp);
-        } else if (selectedSort === "A > Z") {
-            return a.name.localeCompare(b.name);
-        } else if (selectedSort === "Z > A") {
-            return b.name.localeCompare(b.name);
-        }
-        return 0;
+    const filteredData = historyList.filter(item => {
+        const searchLower = debouncedSearch.toLowerCase();
+        if (!searchLower) return true;
+        const matchesName = item.name && item.name.toLowerCase().includes(searchLower);
+        const matchesRole = item.role && item.role.toLowerCase().includes(searchLower);
+        const matchesActivity = item.activity && item.activity.toLowerCase().includes(searchLower);
+        return matchesName || matchesRole || matchesActivity;
     });
 
-    // 2. Logika Filtering
-// Update bagian filteredData untuk include role filter:
-const filteredData = sortedData.filter(item => {
-    const searchLower = searchTerm.toLowerCase();
-    const matchesSearch = item.name.toLowerCase().includes(searchLower) ||
-                          item.role.toLowerCase().includes(searchLower) ||
-                          item.activity.toLowerCase().includes(searchLower);
-
-    if (!matchesSearch) return false;
-
-    // Filter Tanggal (tetap sama)
-    if (dateFilter.start && dateFilter.end) {
-        const itemDateOnly = parseDateISO(item.timestamp.substring(0, 10));
-        const filterStart = dateFilter.start.getTime();
-        const filterEnd = dateFilter.end.getTime();
-        
-        if (itemDateOnly.getTime() < filterStart || itemDateOnly.getTime() > filterEnd) {
-            return false;
-        }
-    }
-
-    return true;
-});
-
-    // --- UTILITY CLASS (Tidak Berubah) ---
     const getSidebarItemClass = (isActive = false) => {
         const baseClasses =
             "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
@@ -458,11 +451,18 @@ const filteredData = sortedData.filter(item => {
             : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
 
-    // --- RENDER COMPONENT ---
+
+    const goPrev = () => {
+        if (pagination.hasPrevPage && currentPage > 1) setCurrentPage(prev => prev - 1);
+    };
+    const goNext = () => {
+        if (pagination.hasNextPage && currentPage < pagination.totalPages) setCurrentPage(prev => prev + 1);
+    };
+
     return (
         <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
 
-            {/* 1. SIDEBAR */}
+            {/* Sidebar */}
             <aside
                 className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
                     } lg:static lg:h-auto`}
@@ -477,21 +477,11 @@ const filteredData = sortedData.filter(item => {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
-                            <IconHome size={20} /> Dashboard
-                        </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
-                            <IconChartBar size={20} /> Data Analitik
-                        </a>
-                        <a href="/approval" className={getSidebarItemClass()}>
-                            <IconBell size={20} /> Konfirmasi Data
-                        </a>
-                        <a href="/user-control" className={getSidebarItemClass()}>
-                            <IconUsers size={20} /> User Control
-                        </a>
-                        <a href="/history" className={getSidebarItemClass(true)}>
-                            <IconHistory size={20} /> History
-                        </a>
+                        <a href="/dashboard" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
+                        <a href="/analytic" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
+                        <a href="/approval" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
+                        <a href="/user-control" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
+                        <a href="/history" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
                     </nav>
                 </div>
             </aside>
@@ -503,10 +493,10 @@ const filteredData = sortedData.filter(item => {
                 ></div>
             )}
 
-            {/* 2. MAIN AREA */}
+            {/* Main */}
             <div className="flex-1 lg:ml-0">
 
-                {/* NAVBAR */}
+                {/* Navbar */}
                 <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                     <button
                         className="lg:hidden text-[#023048]"
@@ -532,23 +522,15 @@ const filteredData = sortedData.filter(item => {
                             <div className="flex items-center gap-3 p-4 border-b">
                                 <IconUser size={24} className="text-gray-500" />
                                 <div>
-                                    <p className="font-semibold text-sm text-[#023048]">
-                                        {profileData.name}
-                                    </p>
+                                    <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
                                     <p className="text-xs text-gray-500">{profileData.role}</p>
                                 </div>
                             </div>
                             <div className="p-2 space-y-1">
-                                <button
-                                    onClick={() => navigate("/profileSA")}
-                                    className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                                >
+                                <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
                                     <IconUser size={18} /> Profile
                                 </button>
-                                <a
-                                    href="/logout"
-                                    className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                >
+                                <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                     <IconLogout size={18} /> Keluar
                                 </a>
                             </div>
@@ -556,10 +538,9 @@ const filteredData = sortedData.filter(item => {
                     )}
                 </header>
 
-                {/* 3. MAIN HISTORY CONTENT */}
+                {/* Content */}
                 <div className="p-4 sm:p-8">
 
-                    {/* Header dan Bar Aksi */}
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
                         <div className="mb-4 md:mb-0">
                             <h1 className="text-xl font-semibold text-[#023048]">History</h1>
@@ -575,20 +556,21 @@ const filteredData = sortedData.filter(item => {
                                     className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition duration-150 ${isFilterOpen ? 'bg-[#023048] text-white border-[#023048]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
                                 >
                                     <IconFilter size={18} /> Filter
-                                    {/* Indikator filter aktif (opsional) */}
                                     {(dateFilter.start || dateFilter.end) && (
                                         <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
                                     )}
                                 </button>
                                 {isFilterOpen && (
-                                    <FilterModal 
-                                        isOpen={isFilterOpen} 
+                                    <FilterModal
+                                        isOpen={isFilterOpen}
                                         onClose={() => setIsFilterOpen(false)}
-                                        onApplyFilter={handleApplyDateFilter} 
+                                        onApplyFilter={handleApplyDateFilter}
+                                        initialStart={dateFilter.start}
+                                        initialEnd={dateFilter.end}
                                     />
                                 )}
                             </div>
-                            
+
                             <div className="relative">
                                 <button
                                     onClick={toggleSort}
@@ -597,9 +579,9 @@ const filteredData = sortedData.filter(item => {
                                     <IconSortDescendingLetters size={18} /> Urutkan
                                 </button>
                                 {isSortOpen && (
-                                    <SortDropdown 
-                                        isOpen={isSortOpen} 
-                                        onClose={() => setIsSortOpen(false)} 
+                                    <SortDropdown
+                                        isOpen={isSortOpen}
+                                        onClose={() => setIsSortOpen(false)}
                                         selectedSort={selectedSort}
                                         setSelectedSort={setSelectedSort}
                                     />
@@ -612,18 +594,16 @@ const filteredData = sortedData.filter(item => {
                                     placeholder="Cari data...."
                                     className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] text-sm"
                                     value={searchTerm}
-                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                 />
                                 <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             </div>
                         </div>
-
                     </div>
-                    
+
                     <div className="w-full border-b border-gray-200 mb-8"></div>
-                    
-                    {/* Timeline Aktivitas */}
-                    
+
+                    {/* Timeline */}
                     {isLoading ? (
                         <div className="text-center py-20 text-gray-600">
                             <svg className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -633,17 +613,14 @@ const filteredData = sortedData.filter(item => {
                             Memuat data histori...
                         </div>
                     ) : filteredData.length > 0 ? (
-                        <div className="space-y-8"> 
+                        <div className="space-y-8">
                             {filteredData.map((item, index) => (
                                 <div key={item.id} className="relative flex">
-                                    
-                                    {/* Vertical Line Connector */}
                                     {index < filteredData.length - 1 && (
                                         <div className="absolute left-[15px] top-0 h-full w-px bg-gray-300 z-0"></div>
                                     )}
-                                    
-                                    {/* Kolom Kiri: Ikon Profil */}
-                                    <div className="flex flex-col items-center flex-shrink-0 mr-4"> 
+
+                                    <div className="flex flex-col items-center flex-shrink-0 mr-4">
                                         <div className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 bg-gray-100 flex-shrink-0 z-10">
                                             {item.photo ? (
                                                 <img src={item.photo} alt={item.name} className="w-full h-full object-cover rounded-full" />
@@ -652,30 +629,23 @@ const filteredData = sortedData.filter(item => {
                                             )}
                                         </div>
                                     </div>
-                                    
-                                    {/* Kolom Kanan: Konten Utama */}
+
                                     <div className="flex-1 -mt-1">
-                                        
-                                        {/* Nama Pengguna & Role */}
-                                        <div className="flex items-center gap-2 mb-2"> 
+                                        <div className="flex items-center gap-2 mb-2">
                                             <p className="font-semibold text-base text-[#023048]">{item.name}</p>
-<span 
-    className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-        item.role === 'Super Admin' 
-            ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]' 
-            : 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
-    }`}
->
-    {item.role}
-</span>
+                                            <span
+                                                className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+                                                    item.role === 'Super Admin'
+                                                        ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
+                                                        : 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+                                                }`}
+                                            >
+                                                {item.role}
+                                            </span>
                                         </div>
-                                        
-                                        {/* Card Aktivitas - Full Width */}
-                                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full"> 
-                                            {/* Timestamp yang sudah diformat */}
+
+                                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full">
                                             <p className="text-xs text-gray-500 font-medium mb-2">{formatDisplayTimestamp(item.timestamp)}</p>
-                                            
-                                            {/* Aktivitas */}
                                             <p className="text-sm text-gray-700">{item.activity}</p>
                                         </div>
                                     </div>
@@ -683,10 +653,33 @@ const filteredData = sortedData.filter(item => {
                             ))}
                         </div>
                     ) : (
-                         <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
+                        <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
                             Tidak ada aktivitas yang ditemukan dengan kriteria tersebut.
                         </div>
                     )}
+
+                    {/* Pagination */}
+                    <div className="flex justify-center mt-10 gap-3">
+                        <button
+                            disabled={!pagination.hasPrevPage}
+                            onClick={goPrev}
+                            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+                        >
+                            Prev
+                        </button>
+
+                        <span className="px-4 py-2">
+                            {pagination.currentPage} / {pagination.totalPages}
+                        </span>
+
+                        <button
+                            disabled={!pagination.hasNextPage}
+                            onClick={goNext}
+                            className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
+                        >
+                            Next
+                        </button>
+                    </div>
 
                 </div>
             </div>
