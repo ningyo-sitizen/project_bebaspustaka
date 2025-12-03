@@ -322,7 +322,7 @@ function Approval() {
                                 <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
                                 <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
                             </svg>
-                            <Link to="/dashboard">
+                            <Link to="/dashboardSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Dashboard
                                 </h2>
@@ -346,7 +346,7 @@ function Approval() {
                                 <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
                                 <path d="M4 20h14" />
                             </svg>
-                            <Link to="/analytic">
+                            <Link to="/analyticSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Data Analitik
                                 </h2>
@@ -370,9 +370,57 @@ function Approval() {
                                 <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
                                 <path d="M15 19l2 2l4-4" />
                             </svg>
-                            <Link to="/approval">
+                            <Link to="/approvalSA">
                                 <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                                     Konfirmasi Data
+                                </h2>
+                            </Link>
+
+                        </div>
+                                                <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#667790"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
+                                <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
+                                <path d="M15 19l2 2l4 -4" />
+                            </svg>
+
+                            <Link to="/usercontrolSA">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    user control
+                                </h2>
+                            </Link>
+
+                        </div>
+                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
+                            <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="#667790"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
+                            >
+                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
+                                <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
+                                <path d="M15 19l2 2l4 -4" />
+                            </svg>
+
+                            <Link to="/historySA">
+                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                    history
                                 </h2>
                             </Link>
 
