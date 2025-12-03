@@ -12,6 +12,7 @@ import ProfileSA from "./ProfileSA.jsx";
 import EditProfileSA from "./EditprofileSA.jsx";
 import UserControlSA from "./UserControlSA.jsx";
 import HistorySA from "./HistorySA.jsx";
+import Logout from "./logout.jsx";
 
 export default function App() {
   return (
@@ -30,6 +31,8 @@ export default function App() {
       <Route path="/edit-profileSA" element = {<EditProfileSA/>}/>
       <Route path="/usercontrolSA" element = {<UserControlSA/>}/>
       <Route path="/historySA" element = {<HistorySA/>}/>
+      <Route path="/logout" element = {<Logout/>}/>
+
     </Routes>
   );
 }

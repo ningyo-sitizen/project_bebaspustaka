@@ -18,9 +18,10 @@ import {
 
 import axios from "axios";
 
-
+import authCheck from "./authCheck";
 
 export default function Approval() {
+    authCheck();
     const [data, setData] = useState([
         { id: 1, name: "Hoshimi Miyabi", nim: "1234", pengembalian: 1, status: 0, statusbebaspustakanya: 0 },
         { id: 2, name: "Jane Doe", nim: "5678", pengembalian: 0, status: 0, statusbebaspustakanya: 0 },
@@ -441,9 +442,11 @@ export default function Approval() {
                             <path d="M18 15l3 -3" />
                         </svg>
 
+                    <Link to="/logout">
                         <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                             Keluar
                         </h2>
+                    </Link>
                     </div>
                 </aside>
 

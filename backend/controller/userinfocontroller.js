@@ -8,39 +8,50 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 exports.updateUserInfo = async (req, res) => {
     const { id, name, username, newPassword } = req.body;
 
-    console.log("hwhwhwhw")
+    try {
+        let sql = `UPDATE users SET `;
+        const params = [];
+        const updates = [];
 
-    let sql = `UPDATE users SET `;
-    const params = [];
-    const updates = [];
+        // 🔍 Cek username apakah sudah dipakai user lain
+        if (username && username !== "") {
+            const checkSql = "SELECT user_id FROM users WHERE username = ? AND user_id != ?";
+            const [exist] = await bebaspustaka.query(checkSql, [username, id]);
 
-    if (username && username !== "") {
-        updates.push("username = ?");
-        params.push(username);
+            if (exist.length > 0) {
+                return res.status(400).json({ message: "Username already taken" });
+            }
+
+            updates.push("username = ?");
+            params.push(username);
+        }
+
+        if (name && name !== "") {
+            updates.push("name = ?");
+            params.push(name);
+        }
+
+        if (newPassword && newPassword !== "") {
+            const hashed = await bcrypt.hash(newPassword, 10);
+            updates.push("password = ?");
+            params.push(hashed);
+        }
+
+        if (updates.length === 0) {
+            return res.status(400).json({ message: "No fields to update" });
+        }
+
+        sql += updates.join(", ") + " WHERE user_id = ?";
+        params.push(id);
+
+        await bebaspustaka.query(sql, params);
+
+        res.json({ message: "User updated successfully" });
+
+    } catch (err) {
+        console.log("UPDATE ERROR:", err);
+        res.status(500).json({ message: "Server error" });
     }
-
-    if (name && name !== "") {
-        updates.push("name = ?");
-        params.push(name);
-    }
-
-    if (newPassword && newPassword !== "") {
-        const hashed = await bcrypt.hash(newPassword, 10);
-        updates.push("password = ?");
-        params.push(hashed);
-    }
-
-    if (updates.length === 0) {
-        return res.status(400).json({ message: "No fields to update" });
-    }
-
-    sql += updates.join(", ") + " WHERE user_id = ?";
-    params.push(id);
-
-
-    await bebaspustaka.query(sql, params);
-
-    res.json({ message: "User updated successfully" });
 };
 
 exports.getUserInfo = async (req, res) => {

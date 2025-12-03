@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"; // ⭐️ Import useEffect
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // ⭐️ Import axios
+import authCheck from "./authCheck";
 import {
   IconUsers,
   IconHistory,
@@ -14,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 
 export default function Profile () {
+  authCheck();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [loading, setLoading] = useState(true); // ⭐️ State untuk loading
@@ -116,7 +118,7 @@ export default function Profile () {
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasiSA" className={getSidebarItemClass()}>
+                        <a href="/approvalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>

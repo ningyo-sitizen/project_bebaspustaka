@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-
+import authCheck from "./authCheck";
 import { DayPicker } from "react-day-picker";
 import 'react-day-picker/dist/style.css';
 import {
@@ -18,7 +18,9 @@ import "./App.css";
 import axios from "axios";
 
 function Approval() {
+    authCheck();
     const [data, setData] = useState([]);
+    
     const [loading, setLoading] = useState(false);
     const [search, setSearch] = useState("");
     const [checkedItems, setCheckedItems] = useState({});
@@ -394,9 +396,11 @@ function Approval() {
                             <path d="M18 15l3-3" />
                         </svg>
 
+                    <Link to="/logout">
                         <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                             Keluar
                         </h2>
+                    </Link>
                     </div>
                 </aside>
 

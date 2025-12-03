@@ -1,6 +1,8 @@
 // History.jsx
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import authCheck from "./authCheck";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
@@ -68,6 +70,14 @@ const parseDateISO = (isoString) => {
     }
 };
 
+const handleLogout = () => {
+  // Hapus local storage
+  localStorage.removeItem("token");
+  localStorage.removeItem("user");
+
+  // Redirect ke halaman login
+  navigate("/login");
+};
 
 // KOMPONEN: Modal Filter Tanggal
 
@@ -86,6 +96,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
         setStartDateISO(selectedRange.start ? formatDateISO(selectedRange.start) : '');
         setEndDateISO(selectedRange.end ? formatDateISO(selectedRange.end) : '');
     }, [selectedRange]);
+
 
     const handleDayClick = (day) => {
         if (!day) return;
@@ -293,6 +304,7 @@ const SortDropdown = ({ isOpen, onClose, selectedSort, setSelectedSort }) => {
 // KOMPONEN UTAMA HISTORY
 // ---------------------------------------------------
 const History = () => {
+    authCheck();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -318,13 +330,48 @@ const History = () => {
         limit: 8,
     });
 
-    const [profileData] = useState({
-        name: "Zahrah Purnama",
-        role: "Admin",
-        photo: ZAHRAH_PHOTO_URL,
+    const [profileData, setProfileData] = useState({
+        user_id: "",
+        username: "",
+        name: "",
+        role: "",
+        photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
     });
 
     const navigate = useNavigate();
+
+        useEffect(() => {
+            const fetchProfile = async () => {
+                const user = JSON.parse(localStorage.getItem('user'))
+                const user_id = user.user_id;
+                const token = localStorage.getItem('token')
+                try {
+                    // Ganti URL sesuai endpoint backend Anda
+                    const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        }
+                    });
+    
+                    setProfileData(response.data);
+    
+    
+                } catch (error) {
+                    console.error("Gagal mengambil data profil:", error);
+                    // Tampilkan pesan default jika gagal
+                    setProfileData({
+                        name: "Gagal memuat",
+                        username: "N/A",
+                        role: "N/A",
+                    });
+                    // Tambahkan alert jika perlu
+                    // alert("Gagal terhubung ke server untuk memuat data profil.");
+                }
+            }
+            fetchProfile();
+    
+        }, []);
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
@@ -389,14 +436,15 @@ const History = () => {
                 };
 
                 if (isMounted) {
-                    const transformedData = rows.map((item, idx) => ({
-                        id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
-                        name: item.user || item.name || '-',
-                        role: item.user === 'Admin' ? 'Admin' : (item.role || 'Super Admin'),
-                        timestamp: item.time || item.timestamp || new Date().toISOString(),
-                        activity: item.user_action || item.activity || '',
-                        photo: item.photo || null
-                    }));
+const transformedData = rows.map((item, idx) => ({
+    id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
+    name: item.user || item.name || '-',
+    role: item.role ? item.role.toLowerCase() : 'sistem',  // backend role
+    timestamp: item.time || item.timestamp || new Date().toISOString(),
+    activity: item.user_action || item.activity || '',
+    photo: item.photo || null
+}));
+
                     setHistoryList(transformedData);
                     setPagination(prev => ({ ...prev, ...paginationFromServer }));
                     setIsLoading(false);
@@ -477,11 +525,11 @@ const History = () => {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
-                        <a href="/analytic" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-                        <a href="/approval" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
-                        <a href="/user-control" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
-                        <a href="/history" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
+                        <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
+                        <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
+                        <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
+                        <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
+                        <a href="/historySA" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
                     </nav>
                 </div>
             </aside>
@@ -633,15 +681,18 @@ const History = () => {
                                     <div className="flex-1 -mt-1">
                                         <div className="flex items-center gap-2 mb-2">
                                             <p className="font-semibold text-base text-[#023048]">{item.name}</p>
-                                            <span
-                                                className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-                                                    item.role === 'Super Admin'
-                                                        ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
-                                                        : 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
-                                                }`}
-                                            >
-                                                {item.role}
-                                            </span>
+<span
+    className={`text-xs px-2 py-0.5 rounded-md font-medium ${
+        item.role === 'super admin'
+            ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
+        : item.role === 'Admin'
+            ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+        : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
+    }`}
+>
+    {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+</span>
+
                                         </div>
 
                                         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full">

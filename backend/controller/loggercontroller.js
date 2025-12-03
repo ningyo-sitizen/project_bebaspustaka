@@ -2,15 +2,16 @@ const { bebaspustaka, opac } = require('../config');
 
 exports.postUserInput = async (req, res) => {
     try {
-        const { user_name, user_action, action_status, time } = req.body;
+        const { user_name, role,user_action, action_status, time } = req.body;
 
         const sql = `
-            INSERT INTO logger (\`user\`, user_action, action_status, time)
-            VALUES (?, ?, ?, ?)
+            INSERT INTO logger (\`user\`,role, user_action, action_status, time)
+            VALUES (?, ?, ?, ?, ?)
         `;
 
         const [result] = await bebaspustaka.query(sql, [
             user_name,
+            role,
             user_action,
             action_status,
             time
@@ -19,6 +20,8 @@ exports.postUserInput = async (req, res) => {
         return res.status(201).json({
             message: "logging berhasil"
         });
+
+        console.log(result)
 
     } catch (error) {
         console.error("Logging error:", error);
@@ -62,7 +65,7 @@ exports.getLog = async(req, res) => {
         const totalPages = Math.ceil(totalRecords / limit);
         
         const sql = `
-            SELECT \`user\`, user_action, action_status, time 
+            SELECT \`user\`, role,user_action, action_status, time 
             FROM logger 
             ${whereClause}
             ORDER BY ${sortBy} ${sortOrder}
@@ -82,6 +85,8 @@ exports.getLog = async(req, res) => {
                 hasPrevPage: page > 1
             }
         });
+
+        console.log(rows)
     } catch (err) {
         console.log("SQL ERROR:", err);
         res.status(500).json({ message: "Server error" });

@@ -1,5 +1,6 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
+import authCheck from './authCheck';
 
 import {
     Chart as ChartJS,
@@ -41,6 +42,7 @@ ChartJS.register(
 );
 
 function Analytic() {
+    authCheck();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [limit] = useState(10);
 
@@ -1552,9 +1554,11 @@ function Analytic() {
                             <path d="M18 15l3 -3" />
                         </svg>
 
+                    <Link to="/logout">
                         <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                             Keluar
                         </h2>
+                    </Link>
                     </div>
                 </aside>
 

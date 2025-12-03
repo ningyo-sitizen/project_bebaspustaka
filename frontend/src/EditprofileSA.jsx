@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";;
 import axios from "axios";
+import authCheck from "./authCheck";
 import {
   IconUsers,
   IconHistory,
@@ -18,6 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export default function EditProfile() {
+  authCheck();
   // --- STATE MANAGEMENT ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -110,7 +112,6 @@ export default function EditProfile() {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // Validasi password
   if (formData.newPassword !== formData.confirmPassword) {
     alert("Password baru dan konfirmasi tidak cocok!");
     return;
@@ -213,7 +214,7 @@ const handleSubmit = async (e) => {
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasiSA" className={getSidebarItemClass()}>
+                        <a href="/approvalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>
@@ -308,7 +309,7 @@ const handleSubmit = async (e) => {
 
             {/* Navigasi Breadcrumb */}
             <button
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/profileSA")}
               className="text-[#667790] text-lg sm:text-2xl font-semibold hover:underline"
             >
               Profile
@@ -339,7 +340,7 @@ const handleSubmit = async (e) => {
 
               {/* Navigasi Tabs */}
               <button
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/profileSA")}
                 className="pb-2 text-gray-500 hover:text-gray-700 text-xs sm:text-sm"
               >
                 Rincian Saya
@@ -484,7 +485,7 @@ const handleSubmit = async (e) => {
                 {/* BUTTON */}
                 <div className="pt-4 sm:pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-5">
                   <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/profileSA")}
                     type="button"
                     className="px-4 py-2 sm:px-6 sm:py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"
                   >

@@ -1,5 +1,6 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import axios from 'axios';
+import authCheck from './authCheck';
 import { useNavigate } from "react-router-dom";
 import {
     Chart as ChartJS,
@@ -37,6 +38,7 @@ ChartJS.register(
 );
 
 function Dashboard() {
+    authCheck();
     //data dummy
     const [data, setData] = useState([
         { id: 1, name: "Hoshimi Miyabi", nim: "1234", jurusan: "TIK", statusbebaspustakanya: 0 },
@@ -316,10 +318,11 @@ function Dashboard() {
                             <path d="M9 12h12l-3 -3" />
                             <path d="M18 15l3 -3" />
                         </svg>
-
+                    <Link to="/logout">
                         <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
                             Keluar
                         </h2>
+                    </Link>
                     </div>
                 </aside>
 

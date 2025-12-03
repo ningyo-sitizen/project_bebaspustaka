@@ -20,42 +20,35 @@ function Login() {
       console.log("Response:", data);
 
       if (res.ok) {
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("user", JSON.stringify(data.user));
-        const userk = JSON.parse(localStorage.getItem('user'))
-        console.log("LOCALSTORAGE USER:", localStorage.getItem("user"));
-        console.log("PARSED:", JSON.parse(localStorage.getItem("user")));
-        const user_name = userk.username || userk.name;
-        const user_action = "user malakukan login"
-        const action_status = "berhasil"
-        const now = new Date();
-        const pad = (n) => n.toString().padStart(2, "0");
-        const token = localStorage.getItem('token');
-        const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
-        const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+          const userk = JSON.parse(localStorage.getItem('user'))
+          console.log("LOCALSTORAGE USER:", localStorage.getItem("user"));
+          console.log("PARSED:", JSON.parse(localStorage.getItem("user")));
+          const user_name = userk.username || userk.name;
+          const role = userk.role;
+          const user_action = "user malakukan login"
+          const action_status = "berhasil"
+          const now = new Date();
+          const pad = (n) => n.toString().padStart(2, "0");
+          const token = localStorage.getItem('token');
+          const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+          const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
 
-        const time = `${datePart} ${timePart}`;   
+          const time = `${datePart} ${timePart}`;
 
-        const res = await fetch("http://localhost:8080/api/logger/logging", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({ user_name, user_action, action_status, time })
+          const res = await fetch("http://localhost:8080/api/logger/logging", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${token}`
+            },
+            body: JSON.stringify({ user_name, role,user_action, action_status, time })
 
 
         })
         const logger = await res.json();
         console.log(logger);
-        
-          const res2 = await fetch("http://localhost:8080/api/summary/sync", {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          }
-        })
 
         if (data.user.role == "super admin") {
           navigate("/dashboardSA")
@@ -63,9 +56,20 @@ function Login() {
         } else {
           navigate("/dashboard");
         }
+          fetch("http://localhost:8080/api/summary/sync", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        }
+      }).catch(err => {
+        console.log("SYNC ERROR (diabaikan):", err);
+      });
       } else {
         alert(data.message || "Login gagal");
+        return
       }
+
     } catch (err) {
       console.error("Error:", err);
       alert("Terjadi kesalahan server");

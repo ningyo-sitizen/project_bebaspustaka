@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react"; // ⭐️ Import useEffect
 import { useNavigate } from "react-router-dom";
 import axios from "axios"; // ⭐️ Import axios
+import authCheck from "./authCheck";
 import {
   IconHome,
   IconUsers,
@@ -14,6 +15,7 @@ import {
 } from "@tabler/icons-react";
 
 const Profile = () => {
+  authCheck();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false); 
   const [loading, setLoading] = useState(true); // ⭐️ State untuk loading

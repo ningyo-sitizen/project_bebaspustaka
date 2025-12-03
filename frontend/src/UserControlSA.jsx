@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import authCheck from "./authCheck";
 import {
     IconHome,
     IconChartBar,
@@ -183,7 +184,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                     const token = localStorage.getItem("token");
 
                     const actor = currentUser.username || currentUser.name;
-
+                    const role = currentUser.role;
                     const user_action = `user berhasil menambahkan akun baru (${formData.username}) dengan role (${formData.role})`;
                     const action_status = "berhasil";
 
@@ -199,7 +200,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${token}`
                         },
-                        body: JSON.stringify({ user_name: actor, user_action, action_status, time })
+                        body: JSON.stringify({ user_name: actor,role, user_action, action_status, time })
                     });
 
                 } catch (logError) {
@@ -371,6 +372,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
 
 // --- KOMPONEN UTAMA USER CONTROL ---
 export default function UserControl() {
+    authCheck();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -478,10 +480,11 @@ export default function UserControl() {
             // 2️⃣ Logging Activity
             const userk = JSON.parse(localStorage.getItem('user'));
 
+            const role = userk.role;
             const user_name = userk.username || userk.name;
             const user_action = `user berhasil menghapus akun user ${userToDelete.username}`;
             const action_status = "berhasil";
-
+            
             const now = new Date();
             const pad = (n) => n.toString().padStart(2, "0");
             const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -494,7 +497,7 @@ export default function UserControl() {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ user_name, user_action, action_status, time })
+                body: JSON.stringify({ user_name,role, user_action, action_status, time })
             });
 
             // 3️⃣ Update list user di frontend tanpa reload
@@ -556,23 +559,23 @@ export default function UserControl() {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
+                        <a href="/dashboardSA" className={getSidebarItemClass()}>
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/approvalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>
-                        <a href="/user-control" className={getSidebarItemClass(true)}>
+                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
                             <IconUsers size={20} />
                             User Control
                         </a>
-                        <a href="/history" className={getSidebarItemClass()}>
+                        <a href="/historySA" className={getSidebarItemClass()}>
                             <IconHistory size={20} />
                             History
                         </a>

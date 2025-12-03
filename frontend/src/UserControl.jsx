@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import authCheck from "./authCheck";
 import axios from "axios";
 import {
     IconHome,
@@ -250,9 +251,8 @@ const handleSubmit = async (e) => {
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
                             required
                         >
-                            <option value="Admin">Admin</option>
-                            <option value="Super Admin">Super Admin</option>
-                            <option value="Dosen">Dosen</option>
+                            <option value="Admin">admin</option>
+                            <option value="Super Admin">super sdmin</option>
                         </select>
                     </div>
 
@@ -343,6 +343,7 @@ const handleSubmit = async (e) => {
 
 // --- KOMPONEN UTAMA USER CONTROL ---
 const UserControl = () => {
+    authCheck();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
