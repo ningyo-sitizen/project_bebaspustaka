@@ -18,8 +18,11 @@ import {
     IconHome,
     IconChartBar,
     IconBell,
+    IconMenu2,
     IconLogout,
     IconUser,
+    IconUsers,
+    IconHistory,
     IconChevronDown,
 } from "@tabler/icons-react";
 import { useState, useEffect } from 'react';
@@ -60,6 +63,15 @@ function Dashboard() {
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
+    };
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const getSidebarItemClass = (isActive = false) => {
+        const baseClasses =
+            "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
+        return isActive
+            ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold`
+            : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
 
     const [chartData, setChartData] = useState({
@@ -153,192 +165,127 @@ function Dashboard() {
     };
 
     return (
-        <main className="font-jakarta bg-[#EDF1F3] w-screen min-h-screen">
+        <main className="font-jakarta w-full flex bg-[#EDF1F3]">
 
-            <header className="w-full bg-white border-b p-4 flex justify-end relative">
-
-                <div
-                    className="flex items-center gap-2 cursor-pointer pr-4 relative"
-                    onClick={toggleDropdown}
-                >
-                    <IconChevronDown size={18} className="text-gray-600" />
-
-                    <p className="font-semibold text-sm text-[#023048] select-none">
-                        <span>Hai,&nbsp;</span>
-                        {profileData.username}
-                    </p>
-
-                    <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
-                        <IconUser size={24} className="text-gray-500" />
+            <aside
+                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
+                ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
+                lg:translate-x-0 lg:static`}
+            >
+                <div className="flex flex-col h-full">
+                    <div className="flex flex-col items-center p-6">
+                        <div className="flex items-center gap-4 mb-6">
+                            {/* Icon Bebas Pustaka */}
+                            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+                            <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+                        </div>
+                        <div className="w-full border-b border-gray-200"></div>
                     </div>
+
+                    <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
+                        <a href="/dashboard" className={getSidebarItemClass(true)}>
+                            <IconHome size={20} />
+                            Dashboard
+                        </a>
+                        <a href="/analytic" className={getSidebarItemClass()}>
+                            <IconChartBar size={20} />
+                            Data Analitik
+                        </a>
+                        <a href="/approval" className={getSidebarItemClass()}>
+                            <IconBell size={20} />
+                            Konfirmasi Data
+                        </a>
+                    </nav>
                 </div>
+            </aside>
+            {isSidebarOpen && (
+                <div
+                    className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"
+                    onClick={toggleSidebar}
+                ></div>
+            )}
 
-                {/* Dropdown Menu */}
-                {isDropdownOpen && (
-                    <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-10">
+            <div className="flex-1">
 
-                        {/* Header Profile Dropdown (Default/Putih) */}
-                        <div className="flex items-center gap-3 p-4 border-b">
+                {/* NAVBAR */}
+                <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
+                    <button
+                        className="lg:hidden text-[#023048]"
+                        onClick={toggleSidebar}
+                        aria-label="Toggle menu"
+                    >
+                        <IconMenu2 size={24} />
+                    </button>
+                    <div
+                        className="flex items-center gap-2 cursor-pointer pr-4 relative"
+                        onClick={toggleDropdown}
+                    >
+                        <IconChevronDown size={18} className="text-gray-600" />
+                        <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                            Hai, {profileData.name.split(" ")[0]}
+                        </p>
+                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                             <IconUser size={24} className="text-gray-500" />
-                            <div>
-                                <p className="font-semibold text-sm text-[#023048]">
-                                    {profileData.username}
-                                </p>
-                                <p className="text-xs text-gray-500">{profileData.role}</p>
+                        </div>
+                    </div>
+                    {isDropdownOpen && (
+                        <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
+                            <div className="flex items-center gap-3 p-4 border-b">
+                                <IconUser size={24} className="text-gray-500" />
+                                <div>
+                                    <p className="font-semibold text-sm text-[#023048]">
+                                        {profileData.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">{profileData.role}</p>
+                                </div>
+                            </div>
+                            <div className="p-2 space-y-1">
+                                <button
+                                    onClick={() => navigate("/profile")}
+                                    className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
+                                >
+                                    <IconUser size={18} />
+                                    Profile
+                                </button>
+                                <a
+                                    href="/logout"
+                                    className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                >
+                                    <IconLogout size={18} />
+                                    Keluar
+                                </a>
                             </div>
                         </div>
+                    )}
+                </header>
 
-                        {/* Menu Dropdown */}
-                        <div className="p-2 space-y-1">
-                            <a
-                                href="/profile"
-                                className="flex items-center gap-3 p-2 text-sm bg-[#667790] text-white rounded-md"
-                                onClick={() => setIsDropdownOpen(false)}
-                            >
-                                <IconUser size={18} className="text-white" />
-                                Profile
-                            </a>
+                <div className="p-8">
+                    <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
+                        <div className="flex flex-col md:flex-row w-full">
 
-                            {/* Keluar (Logout) Link */}
-                            <a
-                                href="/logout"
-                                className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                onClick={() => setIsDropdownOpen(false)}
-                            >
-                                <IconLogout size={18} />
-                                Keluar
-                            </a>
-                        </div>
-                    </div>
-                )}
-            </header>
+                            <div className="md:w-1/2 p-10 text-white flex flex-col justify-start text-left">
+                                <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
+                                <p className="font-normal text-lg mb-2">Di Dashboard Analitik Bebas Pustaka</p>
+                                <p className="font-light text-sm">
+                                    Dashboard ini menyajikan data kunjungan dan status bebas pustaka secara
+                                    terstruktur untuk membantu Admin dalam memantau dan mengelola informasi perpustakaan.
+                                </p>
+                            </div>
 
-            <div className="flex pt-20 min-h-screen">
-                {/* intinya ini sidebar */}
-                <aside className="fixed flex flex-col top-0 left-0 w-64 md:w-64 sm:w-52 h-screen bg-white border-[2px] border-black-2 z-50">
-
-                    <div className="flex items-center ml-4">
-                        <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] 
-                      w-[29px] h-[29px] bg-cover bg-center m-4"></div>
-                        <div className="text-[#023048]">Bebas Pustaka</div>
-                    </div>
-
-                    <div className="w-40 h-[2px] mt-[20px] bg-gray-200 mx-auto"></div>
-
-                    <div className="flex-1 py-6">
-
-                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#667790"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M5 12l-2 0l9 -9l9 9l-2 0" />
-                                <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
-                                <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
-                            </svg>
-                            <Link to="/dashboard">
-                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                    Dashboard
-                                </h2>
-                            </Link>
-                        </div>
-
-                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#667790"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M3 13a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v6a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M9 9a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v10a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M15 5a1 1 0 0 1 1 -1h4a1 1 0 0 1 1 1v14a1 1 0 0 1 -1 1h-4a1 1 0 0 1 -1 -1z" />
-                                <path d="M4 20h14" />
-                            </svg>
-                            <Link to="/Analytic">
-                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                    Data Analitik
-                                </h2>
-                            </Link>
-                        </div>
-
-                        <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-5 px-3">
-                            <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="#667790"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
-                            >
-                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                <path d="M11.5 17h-7.5a4 4 0 0 0 2 -3v-3a7 7 0 0 1 4 -6a2 2 0 1 1 4 0a7 7 0 0 1 4 6v3c.016 .129 .037 .256 .065 .382" />
-                                <path d="M9 17v1a3 3 0 0 0 2.502 2.959" />
-                                <path d="M15 19l2 2l4 -4" />
-                            </svg>
-
-                            <Link to="/approval">
-                                <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                                    Konfirmasi Data
-                                </h2>
-                            </Link>
+                            <div className="md:w-1/2 flex justify-end items-center pr-20">
+                                <img
+                                    src="https://cdn.designfast.io/image/2025-12-03/c0fb8085-f25e-4ce8-8687-24ace6ba9f2e.png"
+                                    alt="icon"
+                                    className="w-52 h-52 object-cover"
+                                />
+                            </div>
 
                         </div>
                     </div>
 
-
-
-                    <div className="group flex items-center justify-start cursor-pointer rounded-md bg-white hover:bg-[#667790] w-[200px] h-[39px] mb-5 ml-10 mt-auto px-3">
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#667790"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="w-[25px] h-[25px] transition-all duration-200 group-hover:stroke-white group-focus:stroke-white"
-                        >
-                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                            <path d="M14 8v-2a2 2 0 0 0 -2 -2h-7a2 2 0 0 0 -2 2v12a2 2 0 0 0 2 2h7a2 2 0 0 0 2 -2v-2" />
-                            <path d="M9 12h12l-3 -3" />
-                            <path d="M18 15l3 -3" />
-                        </svg>
-                    <Link to="/logout">
-                        <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                            Keluar
-                        </h2>
-                    </Link>
-                    </div>
-                </aside>
-
-
-
-                <main className="ml-64 flex-1 p-8">
-
-                    <div className="relative w-full max-w-3xl mx-auto rounded-2xl overflow-hidden shadow-sm mb-8">
-                        <div className="w-full pb-[25%] bg-[url('https://cdn.designfast.io/image/2025-10-30/db2f71c9-29cb-42eb-a2eb-47ec9e3bdb1c.png')] bg-contain bg-no-repeat bg-center">
-                        </div>
-                    </div>
-
-                    <p className="font-semibold text-2xl text-left text-black mb-8">
+                    <p className="font-semibold text-2xl text-left text-black mb-8 overflow-x-hidden">
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
-
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
                         {/* ini chart */}
@@ -350,23 +297,20 @@ function Dashboard() {
                                 </p>
                             </div>
 
-                            <div className="shadow-sm bg-white p-2 flex-1 overflow-x-auto">
-
+                            <div className="shadow-sm bg-white p-2 w-full h-full overflow-x-auto">
                                 {chartData.lineChart && (
-                                    <div className="w-full min-w-[500px]">
+                                    <div className="w-full min-w-[500px]" style={{ height: '300px', maxWidth: '100%' }}>
                                         <Line
                                             data={chartData.lineChart}
                                             options={{
                                                 responsive: true,
-                                                maintainAspectRatio: true,
+                                                maintainAspectRatio: false,
                                                 plugins: {
                                                     legend: {
                                                         position: 'top',
                                                         labels: {
-                                                            font: {
-                                                                family: '"Plus Jakarta Sans", sans-serif',
-                                                            }
-                                                        }
+                                                            font: { family: '"Plus Jakarta Sans", sans-serif' },
+                                                        },
                                                     },
                                                     title: {
                                                         display: true,
@@ -375,37 +319,24 @@ function Dashboard() {
                                                             'mencatat jumlah dan frekuensi kehadiran mereka.'
                                                         ],
                                                         color: '#616161',
-                                                        font: {
-                                                            family: '"Plus Jakarta Sans", sans-serif',
-                                                            size: 14,
-                                                            weight: '300',
-                                                        },
-                                                        padding: {
-                                                            top: 10,
-                                                            bottom: 20,
-                                                        },
+                                                        font: { family: '"Plus Jakarta Sans", sans-serif', size: 14, weight: '300' },
+                                                        padding: { top: 10, bottom: 20 },
                                                         align: 'center',
                                                     },
                                                 },
                                                 scales: {
-                                                    x: {
-                                                        grid: {
-                                                            display: false
-                                                        }
-                                                    },
+                                                    x: { grid: { display: false } },
                                                     y: {
-                                                        grid: {
-                                                            color: '#f3f4f6'
-                                                        }
-                                                    }
-                                                }
+                                                        beginAtZero: true,       // biar garis nggak datar
+                                                        grid: { color: '#f3f4f6' },
+                                                    },
+                                                },
                                             }}
                                         />
                                     </div>
                                 )}
                             </div>
                         </div>
-
                         {/* tabel kanan */}
                         <div className="flex flex-col h-full">
 
@@ -479,15 +410,16 @@ function Dashboard() {
 
                     </div>
 
-                </main>
-            </div>
-
-            {/* Footer */}
-            <footer className='bg-[#023048] text-white py-6 text-center'>
-                <div className="ml-64">
-                    <p className="text-sm">© 2024 Bebas Pustaka - Sistem Manajemen Perpustakaan</p>
                 </div>
-            </footer>
+
+                {/* Footer */}
+                <footer className='bg-[#023048] text-white py-6 text-center mt-auto'>
+                    <div className="lg:ml-64">
+                        <p className="text-sm">© 2024 Bebas Pustaka - Sistem Manajemen Perpustakaan</p>
+                    </div>
+                </footer>
+
+            </div>
         </main>
     );
 }

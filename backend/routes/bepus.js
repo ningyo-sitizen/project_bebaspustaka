@@ -1,4 +1,4 @@
-    const express = require("express");
+const express = require("express");
 const router = express.Router();
 
 const {
@@ -30,4 +30,4 @@ router.get("/export/pdf", exportPDF);
 // EXPORT EXCEL
 router.get("/export/excel", exportExcel);
 
-module.exports = router;
+module.exports = router;

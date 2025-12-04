@@ -141,72 +141,72 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
         setFormData(prev => ({ ...prev, [name]: value }));
     };
 
-const handleSubmit = async (e) => {
-    e.preventDefault();
-    const token = localStorage.getItem('token');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token');
 
-    // Basic validation
-    if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
-        alert("Semua field harus diisi!");
-        return;
-    }
+        // Basic validation
+        if (!formData.name.trim() || !formData.username.trim() || !formData.password) {
+            alert("Semua field harus diisi!");
+            return;
+        }
 
-    if (formData.password !== formData.confirmPassword) {
-        alert("Password dan Konfirmasi Password tidak cocok!");
-        return;
-    }
+        if (formData.password !== formData.confirmPassword) {
+            alert("Password dan Konfirmasi Password tidak cocok!");
+            return;
+        }
 
-    if (formData.password.length < 6) {
-        alert("Password harus minimal 6 karakter!");
-        return;
-    }
+        if (formData.password.length < 6) {
+            alert("Password harus minimal 6 karakter!");
+            return;
+        }
 
-    try {
-        const response = await axios.post(
-            'http://localhost:8080/api/profile/register',
-            {
-                name: formData.name.trim(),
-                username: formData.username.trim(),
-                password: formData.password,
-                role: formData.role
-            },
-            {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
+        try {
+            const response = await axios.post(
+                'http://localhost:8080/api/profile/register',
+                {
+                    name: formData.name.trim(),
+                    username: formData.username.trim(),
+                    password: formData.password,
+                    role: formData.role
+                },
+                {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
                 }
+            );
+
+            if (onAddSuccess) {
+                onAddSuccess(response.data);
             }
-        );
 
-        if (onAddSuccess) {
-            onAddSuccess(response.data);
+            setFormData({
+                name: "",
+                role: "Admin",
+                username: "",
+                password: "",
+                confirmPassword: ""
+            });
+            onClose();
+
+        } catch (error) {
+            console.error("Error adding user:", error);
+
+            if (error.response) {
+                // Server responded with error status
+                const serverMessage = error.response.data.message || error.response.data.error || "Unknown server error";
+                alert(`Gagal menambahkan user: ${serverMessage}`);
+            } else if (error.request) {
+                // No response received
+                alert("Gagal terhubung ke server. Periksa koneksi internet Anda.");
+            } else {
+                // Other errors
+                alert("Terjadi kesalahan: " + error.message);
+            }
         }
-
-        setFormData({
-            name: "",
-            role: "Admin",
-            username: "",
-            password: "",
-            confirmPassword: ""
-        });
-        onClose();
-
-    } catch (error) {
-        console.error("Error adding user:", error);
-        
-        if (error.response) {
-            // Server responded with error status
-            const serverMessage = error.response.data.message || error.response.data.error || "Unknown server error";
-            alert(`Gagal menambahkan user: ${serverMessage}`);
-        } else if (error.request) {
-            // No response received
-            alert("Gagal terhubung ke server. Periksa koneksi internet Anda.");
-        } else {
-            // Other errors
-            alert("Terjadi kesalahan: " + error.message);
-        }
-    }
-};
+    };
 
 
     return (
@@ -563,7 +563,7 @@ const UserControl = () => {
                             Hai, {profileData.name.split(" ")[0]}
                         </p>
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                            <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
+                            <IconUser size={24} className="text-gray-500" />
                         </div>
                     </div>
                     {isDropdownOpen && (
