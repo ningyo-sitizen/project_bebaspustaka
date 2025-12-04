@@ -251,8 +251,8 @@ const handleSubmit = async (e) => {
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
                             required
                         >
-                            <option value="Admin">admin</option>
-                            <option value="Super Admin">super sdmin</option>
+                            <option value="admin">admin</option>
+                            <option value="Super admin">super admin</option>
                         </select>
                     </div>
 
