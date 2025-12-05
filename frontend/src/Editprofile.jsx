@@ -303,13 +303,13 @@ const handleSubmit = async (e) => {
             {/* Navigasi Breadcrumb */}
             <button
               onClick={() => navigate("/profile")}
-              className="text-[#667790] text-lg sm:text-2xl font-semibold hover:underline"
+              className="text-[#667790] text-lg lg:text-md font-semibold hover:underline"
             >
               Profile
             </button>
 
             <span className="mx-2 text-gray-400">&gt;</span>
-            <span className="text-[#023048] font-semibold text-lg sm:text-2xl">
+            <span className="text-[#023048] font-semibold text-lg lg:text-md">
               Edit Profile
             </span>
           </div>
