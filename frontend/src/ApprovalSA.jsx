@@ -45,7 +45,6 @@ function Approval() {
                 params: { search, page: currentPage, limit: rowsPerPage }
             });
 
-            // DI SINI FIX NYA
             const result = res.data?.data || [];
 
             const formatted = result.map(d => ({
@@ -106,6 +105,11 @@ function Approval() {
         });
 
         setCheckedItems(newChecked);
+    };
+
+    const SetujuiSemuaBepus = () => {
+        (!setAlertBebasPustakaAll)
+        console.log("Setuju semua bepustaka clicked");
     };
     const handleSingleCheck = (id) => {
         setCheckedItems(prev => {
@@ -299,6 +303,14 @@ function Approval() {
                             <a href="/Approval" className={getSidebarItemClass(true)}>
                                 <IconBell size={20} />
                                 Konfirmasi Data
+                            </a>
+                            <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                                <IconUsers size={20} />
+                                User Control
+                            </a>
+                            <a href="/historySA" className={getSidebarItemClass()}>
+                                <IconHistory size={20} />
+                                History
                             </a>
 
                         </nav>
@@ -724,8 +736,6 @@ function Approval() {
                                                         {item.status === 1 ? "Bebas Pustaka" : "Tidak Bebas Pustaka"}
                                                     </td>
                                                     <td className="p-4 text-[#4ABC4C] whitespace-nowrap overflow-x-auto">
-                                                        {/* kolom tergantung status bebas pustaka di db. uncomment aja yg dibawah*/}
-
 
                                                         {item.statusbebaspustakanya === 0 ? (
                                                             <>
@@ -733,7 +743,7 @@ function Approval() {
                                                                     type="button"
                                                                     onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
                                                                     className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] font-semibold
-                                                            active:scale-90 transition-transform duration-100"
+                                                                               active:scale-90 transition-transform duration-100"
                                                                 >
                                                                     Setujui
                                                                 </button>
@@ -746,7 +756,7 @@ function Approval() {
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
                                                         <button
                                                             className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded"
-                                                            onClick={() => goto('/Keterangn')}
+                                                            onClick={() => goto(`/KeteranganSA/${item.nim}`)}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                                 width="24"
@@ -821,7 +831,7 @@ function Approval() {
                                 <div className="relative w-80 h-80 overflow-hidden">
 
                                     <div className="absolute bg-[url('https://cdn.designfast.io/image/2025-11-22/cf3fe802-a5e6-4d12-89e9-3cdec8f83aed.png')] 
-                                    bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
+                            bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
                                     </div>
 
                                     <p className='absolute ml-2 left-[270px] top-24 font-semibold text-xl cursor-pointer z-50' onClick={() => setAlertBebasPustaka(false)}> X </p>
@@ -869,7 +879,7 @@ function Approval() {
                                             type="button"
                                             onClick={SetujuiSemuaBepus}
                                             className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-semibold
-                                    active:scale-90 transition-transform duration-100"
+                                                    active:scale-90 transition-transform duration-100"
                                         >
                                             Setujui
                                         </button>

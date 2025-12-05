@@ -3,12 +3,17 @@ import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [name, setName] = useState("");
+  const [failedLogin, setFailedLogin] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
 
+    if (!name || !password) {
+      setFailedLogin("*Harap input username dan password");
+      return; 
+    }
     try {
       const res = await fetch("http://localhost:8080/api/auth/login", {
         method: "POST",
@@ -20,20 +25,61 @@ function Login() {
       console.log("Response:", data);
 
       if (res.ok) {
+        setFailedLogin("");
         localStorage.setItem("token", data.token);
         localStorage.setItem("user", JSON.stringify(data.user));
-        if(data.user.role == "super admin"){
-          navigate("/approval")
+        const userk = JSON.parse(localStorage.getItem('user'))
+        console.log("LOCALSTORAGE USER:", localStorage.getItem("user"));
+        console.log("PARSED:", JSON.parse(localStorage.getItem("user")));
+        const user_name = userk.username || userk.name;
+        const role = userk.role;
+        const user_action = "user malakukan login"
+        const action_status = "berhasil"
 
-        }else{
+        //token if login
+        const now = new Date();
+        const pad = (n) => n.toString().padStart(2, "0");
+        const token = localStorage.getItem('token');
+        const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+        const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+
+        const time = `${datePart} ${timePart}`;
+
+        const res = await fetch("http://localhost:8080/api/logger/logging", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({ user_name, role, user_action, action_status, time })
+
+
+        })
+        const logger = await res.json();
+        console.log(logger);
+
+        if (data.user.role == "super admin") {
+          navigate("/dashboardSA")
+
+        } else {
           navigate("/dashboard");
         }
+        fetch("http://localhost:8080/api/summary/sync", {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        }).catch(err => {
+          console.log("SYNC ERROR (diabaikan):", err);
+        });
       } else {
-        alert(data.message || "Login gagal");
+        setFailedLogin("*Maaf, Username/Password yang anda masukan salah, silahkan coba lagi!");
       }
+
     } catch (err) {
       console.error("Error:", err);
-      alert("Terjadi kesalahan server");
+      setFailedLogin("*Maaf, Username/Password yang anda masukan salah, silahkan coba lagi!");
     }
   };
 
@@ -105,7 +151,7 @@ function Login() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="outline-none w-full"
-                required
+                
               />
             </div>
 
@@ -134,12 +180,12 @@ function Login() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="outline-none w-full"
-                required
+                
               />
             </div>
 
             {/* Remember */}
-            <div className="flex justify-between items-center w-[300px] text-sm text-[#023048] mt-3">
+            <div className="flex justify-between items-center w-full text-sm text-[#023048] mt-3">
               <label className="flex items-center space-x-2">
                 <input type="checkbox" className="accent-[#023048]" />
                 <span>Remember me</span>
@@ -152,12 +198,14 @@ function Login() {
 
             <button
               type="submit"
-              className="bg-[#023048] text-white w-80 h-12 rounded-lg hover:bg-[#034d66] transition duration-200 font-semibold"
+              className="bg-[#023048] text-white w-full h-12 rounded-lg hover:bg-[#034d66] transition duration-200 font-semibold"
             >
               LOGIN
             </button>
 
-            <div className="hidden relative w-[400px] text-[#FF1515] ">*Maaf, Username/Password yang anda masukan salah, silahkan coba lagi!</div>
+            <div className={`relative w-full text-left text-[#FF1515] ${failedLogin ? "" : "hidden"}`}>
+              {failedLogin}
+            </div>
           </form>
         </div>
 

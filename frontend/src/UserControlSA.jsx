@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import authCheck from "./authCheck";
 import axios from "axios";
+import authCheck from "./authCheck";
 import {
     IconHome,
     IconChartBar,
@@ -179,6 +179,34 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
             );
 
             if (onAddSuccess) {
+                try {
+                    const currentUser = JSON.parse(localStorage.getItem("user"));
+                    const token = localStorage.getItem("token");
+
+                    const actor = currentUser.username || currentUser.name;
+                    const role = currentUser.role;
+                    const user_action = `user berhasil menambahkan akun baru (${formData.username}) dengan role (${formData.role})`;
+                    const action_status = "berhasil";
+
+                    const now = new Date();
+                    const pad = (n) => n.toString().padStart(2, "0");
+                    const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+                    const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+                    const time = `${datePart} ${timePart}`;
+
+                    await fetch("http://localhost:8080/api/logger/logging", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ user_name: actor,role, user_action, action_status, time })
+                    });
+
+                } catch (logError) {
+                    console.error("Gagal mencatat log tambah user:", logError);
+                }
+
                 onAddSuccess(response.data);
             }
 
@@ -252,7 +280,8 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                             required
                         >
                             <option value="admin">admin</option>
-                            <option value="Super admin">super admin</option>
+                            <option value="super admin">super admin</option>
+                            <option value="Dosen">Dosen</option>
                         </select>
                     </div>
 
@@ -342,7 +371,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
 };
 
 // --- KOMPONEN UTAMA USER CONTROL ---
-const UserControl = () => {
+export default function UserControl() {
     authCheck();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -360,7 +389,20 @@ const UserControl = () => {
         role: "",
         photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
     });
-
+    const fetchProfileList = async () => {
+        const token = localStorage.getItem('token')
+        try {
+            const response = await axios.get(`http://localhost:8080/api/profile/getAllUser`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                }
+            });
+            setUsers(response.data);
+        } catch (error) {
+            console.error("Gagal mengambil data profil:", error);
+        }
+    };
     useEffect(() => {
         const fetchProfile = async () => {
             const user = JSON.parse(localStorage.getItem('user'))
@@ -386,28 +428,6 @@ const UserControl = () => {
                     username: "N/A",
                     role: "N/A",
                 });
-                // Tambahkan alert jika perlu
-                // alert("Gagal terhubung ke server untuk memuat data profil.");
-            }
-        }
-        const fetchProfileList = async () => {
-            const token = localStorage.getItem('token')
-            try {
-                // Ganti URL sesuai endpoint backend Anda
-                const response = await axios.get(`http://localhost:8080/api/profile/getAllUser`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-
-                setUsers(response.data);
-
-
-            } catch (error) {
-                console.error("Gagal mengambil data profil:", error);
-                // Tampilkan pesan default jika gagal
-
                 // Tambahkan alert jika perlu
                 // alert("Gagal terhubung ke server untuk memuat data profil.");
             }
@@ -449,7 +469,7 @@ const UserControl = () => {
         try {
             const token = localStorage.getItem('token');
 
-            // ✅ DELETE request
+            // 1️⃣ DELETE user
             await axios.delete(
                 `http://localhost:8080/api/profile/userInfo?user_id=${userToDelete.user_id}`,
                 {
@@ -457,12 +477,38 @@ const UserControl = () => {
                 }
             );
 
-            // Update UI
-            setUsers(users.filter(user => user.user_id !== userToDelete.user_id));
-            closeDeleteModal();
+            // 2️⃣ Logging Activity
+            const userk = JSON.parse(localStorage.getItem('user'));
 
+            const role = userk.role;
+            const user_name = userk.username || userk.name;
+            const user_action = `user berhasil menghapus akun user ${userToDelete.username}`;
+            const action_status = "berhasil";
+            
+            const now = new Date();
+            const pad = (n) => n.toString().padStart(2, "0");
+            const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+            const timePart = `${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+            const time = `${datePart} ${timePart}`;
+
+            await fetch("http://localhost:8080/api/logger/logging", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({ user_name,role, user_action, action_status, time })
+            });
+
+            // 3️⃣ Update list user di frontend tanpa reload
+            setUsers(prev => prev.filter(u => u.user_id !== userToDelete.user_id));
+
+            // 4️⃣ Notifikasi berhasil
             setNotificationMessage(`Akun ${userToDelete.username} berhasil dihapus.`);
             setShowSuccessNotification(true);
+
+            // 5️⃣ Tutup modal
+            closeDeleteModal();
 
         } catch (error) {
             console.error("Error deleting user:", error);
@@ -470,15 +516,18 @@ const UserControl = () => {
         }
     };
 
-    // Handler untuk menampilkan notifikasi setelah sukses tambah
-    const handleAddUserSuccess = (newUser) => {
-        // Tambahkan user baru ke state users
-        setUsers(prevUsers => [...prevUsers, newUser]);
 
+
+    // Handler untuk menampilkan notifikasi setelah sukses tambah
+    const handleAddUserSuccess = async (newUser) => {
         setIsAddModalOpen(false);
+
         setNotificationMessage(`Akun ${newUser.username} berhasil ditambahkan.`);
         setShowSuccessNotification(true);
+
+        await fetchProfileList(); // reload list setelah tambah user
     };
+
 
 
     // --- UTILITY CLASS ---
@@ -510,23 +559,23 @@ const UserControl = () => {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
+                        <a href="/dashboardSA" className={getSidebarItemClass()}>
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/approvalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
                         </a>
-                        <a href="/user-control" className={getSidebarItemClass(true)}>
+                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
                             <IconUsers size={20} />
                             User Control
                         </a>
-                        <a href="/history" className={getSidebarItemClass()}>
+                        <a href="/historySA" className={getSidebarItemClass()}>
                             <IconHistory size={20} />
                             History
                         </a>
@@ -563,7 +612,7 @@ const UserControl = () => {
                             Hai, {profileData.name.split(" ")[0]}
                         </p>
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                            <IconUser size={24} className="text-gray-500" />
+                            <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
                         </div>
                     </div>
                     {isDropdownOpen && (
@@ -719,5 +768,3 @@ const UserControl = () => {
         </div>
     );
 };
-
-export default UserControl;

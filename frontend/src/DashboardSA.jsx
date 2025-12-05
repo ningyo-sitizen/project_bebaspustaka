@@ -172,9 +172,8 @@ export default function DashboardSA() {
     };
 
     return (
-
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
-            
+
             <div className="flex">
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
@@ -196,13 +195,21 @@ export default function DashboardSA() {
                                 <IconHome size={20} />
                                 Dashboard
                             </a>
-                            <a href="/analytic" className={getSidebarItemClass()}>
+                            <a href="/analyticSA" className={getSidebarItemClass()}>
                                 <IconChartBar size={20} />
                                 Data Analitik
                             </a>
-                            <a href="/Approval" className={getSidebarItemClass()}>
+                            <a href="/ApprovalSA" className={getSidebarItemClass()}>
                                 <IconBell size={20} />
                                 Konfirmasi Data
+                            </a>
+                            <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                                <IconUsers size={20} />
+                                User Control
+                            </a>
+                            <a href="/historySA" className={getSidebarItemClass()}>
+                                <IconHistory size={20} />
+                                History
                             </a>
                         </nav>
                     </div>

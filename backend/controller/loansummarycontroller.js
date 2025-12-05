@@ -31,15 +31,11 @@ exports.getProgramStudi = async (req, res) => {
   try {
     const { lembaga } = req.query;
 
-    console.log("📌 lembaga diterima:", lembaga);
-
     if (!lembaga || lembaga.trim() === "") {
-      console.log("⚠ lembaga kosong → return {}");
       return res.json({});
     }
 
     const lembagaList = lembaga.split(",").map(l => l.trim());
-    console.log("📌 lembagaList:", lembagaList);
 
     if (lembagaList.length === 0) {
       return res.json({});
@@ -55,15 +51,11 @@ exports.getProgramStudi = async (req, res) => {
 
     const [rows] = await bebaspustaka.query(sql, lembagaList);
 
-    console.log("📌 rows:", rows);
-
     const grouped = {};
     rows.forEach(r => {
       if (!grouped[r.lembaga]) grouped[r.lembaga] = [];
       grouped[r.lembaga].push(r.programs_studi);
     });
-
-    console.log("📦 grouped:", grouped);
 
     res.json(grouped);
 
@@ -73,88 +65,109 @@ exports.getProgramStudi = async (req, res) => {
   }
 };
 
-
 exports.getSummaryReport = async (req, res) => {
   try {
-    const { tahun, lembaga, program } = req.query;
+    const { tahun, lembaga, program, page: pageParam, limit: limitParam } = req.query;
 
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 8;
+    const page = parseInt(pageParam) || 1;
+    const limit = parseInt(limitParam) || 7;
     const offset = (page - 1) * limit;
 
-    const sort = req.query.sort || "desc";
-    const sortDirection = sort === "asc" ? "ASC" : "DESC";
+    const tahunList = tahun ? tahun.split(",").map(t => t.trim()) : [];
+    const lembagaList = lembaga ? lembaga.split(",").map(l => l.trim()) : [];
+    const programList = program ? program.split(",").map(p => p.trim()) : [];
 
-    const tahunList = tahun ? tahun.split(",") : [];
-    const lembagaList = lembaga ? lembaga.split(",") : [];
-    const programList = program ? program.split(",") : [];
+    console.log("🔍 Filter params:", { tahunList, lembagaList, programList });
 
-    let sql = `
-      SELECT tahun, lembaga, programs_studi AS program, total_pinjam
-      FROM summary_loan_jurusan
-      WHERE 1=1
-    `;
-    
+
+    const hasProgram = programList.length > 0;
+    const hasLembaga = lembagaList.length > 0;
+    const hasTahun = tahunList.length > 0;
+
+    let sql = '';
     const params = [];
-    let countSql = `SELECT COUNT(*) AS total FROM summary_loan_jurusan WHERE 1=1`;
-    const countParams = [];
 
- 
-    if (tahunList.length > 0) {
+    if (hasProgram && hasLembaga) {
+      sql = `
+        SELECT tahun, lembaga, programs_studi AS program, total_pinjam
+        FROM summary_loan_jurusan
+        WHERE 1=1
+      `;
+    } else if (hasLembaga) {
+      sql = `
+        SELECT tahun, lembaga, SUM(total_pinjam) AS total_pinjam
+        FROM summary_loan_jurusan
+        WHERE 1=1
+      `;
+    } else {
+      sql = `
+        SELECT tahun, SUM(total_pinjam) AS total_pinjam
+        FROM summary_loan_jurusan
+        WHERE 1=1
+      `;
+    }
+
+    if (hasTahun) {
       const placeholders = tahunList.map(() => "?").join(",");
       sql += ` AND tahun IN (${placeholders})`;
-      countSql += ` AND tahun IN (${placeholders})`;
       params.push(...tahunList);
-      countParams.push(...tahunList); 
     }
 
-    if (lembagaList.length > 0) {
+    if (hasLembaga) {
       const placeholders = lembagaList.map(() => "?").join(",");
       sql += ` AND lembaga IN (${placeholders})`;
-      countSql += ` AND lembaga IN (${placeholders})`;
       params.push(...lembagaList);
-      countParams.push(...lembagaList);
     }
 
-    if (programList.length > 0) {
+    if (hasProgram) {
       const placeholders = programList.map(() => "?").join(",");
       sql += ` AND programs_studi IN (${placeholders})`;
-      countSql += ` AND programs_studi IN (${placeholders})`;
       params.push(...programList);
-      countParams.push(...programList); 
     }
 
-    const [countRows] = await bebaspustaka.query(countSql, countParams);
-    const totalRows = countRows[0].total;
+    if (hasProgram && hasLembaga) {
+      sql += ` GROUP BY tahun, lembaga, programs_studi`;
+    } else if (hasLembaga) {
+      sql += ` GROUP BY tahun, lembaga`;
+    } else {
+      sql += ` GROUP BY tahun`;
+    }
+
+    sql += ` ORDER BY tahun ASC`;
+
+    console.log("📊 SQL Query:", sql);
+    console.log("📊 Params:", params);
+
+    const [allRows] = await bebaspustaka.query(sql, params);
+
+    console.log("📦 All Rows Count:", allRows.length);
+    console.log("📦 Sample Data:", allRows.slice(0, 3));
+
+    const totalRows = allRows.length;
     const totalPages = Math.ceil(totalRows / limit);
+    const paginatedRows = allRows.slice(offset, offset + limit);
 
-    sql += ` ORDER BY total_pinjam ${sortDirection}`;
-    sql += ` LIMIT ? OFFSET ?`;
-    params.push(limit, offset);
-
-    const [rows] = await bebaspustaka.query(sql, params);
-
-    console.log("📊 Query result:", {
+    console.log("📄 Paginated:", {
       totalRows,
       totalPages,
       currentPage: page,
-      dataLength: rows.length
+      showing: paginatedRows.length
     });
 
     return res.json({
       mode: "paged",
       page,
       limit,
-      sort,
       totalRows,
       totalPages,
-      data: rows
+      data: paginatedRows,
+      allData: allRows
     });
 
   } catch (err) {
     console.error("❌ Error getSummaryReport:", err);
-    console.error("❌ Error details:", err.message);
-    res.status(500).json({ 
+    console.error("❌ Stack:", err.stack);
+    res.status(500).json({
       message: "Server error",
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
@@ -163,8 +176,8 @@ exports.getSummaryReport = async (req, res) => {
 
 exports.getLoanHistory = async (req, res) => {
   try {
-    const page = parseInt(req.query.page)
-    const limit = parseInt(req.query.limit) 
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
 
     const sql = `
@@ -185,9 +198,7 @@ exports.getLoanHistory = async (req, res) => {
       loan_date: r.loan_date ? r.loan_date.toISOString().split("T")[0] : null,
       due_date: r.due_date ? r.due_date.toISOString().split("T")[0] : null,
       return_date: r.return_date ? r.return_date.toISOString().split("T")[0] : null,
-
       is_return: r.is_return,
-
       status:
         r.is_return === 0 && r.return_date === null
           ? "Belum Dikembalikan"
