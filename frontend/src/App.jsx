@@ -8,6 +8,14 @@ import EditProfile from "./Editprofile.jsx";
 // import UserControl from "./UserControl.jsx";
 // import Footer from "./Newpage.jsx";
 // import AppLayout from "./AppLayout.jsx";
+import DashboardSA from "./DashboardSA.jsx";
+import AnalyticSA from "./AnalyticSA.jsx";
+import ApprovalSA from "./ApprovalSA.jsx";
+import ProfileSA from "./ProfileSA.jsx";
+import EditProfileSA from "./EditprofileSA.jsx";
+import UserControlSA from "./UserControlSA.jsx";
+import HistorySA from "./HistorySA.jsx";
+import Logout from "./logout.jsx";
 
 export default function App() {
   return (
@@ -19,9 +27,15 @@ export default function App() {
       {/* <Route path="/approval" element={<Approval />} /> */}
       {/* <Route path="/profile" element = {<Profile />}/> */}
       <Route path="/edit-profile" element = {<EditProfile/>}/>
-      {/* <Route path="/usercontrol" element = {<UserControl/>}/> */}
-       {/* <Route path="/" element = {<AppLayout/>}/> */}
-        <Route path="/" element = {<History/>}/>
+      <Route path="/dashboardSA" element={<DashboardSA />} />
+      <Route path="/analyticSA" element={<AnalyticSA />}></Route>
+      <Route path="/approvalSA" element={<ApprovalSA />} />
+      <Route path="/profileSA" element = {<ProfileSA />}/>
+      <Route path="/edit-profileSA" element = {<EditProfileSA/>}/>
+      <Route path="/usercontrolSA" element = {<UserControlSA/>}/>
+      <Route path="/historySA" element = {<HistorySA/>}/>
+      <Route path="/logout" element = {<Logout/>}/>
+
     </Routes>
   );
 }

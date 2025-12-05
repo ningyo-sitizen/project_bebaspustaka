@@ -112,7 +112,6 @@ export default function EditProfile() {
 const handleSubmit = async (e) => {
   e.preventDefault();
 
-  // Validasi password
   if (formData.newPassword !== formData.confirmPassword) {
     alert("Password baru dan konfirmasi tidak cocok!");
     return;
@@ -207,17 +206,25 @@ const handleSubmit = async (e) => {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboard" className={getSidebarItemClass()}>
+                        <a href="/dashboardSA" className={getSidebarItemClass()}>
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/konfirmasi" className={getSidebarItemClass()}>
+                        <a href="/approvalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
+                        </a>
+                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
+                            <IconUsers size={20} />
+                            User Control
+                        </a>
+                        <a href="/historySA" className={getSidebarItemClass()}>
+                            <IconHistory size={20} />
+                            History
                         </a>
                     </nav>
                 </div>
@@ -302,14 +309,14 @@ const handleSubmit = async (e) => {
 
             {/* Navigasi Breadcrumb */}
             <button
-              onClick={() => navigate("/profile")}
-              className="text-[#667790] text-lg lg:text-md font-semibold hover:underline"
+              onClick={() => navigate("/profileSA")}
+              className="text-[#667790] text-lg sm:text-2xl font-semibold hover:underline"
             >
               Profile
             </button>
 
             <span className="mx-2 text-gray-400">&gt;</span>
-            <span className="text-[#023048] font-semibold text-lg lg:text-md">
+            <span className="text-[#023048] font-semibold text-lg sm:text-2xl">
               Edit Profile
             </span>
           </div>
@@ -333,7 +340,7 @@ const handleSubmit = async (e) => {
 
               {/* Navigasi Tabs */}
               <button
-                onClick={() => navigate("/profile")}
+                onClick={() => navigate("/profileSA")}
                 className="pb-2 text-gray-500 hover:text-gray-700 text-xs sm:text-sm"
               >
                 Rincian Saya
@@ -478,7 +485,7 @@ const handleSubmit = async (e) => {
                 {/* BUTTON */}
                 <div className="pt-4 sm:pt-6 flex flex-col-reverse sm:flex-row justify-end gap-3 sm:gap-5">
                   <button
-                    onClick={() => navigate("/profile")}
+                    onClick={() => navigate("/profileSA")}
                     type="button"
                     className="px-4 py-2 sm:px-6 sm:py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50 text-sm"
                   >

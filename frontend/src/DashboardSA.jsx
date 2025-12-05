@@ -1,7 +1,27 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import AppLayout from './AppLayout';
 import axios from 'axios';
 import authCheck from './authCheck';
 import { useNavigate } from "react-router-dom";
+import {
+    IconHome,
+    IconChartBar,
+    IconBell,
+    IconLogout,
+    IconUser,
+    IconChevronDown,
+    IconMenu2,
+    IconTrash,
+    IconUsers,
+    IconHistory,
+    IconPlus,
+    IconLayoutGrid,
+    IconList,
+    IconX,
+    IconEye,
+    IconEyeOff,
+    IconCheck,
+} from "@tabler/icons-react";
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -14,17 +34,6 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-import {
-    IconHome,
-    IconChartBar,
-    IconBell,
-    IconMenu2,
-    IconLogout,
-    IconUser,
-    IconUsers,
-    IconHistory,
-    IconChevronDown,
-} from "@tabler/icons-react";
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -40,7 +49,7 @@ ChartJS.register(
     Legend
 );
 
-function Dashboard() {
+export default function DashboardSA() {
     authCheck();
     //data dummy
     const [data, setData] = useState([
@@ -61,10 +70,14 @@ function Dashboard() {
     });
     //dropdown
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [chartData, setChartData] = useState({
+        lineChart: null
+    });
+
+    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const getSidebarItemClass = (isActive = false) => {
         const baseClasses =
@@ -74,14 +87,8 @@ function Dashboard() {
             : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
 
-    const [chartData, setChartData] = useState({
-        lineChart: null
-    });
-
-
     const [visitors, setVisitors] = useState([]);
 
-    //ambil data apapun (user, chart)
     useEffect(() => {
         const fetchProfile = async () => {
             const user = JSON.parse(localStorage.getItem('user'))
@@ -165,6 +172,7 @@ function Dashboard() {
     };
 
     return (
+        
         <main className="font-jakarta w-full flex bg-[#EDF1F3]">
 
             <aside
@@ -187,13 +195,21 @@ function Dashboard() {
                             <IconHome size={20} />
                             Dashboard
                         </a>
-                        <a href="/analytic" className={getSidebarItemClass()}>
+                        <a href="/analyticSA" className={getSidebarItemClass()}>
                             <IconChartBar size={20} />
                             Data Analitik
                         </a>
-                        <a href="/approval" className={getSidebarItemClass()}>
+                        <a href="/ApprovalSA" className={getSidebarItemClass()}>
                             <IconBell size={20} />
                             Konfirmasi Data
+                        </a>
+                        <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                            <IconUsers size={20} />
+                            User Kontrol
+                        </a>
+                        <a href="/history" className={getSidebarItemClass()}>
+                            <IconHistory size={20} />
+                            History
                         </a>
                     </nav>
                 </div>
@@ -405,23 +421,15 @@ function Dashboard() {
 
                                     </table>
                                 </div>
+                                
                             </div>
                         </div>
-
                     </div>
-
                 </div>
-
-                {/* Footer */}
-                <footer className='bg-[#023048] text-white py-6 text-center mt-auto'>
-                    <div className="lg:ml-64">
-                        <p className="text-sm">© 2024 Bebas Pustaka - Sistem Manajemen Perpustakaan</p>
-                    </div>
-                </footer>
+               <AppLayout></AppLayout>
 
             </div>
         </main>
     );
 }
 
-export default Dashboard;

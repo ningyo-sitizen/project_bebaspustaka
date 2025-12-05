@@ -33,9 +33,15 @@ app.use('/api/loan',require('./routes/loanRouts'));
 
 app.use('/api/landing',require('./routes/landing'));
 
+app.use('/api/approval', require('./routes/bepus'));
+
 app.use('/api/infoCard', require('./routes/infoCardRoutes'));
 
 app.use('/api/profile',require('./routes/UserInfoRoutes'))
+
+app.use('/api/logger',require('./routes/loggerRoutse'));
+
+app.use("/api/summary", require("./routes/syncRoutes"));
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
