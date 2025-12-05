@@ -1,7 +1,6 @@
 //
 // Controller BEPUS
 //
-const mssql = require('mssql');
 const { opac, bebaspustaka } = require('../config');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
