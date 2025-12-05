@@ -7,8 +7,32 @@ export default function authCheck() {
   useEffect(() => {
     const token = localStorage.getItem("token");
 
-    if (!token || token === "" || token === null) {
+    if (!token) {
       navigate("/login");
+      return;
     }
-  }, []);
+
+    fetch("http://localhost:8080/api/landing/landingpagechart?year=2025", {
+      method: "GET",
+      headers: {
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    })
+      .then(async (res) => {
+        if (!res.ok) {
+          if (res.status === 401) {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+            navigate("/login");
+          }
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login");
+      });
+
+  }, [navigate]);
 }

@@ -279,8 +279,8 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                             className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
                             required
                         >
-                            <option value="Admin">Admin</option>
-                            <option value="Super Admin">Super Admin</option>
+                            <option value="admin">admin</option>
+                            <option value="super admin">super admin</option>
                             <option value="Dosen">Dosen</option>
                         </select>
                     </div>
