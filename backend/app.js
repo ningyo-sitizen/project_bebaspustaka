@@ -5,6 +5,7 @@ const authRoutes = require('./routes/authRoutes');
 const visitorcount = require('./routes/web')
 const infoCardRoutes = require('./routes/UserInfoRoutes')
 const verifyToken = require('./middleware/checktoken');
+const keteranganRoutes = require("./routes/keteranganRoutes");
 const { getYearlyVisitors } = require('./controller/visitorcount');
 const {getDashboardDatVisitor} = require('./controller/visitorcount')
 const dashboardvisitorroutes = require('./routes/web');
@@ -42,6 +43,8 @@ app.use('/api/profile',require('./routes/UserInfoRoutes'))
 app.use('/api/logger',require('./routes/loggerRoutse'));
 
 app.use("/api/summary", require("./routes/syncRoutes"));
+
+app.use("/api/keterangan", keteranganRoutes);
 
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
