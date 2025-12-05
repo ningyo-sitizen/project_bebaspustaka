@@ -1,4 +1,4 @@
-import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
+import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
 import authCheck from './authCheck';
 
@@ -46,12 +46,12 @@ export default function Dashboard() {
 
     const [tableData, setTableData] = useState(null);
 
+    //setup chart
     const [chartDataR, setChartDataR] = useState({
         lineChart: null,
         pieChart: null,
         barChart: null,
     })
-
     const [chartDataL, setChartDataL] = useState({
         lineChart: null,
         pieChart: null,
@@ -68,7 +68,6 @@ export default function Dashboard() {
 
 
     const [activeR, setActiveR] = useState(false);
-    const [activeL, setActiveL] = useState(false);
 
     const [actJurusanR, setActJurusanR] = useState(false);
     const [actJurusanL, setActJurusanL] = useState(false);
@@ -109,15 +108,17 @@ export default function Dashboard() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
 
-        const toggleDropdown = () => {
+    const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
+
+    const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
     };
 
-          const [profileData, setProfileData] = useState({
+    const [profileData, setProfileData] = useState({
         name: "Loading...",
         username: "Loading...",
         role: "Admin",
-      });
+    });
     const handleResetFilters = () => {
         setSelectedYears([]);
         setSelectedType("");
@@ -146,8 +147,8 @@ export default function Dashboard() {
         setShowFilterR(false);
     };
 
-    
 
+    //label color buaat chart
     const autoBuildChartData = (data, selectedType) => {
         const monthLabels = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
@@ -161,6 +162,7 @@ export default function Dashboard() {
             return `rgba(${r}, ${g}, ${b}, 0.8)`;
         };
 
+        //set data
         let baseLabels = [];
         if (selectedType === "monthly") baseLabels = monthLabels;
         else if (selectedType === "yearly") baseLabels = data.years;
@@ -205,6 +207,7 @@ export default function Dashboard() {
 
         return { labels: baseLabels, datasets };
     };
+
     const fetchTableDataLeft = useCallback(async (pageNum) => {
         try {
             const token = localStorage.getItem("token");
@@ -228,77 +231,77 @@ export default function Dashboard() {
         }
     }, [selectedYears, selectedType, tableLimitLeft]);
 
-const fetchTableDataRight = useCallback(async (pageNum) => {
-    try {
-        const token = localStorage.getItem("token");
-        const query = new URLSearchParams();
+    const fetchTableDataRight = useCallback(async (pageNum) => {
+        try {
+            const token = localStorage.getItem("token");
+            const query = new URLSearchParams();
 
-        if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-        if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-        if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
 
-        query.append("page", pageNum);
-        query.append("limit", tableLimitRight);
+            query.append("page", pageNum);
+            query.append("limit", tableLimitRight);
 
-        const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const apiData = await res.json();
-        
-        console.log("📦 Raw API Response:", apiData);
-
-        if (apiData.totalPages) {
-            setTablePaginationRight({
-                currentPage: apiData.page || 1,
-                totalPages: apiData.totalPages || 1,
-                totalItems: apiData.totalRows || 0,
-                itemsPerPage: apiData.limit || tableLimitRight,
-                hasPrevPage: (apiData.page || 1) > 1,
-                hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
-            });
-        }
-
-        setTablePageRight(pageNum);
-
-        const transformedData = transformPagedDataForChart(apiData);
-        console.log("🔄 Transformed Data:", transformedData);
-
-        if (transformedData && transformedData.data && transformedData.years) {
-            const chart = autoBuildChartDataRight(transformedData);
-            setChartDataR({
-                lineChart: chart,
-                barChart: chart,
-                pieChart: chart,
-                doughnutChart: chart
+            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            setTableDataRight(transformedData);
-        } else {
-            console.error("❌ Invalid transformed data structure");
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const apiData = await res.json();
+
+            console.log("📦 Raw API Response:", apiData);
+
+            if (apiData.totalPages) {
+                setTablePaginationRight({
+                    currentPage: apiData.page || 1,
+                    totalPages: apiData.totalPages || 1,
+                    totalItems: apiData.totalRows || 0,
+                    itemsPerPage: apiData.limit || tableLimitRight,
+                    hasPrevPage: (apiData.page || 1) > 1,
+                    hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
+                });
+            }
+
+            setTablePageRight(pageNum);
+
+            const transformedData = transformPagedDataForChart(apiData);
+            console.log("🔄 Transformed Data:", transformedData);
+
+            if (transformedData && transformedData.data && transformedData.years) {
+                const chart = autoBuildChartDataRight(transformedData);
+                setChartDataR({
+                    lineChart: chart,
+                    barChart: chart,
+                    pieChart: chart,
+                    doughnutChart: chart
+                });
+
+                setTableDataRight(transformedData);
+            } else {
+                console.error("❌ Invalid transformed data structure");
+                setTableDataRight({
+                    mode: "default_year",
+                    years: [],
+                    data: {}
+                });
+            }
+
+        } catch (err) {
+            console.error("❌ Error fetching table data right:", err);
+
             setTableDataRight({
                 mode: "default_year",
                 years: [],
                 data: {}
             });
-        }
 
-    } catch (err) {
-        console.error("❌ Error fetching table data right:", err);
-        
-        setTableDataRight({
-            mode: "default_year",
-            years: [],
-            data: {}
-        });
-        
-        setTablePaginationRight(null);
-    }
-}, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+            setTablePaginationRight(null);
+        }
+    }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
 
     const handleApplyFiltersLeft = useCallback(async () => {
         setTempYears(selectedYears);
@@ -341,123 +344,123 @@ const fetchTableDataRight = useCallback(async (pageNum) => {
     }, [selectedYears, selectedType]);
 
 
-const autoBuildChartDataRight = (apiResponse) => {
-    console.log("📊 Chart Builder Input:", apiResponse);
-    
-    if (!apiResponse || !apiResponse.data) {
-        console.warn("⚠️ Invalid apiResponse");
+    const autoBuildChartDataRight = (apiResponse) => {
+        console.log("📊 Chart Builder Input:", apiResponse);
+
+        if (!apiResponse || !apiResponse.data) {
+            console.warn("⚠️ Invalid apiResponse");
+            return { labels: [], datasets: [] };
+        }
+
+        const { mode, data, years = [] } = apiResponse;
+
+        if (!years || years.length === 0) {
+            console.warn("⚠️ No years available");
+            return { labels: [], datasets: [] };
+        }
+
+        const generateColors = (count) => {
+            const baseColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12'
+            ];
+            return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
+        };
+
+        const sortedYears = [...years].sort((a, b) => a - b);
+        console.log("📅 Sorted Years:", sortedYears);
+
+        if (mode === "default_year") {
+            const chartData = sortedYears.map(year => {
+                const yearData = data[year];
+                console.log(`📍 Year ${year} data:`, yearData);
+
+                if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
+                    return 0;
+                }
+
+                const total = yearData[0].total || yearData[0].total_pinjam || 0;
+                console.log(`💰 Year ${year} total:`, total);
+                return total;
+            });
+
+            console.log("📊 Final Chart Data:", chartData);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: [{
+                    label: "Total Peminjaman",
+                    data: chartData,
+                    backgroundColor: generateColors(sortedYears.length),
+                    borderColor: generateColors(sortedYears.length),
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            };
+        }
+
+        if (mode === "per_lembaga") {
+            const lembagaSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => lembagaSet.add(item.lembaga));
+                }
+            });
+
+            const lembagaList = Array.from(lembagaSet);
+            const colors = generateColors(lembagaList.length);
+
+            console.log("🏢 Lembaga found:", lembagaList);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: lembagaList.map((lem, idx) => ({
+                    label: lem,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.lembaga === lem);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
+        if (mode === "per_program") {
+            const programSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => programSet.add(item.program));
+                }
+            });
+
+            const programList = Array.from(programSet);
+            const colors = generateColors(programList.length);
+
+            console.log("🎓 Programs found:", programList);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: programList.map((prog, idx) => ({
+                    label: prog,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.program === prog);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
         return { labels: [], datasets: [] };
-    }
-
-    const { mode, data, years = [] } = apiResponse;
-
-    if (!years || years.length === 0) {
-        console.warn("⚠️ No years available");
-        return { labels: [], datasets: [] };
-    }
-
-    const generateColors = (count) => {
-        const baseColors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-            '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12'
-        ];
-        return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
     };
-
-    const sortedYears = [...years].sort((a, b) => a - b);
-    console.log("📅 Sorted Years:", sortedYears);
-
-    if (mode === "default_year") {
-        const chartData = sortedYears.map(year => {
-            const yearData = data[year];
-            console.log(`📍 Year ${year} data:`, yearData);
-            
-            if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
-                return 0;
-            }
-            
-            const total = yearData[0].total || yearData[0].total_pinjam || 0;
-            console.log(`💰 Year ${year} total:`, total);
-            return total;
-        });
-
-        console.log("📊 Final Chart Data:", chartData);
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: [{
-                label: "Total Peminjaman",
-                data: chartData,
-                backgroundColor: generateColors(sortedYears.length),
-                borderColor: generateColors(sortedYears.length),
-                borderWidth: 2,
-                tension: 0.3
-            }]
-        };
-    }
-
-    if (mode === "per_lembaga") {
-        const lembagaSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => lembagaSet.add(item.lembaga));
-            }
-        });
-        
-        const lembagaList = Array.from(lembagaSet);
-        const colors = generateColors(lembagaList.length);
-
-        console.log("🏢 Lembaga found:", lembagaList);
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: lembagaList.map((lem, idx) => ({
-                label: lem,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.lembaga === lem);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
-        };
-    }
-
-    if (mode === "per_program") {
-        const programSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => programSet.add(item.program));
-            }
-        });
-        
-        const programList = Array.from(programSet);
-        const colors = generateColors(programList.length);
-
-        console.log("🎓 Programs found:", programList);
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: programList.map((prog, idx) => ({
-                label: prog,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.program === prog);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
-        };
-    }
-
-    return { labels: [], datasets: [] };
-};
 
     const handleApplyFiltersRight = async () => {
         setTempAngkatan(selectedAngkatan);
@@ -466,83 +469,83 @@ const autoBuildChartDataRight = (apiResponse) => {
         setShowFilterR(false);
 
         await fetchChartDataRight(1)
-        
+
     };
-const transformPagedDataForChart = (pagedData) => {
-    console.log("🔄 Transform input:", pagedData);
-    
-    if (!pagedData || (!pagedData.data && !pagedData.allData)) {
-        console.warn("⚠️ Invalid pagedData structure");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
+    const transformPagedDataForChart = (pagedData) => {
+        console.log("🔄 Transform input:", pagedData);
 
-    const dataSource = pagedData.allData || pagedData.data;
-    
-    if (!Array.isArray(dataSource) || dataSource.length === 0) {
-        console.warn("⚠️ No data to transform");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
-
-    const grouped = {};
-    const years = new Set();
-
-    dataSource.forEach(row => {
-        const year = row.tahun;
-        years.add(year);
-        
-        if (!grouped[year]) {
-            grouped[year] = [];
+        if (!pagedData || (!pagedData.data && !pagedData.allData)) {
+            console.warn("⚠️ Invalid pagedData structure");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
         }
 
-        if (row.program && row.lembaga) {
-            grouped[year].push({
-                program: row.program,
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else if (row.lembaga) {
-            grouped[year].push({
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else {
-            grouped[year].push({
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
+        const dataSource = pagedData.allData || pagedData.data;
+
+        if (!Array.isArray(dataSource) || dataSource.length === 0) {
+            console.warn("⚠️ No data to transform");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
         }
-    });
 
-    let mode = "default_year";
-    const firstRow = dataSource[0];
-    if (firstRow.program && firstRow.lembaga) {
-        mode = "per_program";
-    } else if (firstRow.lembaga) {
-        mode = "per_lembaga";
-    }
+        const grouped = {};
+        const years = new Set();
 
-    const result = {
-        mode,
-        years: Array.from(years).sort((a, b) => a - b),
-        data: grouped
+        dataSource.forEach(row => {
+            const year = row.tahun;
+            years.add(year);
+
+            if (!grouped[year]) {
+                grouped[year] = [];
+            }
+
+            if (row.program && row.lembaga) {
+                grouped[year].push({
+                    program: row.program,
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else if (row.lembaga) {
+                grouped[year].push({
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else {
+                grouped[year].push({
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            }
+        });
+
+        let mode = "default_year";
+        const firstRow = dataSource[0];
+        if (firstRow.program && firstRow.lembaga) {
+            mode = "per_program";
+        } else if (firstRow.lembaga) {
+            mode = "per_lembaga";
+        }
+
+        const result = {
+            mode,
+            years: Array.from(years).sort((a, b) => a - b),
+            data: grouped
+        };
+
+        console.log("✅ Transform output:", result);
+        console.log("✅ Years found:", result.years);
+        console.log("✅ Data structure:", Object.keys(result.data));
+
+        return result;
     };
-    
-    console.log("✅ Transform output:", result);
-    console.log("✅ Years found:", result.years);
-    console.log("✅ Data structure:", Object.keys(result.data));
-    
-    return result;
-};
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;
@@ -683,187 +686,187 @@ const transformPagedDataForChart = (pagedData) => {
         );
     }
 
-function DataTableRight({ data, pagination, onPageChange }) {
-    
-    if (!data) {
-        return (
-            <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <p className="text-center text-gray-500">No data available</p>
-            </div>
-        );
-    }
+    function DataTableRight({ data, pagination, onPageChange }) {
 
-    if (!data.data) {
-        return (
-            <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <p className="text-center text-gray-500">Invalid data structure</p>
-            </div>
-        );
-    }
-
-    const { mode = "default_year", years = [], lembaga = [] } = data;
-
-    const getHeaders = () => {
-        switch (mode) {
-            case "default_year":
-                return ["Tahun", "Total Peminjaman"];
-            case "per_lembaga":
-                return ["Tahun", "Lembaga", "Total Peminjaman"];
-            case "per_program":
-                return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
-            default:
-                return ["Tahun", "Info", "Total"];
-        }
-    };
-
-    const headers = getHeaders();
-
-    const renderRows = () => {
-        if (!years || years.length === 0) {
+        if (!data) {
             return (
-                <tr>
-                    <td colSpan={headers.length} className="text-center p-4 text-gray-500">
-                        No data available
-                    </td>
-                </tr>
+                <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                    <p className="text-center text-gray-500">No data available</p>
+                </div>
             );
         }
 
-        const sortedYears = [...years].sort((a, b) => b - a);
+        if (!data.data) {
+            return (
+                <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                    <p className="text-center text-gray-500">Invalid data structure</p>
+                </div>
+            );
+        }
 
-        if (mode === "default_year") {
-            return sortedYears.map((year) => {
-                if (!data.data[year] || !data.data[year][0]) return null;
-                
+        const { mode = "default_year", years = [], lembaga = [] } = data;
+
+        const getHeaders = () => {
+            switch (mode) {
+                case "default_year":
+                    return ["Tahun", "Total Peminjaman"];
+                case "per_lembaga":
+                    return ["Tahun", "Lembaga", "Total Peminjaman"];
+                case "per_program":
+                    return ["Tahun", "Lembaga", "Program Studi", "Total Peminjaman"];
+                default:
+                    return ["Tahun", "Info", "Total"];
+            }
+        };
+
+        const headers = getHeaders();
+
+        const renderRows = () => {
+            if (!years || years.length === 0) {
                 return (
-                    <tr key={year} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-semibold">{year}</td>
-                        <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
+                    <tr>
+                        <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                            No data available
+                        </td>
                     </tr>
                 );
-            }).filter(Boolean);
-        }
+            }
 
-        if (mode === "per_lembaga") {
-            return sortedYears.flatMap((year) => {
-                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
-                
-                return data.data[year].map((item, i) => (
-                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-semibold">{year}</td>
-                        <td className="p-3">{item.lembaga || '-'}</td>
-                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
-                    </tr>
-                ));
-            });
-        }
+            const sortedYears = [...years].sort((a, b) => b - a);
 
-        if (mode === "per_program") {
-            return sortedYears.flatMap((year) => {
-                if (!data.data[year] || !Array.isArray(data.data[year])) return [];
-                
-                return data.data[year].map((item, i) => (
-                    <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-semibold">{year}</td>
-                        <td className="p-3">{item.lembaga || '-'}</td>
-                        <td className="p-3">{item.program || '-'}</td>
-                        <td className="p-3">{(item.total || 0).toLocaleString()}</td>
-                    </tr>
-                ));
-            });
-        }
+            if (mode === "default_year") {
+                return sortedYears.map((year) => {
+                    if (!data.data[year] || !data.data[year][0]) return null;
+
+                    return (
+                        <tr key={year} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{year}</td>
+                            <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
+                        </tr>
+                    );
+                }).filter(Boolean);
+            }
+
+            if (mode === "per_lembaga") {
+                return sortedYears.flatMap((year) => {
+                    if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+
+                    return data.data[year].map((item, i) => (
+                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{year}</td>
+                            <td className="p-3">{item.lembaga || '-'}</td>
+                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                        </tr>
+                    ));
+                });
+            }
+
+            if (mode === "per_program") {
+                return sortedYears.flatMap((year) => {
+                    if (!data.data[year] || !Array.isArray(data.data[year])) return [];
+
+                    return data.data[year].map((item, i) => (
+                        <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
+                            <td className="p-3 font-semibold">{year}</td>
+                            <td className="p-3">{item.lembaga || '-'}</td>
+                            <td className="p-3">{item.program || '-'}</td>
+                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                        </tr>
+                    ));
+                });
+            }
+
+            return (
+                <tr>
+                    <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                        Unknown data mode
+                    </td>
+                </tr>
+            );
+        };
+
+        const getTitle = () => {
+            switch (mode) {
+                case "default_year":
+                    return "Data Peminjaman Per Tahun";
+                case "per_lembaga":
+                    return "Data Peminjaman Per Lembaga";
+                case "per_program":
+                    return "Data Peminjaman Per Program Studi";
+                default:
+                    return "Data Peminjaman";
+            }
+        };
 
         return (
-            <tr>
-                <td colSpan={headers.length} className="text-center p-4 text-gray-500">
-                    Unknown data mode
-                </td>
-            </tr>
-        );
-    };
+            <div className="bg-white p-6 mt-8 rounded-xl shadow">
+                <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
 
-    const getTitle = () => {
-        switch (mode) {
-            case "default_year":
-                return "Data Peminjaman Per Tahun";
-            case "per_lembaga":
-                return "Data Peminjaman Per Lembaga";
-            case "per_program":
-                return "Data Peminjaman Per Program Studi";
-            default:
-                return "Data Peminjaman";
-        }
-    };
-
-    return (
-        <div className="bg-white p-6 mt-8 rounded-xl shadow">
-            <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
-
-            <div className="overflow-x-auto">
-                <table className="w-full border-collapse border border-gray-300">
-                    <thead className="bg-gray-100">
-                        <tr>
-                            {headers.map((header, idx) => (
-                                <th key={idx} className="p-3 border font-medium text-left">
-                                    {header}
-                                </th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {renderRows()}
-                    </tbody>
-                </table>
-            </div>
-
-            {pagination && pagination.totalPages > 1 && (
-                <div className="flex items-center justify-between mt-6 px-4">
-                    <div className="text-sm text-gray-600">
-                        Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
-                        {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
-                        {pagination.totalItems} entries
-                    </div>
-
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => onPageChange(1)}
-                            disabled={!pagination.hasPrevPage}
-                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            First
-                        </button>
-                        <button
-                            onClick={() => onPageChange(pagination.currentPage - 1)}
-                            disabled={!pagination.hasPrevPage}
-                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Previous
-                        </button>
-
-                        <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
-                            Page {pagination.currentPage} of {pagination.totalPages}
-                        </span>
-
-                        <button
-                            onClick={() => onPageChange(pagination.currentPage + 1)}
-                            disabled={!pagination.hasNextPage}
-                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Next
-                        </button>
-                        <button
-                            onClick={() => onPageChange(pagination.totalPages)}
-                            disabled={!pagination.hasNextPage}
-                            className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            Last
-                        </button>
-                    </div>
+                <div className="overflow-x-auto">
+                    <table className="w-full border-collapse border border-gray-300">
+                        <thead className="bg-gray-100">
+                            <tr>
+                                {headers.map((header, idx) => (
+                                    <th key={idx} className="p-3 border font-medium text-left">
+                                        {header}
+                                    </th>
+                                ))}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {renderRows()}
+                        </tbody>
+                    </table>
                 </div>
-            )}
-        </div>
-    );
-}
+
+                {pagination && pagination.totalPages > 1 && (
+                    <div className="flex items-center justify-between mt-6 px-4">
+                        <div className="text-sm text-gray-600">
+                            Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
+                            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
+                            {pagination.totalItems} entries
+                        </div>
+
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => onPageChange(1)}
+                                disabled={!pagination.hasPrevPage}
+                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                First
+                            </button>
+                            <button
+                                onClick={() => onPageChange(pagination.currentPage - 1)}
+                                disabled={!pagination.hasPrevPage}
+                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Previous
+                            </button>
+
+                            <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
+                                Page {pagination.currentPage} of {pagination.totalPages}
+                            </span>
+
+                            <button
+                                onClick={() => onPageChange(pagination.currentPage + 1)}
+                                disabled={!pagination.hasNextPage}
+                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                            </button>
+                            <button
+                                onClick={() => onPageChange(pagination.totalPages)}
+                                disabled={!pagination.hasNextPage}
+                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Last
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
 
 
 
@@ -889,6 +892,7 @@ function DataTableRight({ data, pagination, onPageChange }) {
                                         }
                                     }
                                 },
+
                                 title: {
                                     display: true,
                                     text: [
@@ -911,14 +915,10 @@ function DataTableRight({ data, pagination, onPageChange }) {
                             },
                             scales: {
                                 x: {
-                                    grid: {
-                                        display: false
-                                    }
+                                    grid: { display: false }
                                 },
                                 y: {
-                                    grid: {
-                                        color: '#f3f4f6'
-                                    }
+                                    grid: { color: '#f3f4f6' }
                                 }
                             }
                         }}
@@ -1122,32 +1122,32 @@ function DataTableRight({ data, pagination, onPageChange }) {
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
-            const fetchProfile = async () => {
-              const user = JSON.parse(localStorage.getItem('user'))
-              const user_id = user.user_id;
-              const token = localStorage.getItem('token')
-              try {
-                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
-                  headers : {
+        const fetchProfile = async () => {
+            const user = JSON.parse(localStorage.getItem('user'))
+            const user_id = user.user_id;
+            const token = localStorage.getItem('token')
+            try {
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+                    headers: {
                         "Content-Type": "application/json",
                         "Authorization": `Bearer ${token}`
-                  }
+                    }
                 });
-        
+
                 setProfileData(response.data);
-        
-                
-              } catch (error) {
+
+
+            } catch (error) {
                 console.error("Gagal mengambil data profil:", error);
                 setProfileData({
                     name: "Gagal memuat",
                     username: "N/A",
                     role: "N/A",
                 });
-              } finally {
+            } finally {
                 setLoading(false);
-              }
-            };
+            }
+        };
         fetchProfile();
         fetchYears();
         fetchChartDataLeft();
@@ -1166,6 +1166,12 @@ function DataTableRight({ data, pagination, onPageChange }) {
             setSelectedProdi([]);
         }
     }, [selectedLembaga]);
+
+    useEffect(() => {
+        if (selectedYears.length > 1 && (selectedType === "daily" || selectedType === "weekly")) {
+            setSelectedType("monthly");
+        }
+    }, [selectedYears]);
 
     const fetchYears = useCallback(async () => {
         try {
@@ -1301,86 +1307,91 @@ function DataTableRight({ data, pagination, onPageChange }) {
         }
     }, []);
 
-const fetchChartDataRight = useCallback(async (pageNum = 1) => {
-    try {
-        const token = localStorage.getItem("token");
-        const query = new URLSearchParams();
-        
-        if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-        if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-        if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
-        
-        query.append("page", pageNum);
-        query.append("limit", tableLimitRight);
-        
-        console.log("🌐 Fetching with filters:", {
-            tahun: selectedAngkatan,
-            lembaga: selectedLembaga,
-            program: selectedProdi
-        });
-        
-        const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
-        
-        if (!res.ok) {
-            throw new Error(`HTTP error! status: ${res.status}`);
-        }
-        
-        const apiData = await res.json();
-        console.log("📦 API Response:", apiData);
+    const fetchChartDataRight = useCallback(async (pageNum = 1) => {
+        try {
+            const token = localStorage.getItem("token");
+            const query = new URLSearchParams();
 
-        if (!apiData || !apiData.data) {
-            console.error("Invalid API response structure");
+            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
+            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
+            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+
+            query.append("page", pageNum);
+            query.append("limit", tableLimitRight);
+
+            console.log("🌐 Fetching with filters:", {
+                tahun: selectedAngkatan,
+                lembaga: selectedLembaga,
+                program: selectedProdi
+            });
+
+            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+
+            if (!res.ok) {
+                throw new Error(`HTTP error! status: ${res.status}`);
+            }
+
+            const apiData = await res.json();
+            console.log("📦 API Response:", apiData);
+
+            if (!apiData || !apiData.data) {
+                console.error("Invalid API response structure");
+                setChartDataR({
+                    lineChart: { labels: [], datasets: [] },
+                    barChart: { labels: [], datasets: [] },
+                    pieChart: { labels: [], datasets: [] }
+                });
+                return;
+            }
+
+            const transformedData = transformPagedDataForChart(apiData);
+            console.log("🔄 Transformed Data:", transformedData);
+
+            const chart = autoBuildChartDataRight(transformedData);
+            console.log("📊 Built Chart:", chart);
+
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart
+            });
+
+            setTableDataRight(transformedData);
+
+            if (apiData.totalPages) {
+                setTablePaginationRight({
+                    currentPage: apiData.page || 1,
+                    totalPages: apiData.totalPages,
+                    totalItems: apiData.totalRows,
+                    itemsPerPage: apiData.limit || tableLimitRight,
+                    hasPrevPage: (apiData.page || 1) > 1,
+                    hasNextPage: (apiData.page || 1) < apiData.totalPages
+                });
+            }
+        } catch (err) {
+            console.error("❌ Error fetching chart data:", err);
+
             setChartDataR({
                 lineChart: { labels: [], datasets: [] },
                 barChart: { labels: [], datasets: [] },
                 pieChart: { labels: [], datasets: [] }
             });
-            return;
-        }
 
-        const transformedData = transformPagedDataForChart(apiData);
-        console.log("🔄 Transformed Data:", transformedData);
-
-        const chart = autoBuildChartDataRight(transformedData);
-        console.log("📊 Built Chart:", chart);
-
-        setChartDataR({
-            lineChart: chart,
-            barChart: chart,
-            pieChart: chart
-        });
-
-        setTableDataRight(transformedData);
-
-        if (apiData.totalPages) {
-            setTablePaginationRight({
-                currentPage: apiData.page || 1,
-                totalPages: apiData.totalPages,
-                totalItems: apiData.totalRows,
-                itemsPerPage: apiData.limit || tableLimitRight,
-                hasPrevPage: (apiData.page || 1) > 1,
-                hasNextPage: (apiData.page || 1) < apiData.totalPages
+            setTableDataRight({
+                mode: "default_year",
+                years: [],
+                data: {}
             });
         }
-    } catch (err) {
-        console.error("❌ Error fetching chart data:", err);
-        
-        setChartDataR({
-            lineChart: { labels: [], datasets: [] },
-            barChart: { labels: [], datasets: [] },
-            pieChart: { labels: [], datasets: [] }
-        });
-        
-        setTableDataRight({
-            mode: "default_year",
-            years: [],
-            data: {}
-        });
-    }
-}, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+    }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
 
+
+
+
+
+    
 
     return (
         <div className="font-jakarta bg-[#EDF1F3] w-full min-h-screen">
@@ -1412,7 +1423,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                             <IconUser size={24} className="text-gray-500" />
                             <div>
                                 <p className="font-semibold text-sm text-[#023048]">
-                                {profileData.username}
+                                    {profileData.username}
                                 </p>
                                 <p className="text-xs text-gray-500">{profileData.role}</p>
                             </div>
@@ -1595,11 +1606,11 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                             <path d="M18 15l3 -3" />
                         </svg>
 
-                    <Link to="/logout">
-                        <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
-                            Keluar
-                        </h2>
-                    </Link>
+                        <Link to="/logout">
+                            <h2 className="ml-2 font-semibold transition-all duration-200 text-[#667790] group-hover:text-white group-focus:text-white">
+                                Keluar
+                            </h2>
+                        </Link>
                     </div>
                 </aside>
 
@@ -1615,7 +1626,7 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                         Silakan cek data yang ingin anda lihat di sini!
                     </p>
 
-                    <InfoCards/>
+                    <InfoCards />
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
                         <div>
@@ -1627,119 +1638,140 @@ const fetchChartDataRight = useCallback(async (pageNum = 1) => {
                                 </p>
                             </div>
 
-                            <div className=" bg-white p-6">
+                            <div className="bg-white p-6">
                                 <div className="relative">
+
+                                    {/* //render filter */}
                                     {showFilterL && (
-                                        <div className="absolute top-0 right-0 p-4 bg-white border w-64 z-20">
-                                            <p className="font-thin mb-2">Filter </p>
-                                            <p className="font-nomral text-[#023048]">Kategori Akademik</p>
 
-                                            <p className={`cursor-pointer text-black transition-all ${activeL ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                }`}
-                                                onClick={() => setActiveL(!activeL)}>Tahun Masuk
-                                            </p>
-                                            <div className='gap-5'>
-                                                {years.length > 0 ? (
-                                                    years.map((year) => (
-                                                        <label
-                                                            key={year}
-                                                            className="cursor-pointer flex items-center gap-2 font-thin"
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                value={year}
-                                                                checked={selectedYears.includes(year)}
-                                                                onChange={(e) => {
-                                                                    if (e.target.checked) {
-                                                                        setSelectedYears([...selectedYears, year]);
-                                                                    } else {
-                                                                        setSelectedYears(selectedYears.filter((y) => y !== year));
-                                                                    }
+                                        <div className="fixed inset-0 bg-[#333333]/60 flex justify-center z-50">
+                                            <div className="flex flex-col bg-white flex gap-1 z-50">
+                                                <p className="font-bold text-lg ml-5 mb-2 mt-4 text-left">Filter </p>
+                                                <p className="font-thin text-sm ml-5 mb-2 text-left text-[#9A9A9A]">Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.</p>
+                                                <div className="px-5">
+                                                    <div className="w-full h-[2px] mt-[20px] bg-gray-200 px-3 mx-auto"></div>
+                                                </div>
+
+
+                                                {/* tahunnya */}
+                                                <p className='text-[#616161] transition-all font-semibold text-normal ml-5 my-2 text-left'>
+                                                    Tahun Masuk
+                                                </p>
+                                                <div className="flex gap-3 px-8 flex-wrap">
+                                                    {years.length > 0 ? (
+                                                        years.map((year) => {
+                                                            const isSelected = selectedYears.includes(year);
+
+                                                            return (
+                                                                <button
+                                                                    key={year}
+                                                                    onClick={() => {
+                                                                        if (isSelected) {
+                                                                            setSelectedYears(selectedYears.filter((y) => y !== year));
+                                                                        } else {
+                                                                            if (!maxReached) {
+                                                                                setSelectedYears([...selectedYears, year]);
+                                                                            }
+                                                                        }
+                                                                    }}
+                                                                    className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                               ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]"
+                                                                            : "border border-[#BFC0C0] text-[#BFC0C0]"}
+                                                                                    ${maxReached && !isSelected ? "opacity-40 cursor-not-allowed" : ""}
+                                                                                `}
+                                                                >
+                                                                    {year}
+                                                                </button>
+                                                            );
+                                                        })
+                                                    ) : (
+                                                        <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                    )}
+                                                </div>
+
+
+                                                {/* periode */}
+                                                <p className='text-[#616161] font-semibold text-normal ml-5 my-5 text-left'>
+                                                    Periode
+                                                </p>
+                                                <div className="flex gap-3 px-8 flex-wrap">
+                                                    {["daily", "weekly", "monthly", "yearly"].map((type) => {
+                                                        const isActive = selectedType === type;
+                                                        const isBlocked = selectedYears.length > 1 && (type === "daily" || type === "weekly");
+
+                                                        return (
+                                                            <button
+                                                                key={type}
+                                                                type="button"                             // penting agar gak submit form
+                                                                disabled={isBlocked}                      // native disable
+                                                                onClick={() => {
+                                                                    if (isBlocked) return;                  // double-guard (safety)
+                                                                    setSelectedType(type);
                                                                 }}
-                                                                className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
-                                                            />
-                                                            <span
-                                                                className={
-                                                                    selectedYears.includes(year)
-                                                                        ? "underline text-[#023048]"
-                                                                        : "text-gray-600"
-                                                                }
+                                                                aria-disabled={isBlocked}                 // aksesibilitas
+                                                                className={`px-3 py-1 rounded text-sm transition-colors
+                                                                            ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]"
+                                                                        : "border border-[#BFC0C0] bg-white text-[#BFC0C0]"}
+                                                                            ${isBlocked ? "opacity-40 cursor-not-allowed pointer-events-none" : "cursor-pointer"}
+                                                                        `}
                                                             >
-                                                                {year}
-                                                            </span>
-                                                        </label>
-                                                    ))
-                                                ) : (
-                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
-                                                )}
+                                                                {type}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
 
 
-                                            </div>
+                                                {/* jenis diagram */}
+                                                <p className='text-[#616161] font-semibold text-normal ml-5 my-5 text-left'>
+                                                    Jenis Diagram
+                                                </p>
+                                                <div className="flex gap-3 px-8 flex-wrap">
+                                                    {[
+                                                        { label: "Diagram Lingkaran", value: "circle" },
+                                                        { label: "Diagram Garis", value: "Line" },
+                                                        { label: "Diagram Batang", value: "Bar" },
+                                                    ].map((chart) => {
+                                                        const isActive = activeChartL === chart.value;
 
-                                            <p className='font-normal text-[#023048] mt-4'>Tipe</p>
-                                            <div className="gap-4 flex flex-col mt-2">
-                                                {["daily", "weekly", "monthly", "yearly"].map((type) => (
-                                                    <label
-                                                        key={type}
-                                                        className="cursor-pointer flex items-center gap-2 font-thin"
+                                                        return (
+                                                            <button
+                                                                key={chart.value}
+                                                                onClick={() => setActiveChartL(chart.value)}
+                                                                className={`px-3 py-1 rounded text-sm font-thin transition-colors
+                                                                            ${isActive
+                                                                        ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]"
+                                                                        : "border border-[#BFC0C0] bg-white text-[#BFC0C0]"
+                                                                    }
+                                                                          `}
+                                                            >
+                                                                {chart.label}
+                                                            </button>
+                                                        );
+                                                    })}
+                                                </div>
+
+                                                <div className="flex justify-between mt-6 border-t pt-3">
+                                                    <button
+                                                        onClick={handleResetFilters}
+                                                        className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
                                                     >
-                                                        <input
-                                                            type='radio'
-                                                            name='type'
-                                                            value={type}
-                                                            checked={selectedType === type}
-                                                            onChange={() => setSelectedType(type)}
-                                                            className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
-                                                        />
-                                                        <span
-                                                            className={
-                                                                selectedType === type
-                                                                    ? "underline text-[#023048]"
-                                                                    : "text-gray-600"
-                                                            }
-                                                        >
-                                                            {type}
-                                                        </span>
-                                                    </label>
-                                                ))}
+                                                        Reset
+                                                    </button>
+                                                    <button
+                                                        onClick={handleCancelFilters}
+                                                        className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                    >
+                                                        Cancel
+                                                    </button>
+                                                    <button
+                                                        onClick={handleApplyFiltersLeft}
+                                                        className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                                                    >
+                                                        Apply
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <p className="font-nomral text-[#023048] mt-3">Kategori Diagram</p>
-                                            <div className='gap-4 mb-4 pb-4'>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartL === "circle" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartL("circle")}>Diagram Lingkaran
-                                                </p>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartL === "Line" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartL("Line")}>Diagram Garis
-                                                </p>
-                                                <p className={`cursor-pointer text-black transition-all ${activeChartL === "Bar" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"
-                                                    }`}
-                                                    onClick={() => setActiveChartL("Bar")}>Diagram Batang
-                                                </p>
-                                            </div>
-
-                                            <div className="flex justify-between mt-6 border-t pt-3">
-                                                <button
-                                                    onClick={handleResetFilters}
-                                                    className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                >
-                                                    Reset
-                                                </button>
-                                                <button
-                                                    onClick={handleCancelFilters}
-                                                    className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                >
-                                                    Cancel
-                                                </button>
-                                                <button
-                                                    onClick={handleApplyFiltersLeft}
-                                                    className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-                                                >
-                                                    Apply
-                                                </button>
-                                            </div>
-
 
                                         </div>
                                     )}

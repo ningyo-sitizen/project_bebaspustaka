@@ -79,7 +79,7 @@ exports.getSummaryReport = async (req, res) => {
 
     console.log("🔍 Filter params:", { tahunList, lembagaList, programList });
 
-    
+
     const hasProgram = programList.length > 0;
     const hasLembaga = lembagaList.length > 0;
     const hasTahun = tahunList.length > 0;
@@ -161,13 +161,13 @@ exports.getSummaryReport = async (req, res) => {
       totalRows,
       totalPages,
       data: paginatedRows,
-      allData: allRows 
+      allData: allRows
     });
 
   } catch (err) {
     console.error("❌ Error getSummaryReport:", err);
     console.error("❌ Stack:", err.stack);
-    res.status(500).json({ 
+    res.status(500).json({
       message: "Server error",
       error: process.env.NODE_ENV === 'development' ? err.message : undefined
     });
