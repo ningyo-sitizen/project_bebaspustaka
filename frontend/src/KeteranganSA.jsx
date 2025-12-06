@@ -3,6 +3,7 @@ import axios from 'axios';
 import authCheck from './authCheck';
 import { useNavigate, useParams } from "react-router-dom";
 import {
+    IconBookOff,
     IconHome,
     IconChartBar,
     IconBell,
@@ -60,13 +61,13 @@ export default function KeteranganSA() {
             }
         };
 
-        const fetchIDMahasiswa = async () => {
+        const fetchDataMahasiswa = async () => {
             try {
                 const token = localStorage.getItem("token");
                 if (!token) return console.warn("⚠️ No token!");
-                const response = await axios.get(`http://localhost:8080/api/approval/${nim}`, {
-                    headers: { "Authorization": `Bearer ${token}` }
-                });
+                const response = await axios.get(`http://localhost:8080/api/keterangan/dataMahasiswa?nim=${nim}`, {
+    headers: { Authorization: `Bearer ${token}` }
+});
                 setDataMahasiswa(Array.isArray(response.data) ? response.data : [response.data]);
             } catch (err) {
                 console.error("❌ Error fetch mahasiswa:", err);
@@ -75,7 +76,7 @@ export default function KeteranganSA() {
 
         fetchProfile();
         fetchTokenLogin();
-        fetchIDMahasiswa();
+        fetchDataMahasiswa();
     }, [nim]);
 
    useEffect(() => {
@@ -121,6 +122,7 @@ export default function KeteranganSA() {
 
     return (
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
+            <h1>{nim}</h1>
             <div className="flex">
                 {/* Sidebar */}
                 <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static`}>
@@ -133,7 +135,7 @@ export default function KeteranganSA() {
                             <div className="w-full border-b border-gray-200"></div>
                         </div>
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
+                            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard </a>
                             <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
                             <a href="/ApprovalSA" className={getSidebarItemClass(true)}><IconBell size={20} /> Konfirmasi Data</a>
                             <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
@@ -187,7 +189,7 @@ export default function KeteranganSA() {
                             <p className="font-semibold text-xl mb-2 px-2 text-[#667790] hover:underline cursor-pointer"
                                 onClick={() => goto('/approvalSA')}>Konfirmasi Data</p>
                             <p className="font-semibold text-xl mb-2 px-2 ">&gt;</p>
-                            <p className="font-semibold text-xl mb-2 px-2 hover:underline cursor-pointer ">Keterangan Data</p>
+                            <p className="font-semibold text-xl mb-2 px-2 hover:underline cursor-pointer ">Keterangan Data <h1>{nim}</h1></p>
                         </div>
 
                         <div className="w-full mx-auto rounded-lg shadow-sm mb-4">
@@ -231,32 +233,47 @@ export default function KeteranganSA() {
                                         <div className="mx-auto bg-white rounded-lg w-full mt-7 border border-[#EDEDED] p-4 flex flex-col">
                                             <p className="text-lg font-medium mb-4 text-left">Keterangan</p>
                                             <div className="w-full overflow-x-auto">
-                                                <table className="w-full border-collapse">
-                                                    <thead>
-                                                        <tr className="border-b-5 border-gray-300">
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Jenis Buku</th>
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Peminjaman</th>
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Pengembalian</th>
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
-                                                            <th className="text-left px-2 py-2 font-semibold text-center text-xs">Status</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody>
-                                                        {history.map((item) => (
-                                                            <tr key={item.id} className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50">
-                                                                <td className="p-1">{item.book}</td>
-                                                                <td className="p-1">{item.tpinjam}</td>
-                                                                <td className="p-1">{item.wpinjam}</td>
-                                                                <td className="p-1">{item.tkembali}</td>
-                                                                <td className="p-1">{item.wkembali}</td>
-                                                                <td className={`p-4 font-semibold ${item.statusbuku === 0 ? "text-red-500" : "text-green-600"}`}>
-                                                                    {item.statusbuku === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
-                                                                </td>
+                                                {history.length > 0 ? (
+                                                    <table className="w-full border-collapse">
+                                                        <thead>
+                                                            <tr className="border-b-5 border-gray-300">
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Jenis Buku</th>
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Peminjaman</th>
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Pengembalian</th>
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
+                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Status</th>
                                                             </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                                        </thead>
+                                                        <tbody>
+                                                            {history.map((item) => (
+                                                                <tr key={item.id} className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50">
+                                                                    <td className="p-1">{item.book}</td>
+                                                                    <td className="p-1">{item.tpinjam}</td>
+                                                                    <td className="p-1">{item.wpinjam}</td>
+                                                                    <td className="p-1">{item.tkembali || '-'}</td>
+                                                                    <td className="p-1">{item.wkembali || '-'}</td>
+                                                                    <td className={`p-4 font-semibold ${item.statusbuku === 0 ? "text-red-500" : "text-green-600"}`}>
+                                                                        {item.statusbuku === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
+                                                                    </td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                ) : (
+                                                    
+                                                    <div className="flex flex-col items-center justify-center py-12 px-4">
+                                                        <div className="bg-gray-100 rounded-full p-6 mb-4">
+                                                            <IconBookOff size={48} className="text-gray-400" />
+                                                        </div>
+                                                        <p className="text-lg font-medium text-gray-700 mb-2">
+                                                            Tidak Ada Riwayat Peminjaman
+                                                        </p>
+                                                        <p className="text-sm text-gray-500 text-center max-w-md">
+                                                            Mahasiswa ini belum memiliki riwayat peminjaman buku di perpustakaan.
+                                                        </p>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
@@ -270,6 +287,7 @@ export default function KeteranganSA() {
             <div className="sticky w-full z-50">
                 <AppLayout />
             </div>
+
         </main>
     );
 }

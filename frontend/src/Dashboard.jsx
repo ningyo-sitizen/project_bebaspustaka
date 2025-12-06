@@ -251,7 +251,7 @@ export default function DashboardSA() {
                                 </div>
                                 <div className="p-2 space-y-1">
                                     <button
-                                        onClick={() => navigate("/profile")}
+                                        onClick={() => goto("/profile")}
                                         className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                     >
                                         <IconUser size={18} />
