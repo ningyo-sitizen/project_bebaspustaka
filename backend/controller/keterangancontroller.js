@@ -1,44 +1,62 @@
 
 const { opac, bebaspustaka } = require("../config");
 
-
 exports.getLoanHistoryByNim = async (req, res) => {
   try {
     const { nim } = req.params;
-    console.log("req.params.nim =", nim);
-
-    if (!nim) {
-      return res.status(400).json({ success: false, message: "NIM Tidak bisa diambil" });
-    }
 
     const sql = `
-      SELECT l.loan_id, l.member_id AS nim, l.item_code, COALESCE(k.title, l.item_code) AS book,l.loan_date, l.due_date, l.is_return, l.return_date, i.biblio_id, k.title
-      FROM loan l
-      LEFT JOIN item i ON l.item_code = i.item_code
-      LEFT JOIN biblio k ON i.biblio_id = k.biblio_id
-      WHERE l.member_id = ?
-      `;
+      SELECT 
+        loan.loan_id,
+        loan.member_id AS nim,
+        loan.item_code,
+        item.biblio_id,
+        biblio.title AS book_name,
+        loan.loan_date,
+        loan.due_date,
+        loan.is_return,
+        loan.return_date
+      FROM loan
+      LEFT JOIN item ON loan.item_code = item.item_code
+      LEFT JOIN biblio ON item.biblio_id = biblio.biblio_id
+      WHERE loan.member_id = ?
+      ORDER BY 
+        (loan.is_return = 0 AND loan.return_date IS NULL) DESC,
+        loan.is_return ASC;
+    `;
 
     const [rows] = await opac.query(sql, [nim]);
-    console.log(rows)
 
     const history = rows.map(r => ({
       id: r.loan_id,
-      book: r.book,
+      nim: r.nim,
+      item_code: r.item_code,
+      biblio_id: r.biblio_id,
+      book: r.book_name,
+      loan_date: r.loan_date,
+      due_date: r.due_date,
+      return_date: r.return_date,
       tpinjam: r.loan_date ? r.loan_date.toISOString().split("T")[0] : null,
       wpinjam: r.loan_date ? r.loan_date.toISOString().split("T")[1]?.slice(0, 5) : null,
       tkembali: r.return_date ? r.return_date.toISOString().split("T")[0] : null,
       wkembali: r.return_date ? r.return_date.toISOString().split("T")[1]?.slice(0, 5) : null,
-      statusbuku: r.is_return === 1 ? 1 : 0
+      statusbuku: r.is_return === 1 ? 1 : 0,
     }));
 
+<<<<<<< HEAD
     res.json({ success: true, history });
     console.log(history)
+=======
+    return res.json({ success: true, history });
+
+>>>>>>> fa15759a610bca240efe94e004ebb24c66bfb3af
   } catch (err) {
     console.error("❌ Error getLoanHistoryByNim:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    return res.status(500).json({ success: false, message: "Server error" });
   }
 };
+
+
 
 exports.getDataMahasiswa = async (req, res) => {
   try {
