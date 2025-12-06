@@ -66,8 +66,8 @@ export default function KeteranganSA() {
                 const token = localStorage.getItem("token");
                 if (!token) return console.warn("⚠️ No token!");
                 const response = await axios.get(`http://localhost:8080/api/keterangan/dataMahasiswa?nim=${nim}`, {
-    headers: { Authorization: `Bearer ${token}` }
-});
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 setDataMahasiswa(Array.isArray(response.data) ? response.data : [response.data]);
             } catch (err) {
                 console.error("❌ Error fetch mahasiswa:", err);
@@ -79,32 +79,32 @@ export default function KeteranganSA() {
         fetchDataMahasiswa();
     }, [nim]);
 
-   useEffect(() => {
-    const fetchLoanHistory = async () => {
-        if (!dataMahasiswa.length) return;
-        const token = localStorage.getItem("token");
-        if (!token) return;
+    useEffect(() => {
+        const fetchLoanHistory = async () => {
+            if (!dataMahasiswa.length) return;
+            const token = localStorage.getItem("token");
+            if (!token) return;
 
-        const map = {};
+            const map = {};
 
-        for (let mhs of dataMahasiswa) {
-            try {
-                const res = await axios.get(`http://localhost:8080/api/keterangan/loanHistoryByNIM/${mhs.nim}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                map[mhs.nim] = res.data.success ? res.data.history : [];
-                console.log("Fetched history for:", mhs.nim);
-            } catch (err) {
-                console.error(`Error fetch history for ${mhs.nim}:`, err);
-                map[mhs.nim] = [];
+            for (let mhs of dataMahasiswa) {
+                try {
+                    const res = await axios.get(`http://localhost:8080/api/keterangan/loanHistoryByNIM/${mhs.nim}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    map[mhs.nim] = res.data.success ? res.data.history : [];
+                    console.log("Fetched history for:", mhs.nim);
+                } catch (err) {
+                    console.error(`Error fetch history for ${mhs.nim}:`, err);
+                    map[mhs.nim] = [];
+                }
             }
-        }
 
-        setLoanHistoryMap(map);
-    };
+            setLoanHistoryMap(map);
+        };
 
-    fetchLoanHistory();
-}, [dataMahasiswa]);
+        fetchLoanHistory();
+    }, [dataMahasiswa]);
 
 
     const fetchTokenLogin = async () => {
@@ -237,23 +237,42 @@ export default function KeteranganSA() {
                                                     <table className="w-full border-collapse">
                                                         <thead>
                                                             <tr className="border-b-5 border-gray-300">
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Jenis Buku</th>
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Peminjaman</th>
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Tanggal Pengembalian</th>
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Waktu</th>
-                                                                <th className="text-left px-2 py-2 font-semibold text-center text-xs">Status</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Loan ID</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">NIM</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Item Code</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Biblio ID</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Jenis Buku</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Tanggal Peminjaman</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Waktu</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Due Date</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Tanggal Pengembalian</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Waktu</th>
+                                                                <th className="text-center px-2 py-2 text-xs font-semibold">Status</th>
                                                             </tr>
                                                         </thead>
+
                                                         <tbody>
                                                             {history.map((item) => (
                                                                 <tr key={item.id} className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50">
-                                                                    <td className="p-1">{item.book}</td>
-                                                                    <td className="p-1">{item.tpinjam}</td>
-                                                                    <td className="p-1">{item.wpinjam}</td>
-                                                                    <td className="p-1">{item.tkembali || '-'}</td>
-                                                                    <td className="p-1">{item.wkembali || '-'}</td>
-                                                                    <td className={`p-4 font-semibold ${item.statusbuku === 0 ? "text-red-500" : "text-green-600"}`}>
+
+                                                                    <td className="p-1 text-center">{item.id}</td>
+                                                                    <td className="p-1 text-center">{item.nim}</td>
+                                                                    <td className="p-1 text-center">{item.item_code}</td>
+                                                                    <td className="p-1 text-center">{item.biblio_id}</td>
+
+                                                                    <td className="p-1 text-center">{item.book}</td>
+
+                                                                    <td className="p-1 text-center">{item.tpinjam}</td>
+                                                                    <td className="p-1 text-center">{item.wpinjam}</td>
+
+                                                                    <td className="p-1 text-center">
+                                                                        {item.due_date ? item.due_date.split("T")[0] : "-"}
+                                                                    </td>
+
+                                                                    <td className="p-1 text-center">{item.tkembali || "-"}</td>
+                                                                    <td className="p-1 text-center">{item.wkembali || "-"}</td>
+
+                                                                    <td className={`p-1 font-semibold text-center ${item.statusbuku === 0 ? "text-red-500" : "text-green-600"}`}>
                                                                         {item.statusbuku === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
                                                                     </td>
                                                                 </tr>
@@ -261,7 +280,7 @@ export default function KeteranganSA() {
                                                         </tbody>
                                                     </table>
                                                 ) : (
-                                                    
+
                                                     <div className="flex flex-col items-center justify-center py-12 px-4">
                                                         <div className="bg-gray-100 rounded-full p-6 mb-4">
                                                             <IconBookOff size={48} className="text-gray-400" />
