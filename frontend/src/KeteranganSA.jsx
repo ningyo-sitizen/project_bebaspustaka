@@ -66,8 +66,8 @@ export default function KeteranganSA() {
                 const token = localStorage.getItem("token");
                 if (!token) return console.warn("⚠️ No token!");
                 const response = await axios.get(`http://localhost:8080/api/keterangan/dataMahasiswa?nim=${nim}`, {
-    headers: { Authorization: `Bearer ${token}` }
-});
+                    headers: { Authorization: `Bearer ${token}` }
+                });
                 setDataMahasiswa(Array.isArray(response.data) ? response.data : [response.data]);
             } catch (err) {
                 console.error("❌ Error fetch mahasiswa:", err);
@@ -79,32 +79,32 @@ export default function KeteranganSA() {
         fetchDataMahasiswa();
     }, [nim]);
 
-   useEffect(() => {
-    const fetchLoanHistory = async () => {
-        if (!dataMahasiswa.length) return;
-        const token = localStorage.getItem("token");
-        if (!token) return;
+    useEffect(() => {
+        const fetchLoanHistory = async () => {
+            if (!dataMahasiswa.length) return;
+            const token = localStorage.getItem("token");
+            if (!token) return;
 
-        const map = {};
+            const map = {};
 
-        for (let mhs of dataMahasiswa) {
-            try {
-                const res = await axios.get(`http://localhost:8080/api/keterangan/loanHistoryByNIM/${mhs.nim}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                map[mhs.nim] = res.data.success ? res.data.history : [];
-                console.log("Fetched history for:", mhs.nim);
-            } catch (err) {
-                console.error(`Error fetch history for ${mhs.nim}:`, err);
-                map[mhs.nim] = [];
+            for (let mhs of dataMahasiswa) {
+                try {
+                    const res = await axios.get(`http://localhost:8080/api/keterangan/loanHistoryByNIM/${mhs.nim}`, {
+                        headers: { Authorization: `Bearer ${token}` }
+                    });
+                    map[mhs.nim] = res.data.success ? res.data.history : [];
+                    console.log("Fetched history for:", mhs.nim);
+                } catch (err) {
+                    console.error(`Error fetch history for ${mhs.nim}:`, err);
+                    map[mhs.nim] = [];
+                }
             }
-        }
 
-        setLoanHistoryMap(map);
-    };
+            setLoanHistoryMap(map);
+        };
 
-    fetchLoanHistory();
-}, [dataMahasiswa]);
+        fetchLoanHistory();
+    }, [dataMahasiswa]);
 
 
     const fetchTokenLogin = async () => {
@@ -189,7 +189,7 @@ export default function KeteranganSA() {
                             <p className="font-semibold text-xl mb-2 px-2 text-[#667790] hover:underline cursor-pointer"
                                 onClick={() => goto('/approvalSA')}>Konfirmasi Data</p>
                             <p className="font-semibold text-xl mb-2 px-2 ">&gt;</p>
-                            <p className="font-semibold text-xl mb-2 px-2 hover:underline cursor-pointer ">Keterangan Data <h1>{nim}</h1></p>
+                            <p className="font-semibold text-xl mb-2 px-2 hover:underline cursor-pointer ">Keterangan Data <span>{nim}</span></p>
                         </div>
 
                         <div className="w-full mx-auto rounded-lg shadow-sm mb-4">
@@ -261,7 +261,7 @@ export default function KeteranganSA() {
                                                         </tbody>
                                                     </table>
                                                 ) : (
-                                                    
+
                                                     <div className="flex flex-col items-center justify-center py-12 px-4">
                                                         <div className="bg-gray-100 rounded-full p-6 mb-4">
                                                             <IconBookOff size={48} className="text-gray-400" />

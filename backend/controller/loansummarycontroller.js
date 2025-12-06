@@ -46,7 +46,7 @@ exports.getProgramStudi = async (req, res) => {
       SELECT DISTINCT lembaga, programs_studi
       FROM summary_loan_jurusan
       WHERE lembaga IN (${placeholders})
-      ORDER BY lembaga, programs_studi
+      ORDER BY lembaga ASC, programs_studi ASC;
     `;
 
     const [rows] = await bebaspustaka.query(sql, lembagaList);

@@ -129,7 +129,7 @@ export default function Dashboard() {
         const baseClasses =
             "flex items-center gap-3 p-3 rounded-md font-medium transition-colors text-sm";
         return isActive
-            ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold`
+            ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-medium`
             : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
 
@@ -1169,14 +1169,14 @@ export default function Dashboard() {
 
     }, []);
 
-    useEffect(() => {
-        if (selectedLembaga.length > 0) {
-            fetchProdi(selectedLembaga);
-        } else {
-            setProdi({});
-            setSelectedProdi([]);
-        }
-    }, [selectedLembaga]);
+    // useEffect(() => {
+    //     if (selectedLembaga.length > 0) {
+    //         fetchProdi(selectedLembaga);
+    //     } else {
+    //         setProdi({});
+    //         setSelectedProdi([]);
+    //     }
+    // }, [selectedLembaga]);
 
     useEffect(() => {
         if (selectedYears.length > 1 && (selectedType === "daily" || selectedType === "weekly")) {
@@ -1536,20 +1536,20 @@ export default function Dashboard() {
                             <div>
                                 <div className="flex justify-between items-center mb-4 w-full">
                                     <h3 className="font-semibold text-lg">Data Analitik Mahasiswa</h3>
-                                    <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline"
+                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={() => setShowFilterL(!showFilterL)}>
                                         Filter &gt;
                                     </p>
                                 </div>
 
-                                <div className="bg-white p-6">
+                                <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
                                     <div className="relative">
 
                                         {/* //render filter */}
                                         {showFilterL && (
 
                                             <div className="fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0">
-                                                
+
                                                 <div className="bg-white w-full max-w-md sm:max-w-lg md:max-w-xl rounded-lg shadow-lg flex flex-col gap-1">
                                                     <div className="px-5 pt-5">
                                                         <p className="font-bold text-lg text-left">Filter</p>
@@ -1561,7 +1561,7 @@ export default function Dashboard() {
 
                                                     {/* Tahun */}
                                                     <div className="px-5">
-                                                        <p className="text-[#616161] font-semibold mb-2">Tahun Masuk</p>
+                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {years.length > 0 ? (years.map((year) => {
                                                                 const isSelected = selectedYears.includes(year);
@@ -1581,7 +1581,7 @@ export default function Dashboard() {
 
                                                     {/* Periode */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-3">Periode</p>
+                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Periode</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {["daily", "weekly", "monthly", "yearly"].map((type) => {
                                                                 const isActive = selectedType === type;
@@ -1606,7 +1606,7 @@ export default function Dashboard() {
 
                                                     {/* Jenis Diagram */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-3">Jenis Diagram</p>
+                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {[{ label: "Diagram Lingkaran", value: "circle" },
                                                             { label: "Diagram Garis", value: "Line" },
@@ -1635,20 +1635,20 @@ export default function Dashboard() {
                                                     <div className="w-full mt-6">
                                                         <div className="h-[1.5px] bg-gray-200 mb-5 mx-5"></div>
                                                         <div className="flex justify-between px-5 pb-5 gap-3">
-                                                            
+
                                                             <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
                                                                 onClick={handleResetFilters}>
-                                                                Reset
+                                                                Atur ulang
                                                             </button>
 
                                                             <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
                                                                 onClick={handleCancelFilters}>
-                                                                Cancel
+                                                                Batalkan
                                                             </button>
 
                                                             <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
                                                                 onClick={handleApplyFiltersLeft}>
-                                                                Apply
+                                                                Filter Data
                                                             </button>
 
                                                         </div>
@@ -1669,151 +1669,197 @@ export default function Dashboard() {
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-semibold text-lg">Setujui Data Bebas Pustaka</h3>
-                                    <p className="font-light text-[#9A9A9A] cursor-pointer hover:underline"
+                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={() => setShowFilterR(!showFilterR)}>
                                         Filter &gt;
                                     </p>
 
                                 </div>
 
-                                <div className="bg-white p-6">
+                                <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
                                     <div className="relative">
+                                        {showFilterR && (
+                                            <div className="fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0">
+                                                <div className="bg-white w-full max-w-6xl rounded-lg shadow-lg flex flex-col gap-1">
 
+                                                    {/* Header */}
+                                                    <div className="px-5 pt-5">
+                                                        <p className="font-bold text-lg text-left">Filter</p>
+                                                        <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1">
+                                                            Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.
+                                                        </p>
+                                                    </div>
+
+                                                    <div className="w-full h-[2px] bg-gray-200 my-4"></div>
+                                                    <div className="max-h-[70vh] overflow-y-auto pb-5">
+                                                        {/* Tahun Masuk */}
+                                                        <div className="px-5">
+                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
+
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {angkatan.length > 0 ? (
+                                                                    angkatan.map((item) => {
+                                                                        const isSelected = selectedAngkatan.includes(item);
+
+                                                                        return (
+                                                                            <button
+                                                                                key={item}
+                                                                                className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                    }`}
+                                                                                onClick={() => {
+                                                                                    if (isSelected) {
+                                                                                        setSelectedAngkatan(selectedAngkatan.filter((y) => y !== item));
+                                                                                    } else {
+                                                                                        setSelectedAngkatan([...selectedAngkatan, item]);
+                                                                                    }
+                                                                                }}
+                                                                            >
+                                                                                {item}
+                                                                            </button>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Lembaga */}
+                                                        <div className="px-5 mt-6">
+                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Lembaga</p>
+
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {lembaga.length > 0 ? (
+                                                                    lembaga.map((item) => {
+                                                                        const isSelected = selectedLembaga.includes(item);
+
+                                                                        return (
+                                                                            <button
+                                                                                key={item}
+                                                                                className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                    }`}
+                                                                                onClick={() => {
+                                                                                    setSelectedLembaga((prev) => {
+                                                                                        let updated;
+
+                                                                                        if (prev.includes(item)) {
+                                                                                            updated = prev.filter((l) => l !== item);
+                                                                                        } else {
+                                                                                            updated = [...prev, item];
+                                                                                        }
+                                                                                        setActiveProdiR(true);
+                                                                                        fetchProdi(updated);
+
+                                                                                        return updated;
+                                                                                    });
+                                                                                }}
+
+                                                                            >
+                                                                                {item}
+                                                                            </button>
+                                                                        );
+                                                                    })
+                                                                ) : (
+                                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                                )}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Prodi */}
+                                                        <div className="px-5 mt-6">
+                                                            <p
+                                                                className="text-[#616161] font-semibold mb-4 text-left cursor-pointer"
+                                                                onClick={() => setActiveProdiR((prev) => !prev)}
+
+                                                            >
+                                                                Program Studi
+                                                            </p>
+
+                                                            {activeProdiR && (
+                                                                <div>
+                                                                    {Object.keys(prodi).map((lem) => (
+                                                                        <div key={lem} className="mt-3">
+                                                                            <p className="font-semibold text-[#023048] text-left ml-5 text-sm mb-4">{lem}</p>
+
+                                                                            <div className="flex gap-2 flex-wrap ml-4">
+                                                                                {prodi[lem].map((ps) => {
+                                                                                    const isSelected = selectedProdi.includes(ps);
+
+                                                                                    return (
+                                                                                        <button
+                                                                                            key={ps}
+                                                                                            className={`px-3 py-1 rounded text-sm ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                                }`}
+                                                                                            onClick={() => {
+                                                                                                if (isSelected) {
+                                                                                                    setSelectedProdi(selectedProdi.filter((p) => p !== ps));
+                                                                                                } else {
+                                                                                                    setSelectedProdi([...selectedProdi, ps]);
+                                                                                                }
+                                                                                            }}
+                                                                                        >
+                                                                                            {ps}
+                                                                                        </button>
+                                                                                    );
+                                                                                })}
+                                                                            </div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Jenis Diagram */}
+                                                        <div className="px-5 mt-5">
+                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {[{ label: "Diagram Lingkaran", value: "circle" },
+                                                                { label: "Diagram Garis", value: "Line" },
+                                                                { label: "Diagram Batang", value: "Bar" },]
+                                                                    .map((chart) => {
+                                                                        const isActive = activeChartR === chart.value;
+                                                                        return (
+                                                                            <button
+                                                                                key={chart.value}
+                                                                                onClick={() => setActiveChartR(chart.value)}
+                                                                                className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
+                                                                   `}
+                                                                            >
+                                                                                {chart.label}
+                                                                            </button>
+                                                                        );
+                                                                    })}
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="flex justify-between px-5 pb-5 gap-3">
+
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                                onClick={handleResetFiltersRight}>
+                                                                Atur ulang
+                                                            </button>
+
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                                onClick={handleCancelFiltersRight}>
+                                                                Batalkan
+                                                            </button>
+
+                                                            <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
+                                                                onClick={handleApplyFiltersRight}>
+                                                                Filter Data
+                                                            </button>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                         <div className="overflow-x-auto">
                                             <div className="w-full h-80">
                                                 {renderChartR()}
                                             </div>
                                         </div>
-
-                                        {showFilterR && (
-                                            <div className="absolute top-0 right-0 p-4 bg-white border w-64 z-20">
-                                                <p className="font-thin mb-2">Filter</p>
-                                                <p className="font-normal text-[#023048]">Kategori Akademik</p>
-
-                                                {/* Tahun Masuk */}
-                                                <p className={`cursor-pointer text-black transition-all ${activeR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                    onClick={() => setActiveR(!activeR)}>
-                                                    Tahun Masuk
-                                                </p>
-                                                <div className='gap-5'>
-                                                    {angkatan.length > 0 ? (
-                                                        angkatan.map((item) => (
-                                                            <label key={item} className="cursor-pointer flex items-center gap-2 font-thin">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    value={item}
-                                                                    checked={selectedAngkatan.includes(item)}
-                                                                    onChange={(e) => {
-                                                                        if (e.target.checked) {
-                                                                            setSelectedAngkatan([...selectedAngkatan, item]);
-                                                                        } else {
-                                                                            setSelectedAngkatan(selectedAngkatan.filter((y) => y !== item));
-                                                                        }
-                                                                    }}
-                                                                    className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
-                                                                />
-                                                                <span className={selectedAngkatan.includes(item) ? "underline text-[#023048]" : "text-gray-600"}>
-                                                                    {item}
-                                                                </span>
-                                                            </label>
-                                                        ))
-                                                    ) : (
-                                                        <p className="text-gray-500 text-sm">Memuat tahun...</p>
-                                                    )}
-                                                </div>
-
-                                                {/* Lembaga */}
-                                                <p className={`cursor-pointer text-black transition-all ${actJurusanR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                    onClick={() => setActJurusanR(!actJurusanR)}>
-                                                    Lembaga
-                                                </p>
-                                                <div className="gap-5">
-                                                    {lembaga.length > 0 && (
-                                                        lembaga.map((item) => (
-                                                            <label key={item} className="cursor-pointer flex items-center gap-2 font-thin">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    value={item}
-                                                                    checked={selectedLembaga.includes(item)}
-                                                                    onChange={(e) => {
-                                                                        let updated;
-                                                                        if (e.target.checked) {
-                                                                            updated = [...selectedLembaga, item];
-                                                                        } else {
-                                                                            updated = selectedLembaga.filter((l) => l !== item);
-                                                                        }
-                                                                        setSelectedLembaga(updated);
-                                                                        fetchProdi(updated);
-                                                                    }}
-                                                                    className="accent-blue-600 w-[12px] h-[12px] cursor-pointer"
-                                                                />
-                                                                <span className={selectedLembaga.includes(item) ? "underline text-[#023048]" : "text-gray-600"}>
-                                                                    {item}
-                                                                </span>
-                                                            </label>
-                                                        ))
-                                                    )}
-                                                </div>
-
-
-                                                <p className={`cursor-pointer text-black transition-all ${activeProdiR ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                    onClick={() => setActiveProdiR(!activeProdiR)}>
-                                                    Program Studi
-                                                </p>
-                                                {Object.keys(prodi).map((lem) => (
-                                                    <div key={lem} className="mt-2">
-                                                        <p className="font-semibold text-[#023048]">{lem}</p>
-                                                        {prodi[lem].map((ps) => (
-                                                            <label key={ps} className="flex items-center gap-2 ml-4 text-sm">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    value={ps}
-                                                                    checked={selectedProdi.includes(ps)}
-                                                                    onChange={(e) => {
-                                                                        if (e.target.checked) {
-                                                                            setSelectedProdi([...selectedProdi, ps]);
-                                                                        } else {
-                                                                            setSelectedProdi(selectedProdi.filter((p) => p !== ps));
-                                                                        }
-                                                                    }}
-                                                                />
-                                                                <span className={selectedProdi.includes(ps) ? "underline text-[#023048]" : "text-gray-600"}>
-                                                                    {ps}
-                                                                </span>
-                                                            </label>
-                                                        ))}
-                                                    </div>
-                                                ))}
-
-                                                <p className="font-normal text-[#023048] mt-3">Kategori Diagram</p>
-                                                <div className='gap-4 mb-4 pb-4'>
-                                                    <p className={`cursor-pointer text-black transition-all ${activeChartR === "circle" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                        onClick={() => setActiveChartR("circle")}>
-                                                        Diagram Lingkaran
-                                                    </p>
-                                                    <p className={`cursor-pointer text-black transition-all ${activeChartR === "Line" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                        onClick={() => setActiveChartR("Line")}>
-                                                        Diagram Garis
-                                                    </p>
-                                                    <p className={`cursor-pointer text-black transition-all ${activeChartR === "Bar" ? "bg-[#A8B5CB]" : "text-[#9A9A9A]"}`}
-                                                        onClick={() => setActiveChartR("Bar")}>
-                                                        Diagram Batang
-                                                    </p>
-                                                </div>
-
-                                                <div className="flex gap-2 mt-4">
-                                                    <button onClick={handleResetFiltersRight} className="px-3 py-1 bg-gray-300 rounded">
-                                                        Reset
-                                                    </button>
-                                                    <button onClick={handleCancelFiltersRight} className="px-3 py-1 bg-gray-500 text-white rounded">
-                                                        Batal
-                                                    </button>
-                                                    <button onClick={handleApplyFiltersRight} className="px-3 py-1 bg-blue-600 text-white rounded">
-                                                        Terapkan
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
                                     </div>
 
                                 </div>
@@ -1870,7 +1916,7 @@ export default function Dashboard() {
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
                             </div>
 
-                            <div className="bg-white p-6">
+                            <div className="bg-white p-6 ">
                                 <div className="relative bottom-0">
 
                                     <div className="overflow-x-auto">
@@ -1958,4 +2004,3 @@ export default function Dashboard() {
         </main>
     );
 }
-
