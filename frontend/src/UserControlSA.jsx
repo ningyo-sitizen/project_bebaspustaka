@@ -650,16 +650,15 @@ export default function UserControl() {
                 <div className="p-4 sm:p-8">
 
                     <div className="flex justify-between items-start mb-6">
-                        {/* Judul dan deskripsi */}
+
                         <div>
-                            <h1 className="text-xl font-semibold text-[#023048]">Kontrol Pengguna</h1>
+                            <h1 className="text-xl font-semibold text-[#023048] text-left">Kontrol Pengguna</h1>
                             <p className="text-sm text-gray-600 mt-1">
                                 Fitur User Control memungkinkan admin menambah dan menghapus akun pengguna sesuai kebutuhan sistem.
                             </p>
                         </div>
-                        {/* IKON TAMPILAN DATA */}
+
                         <div className="flex-shrink-0 flex items-center mt-2 sm:mt-0">
-                            {/* Tombol Grid */}
                             <button
                                 onClick={() => setViewMode('grid')}
                                 className={`w-10 h-10 border rounded-lg flex items-center justify-center ${viewMode === 'grid'

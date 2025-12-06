@@ -21,7 +21,7 @@ import "./App.css";
 
 import axios from "axios";
 
-function Approval() {
+function ApprovalSA() {
     authCheck();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
@@ -111,6 +111,7 @@ function Approval() {
         (!setAlertBebasPustakaAll)
         console.log("Setuju semua bepustaka clicked");
     };
+
     const handleSingleCheck = (id) => {
         setCheckedItems(prev => {
             const updated = { ...prev, [id]: !prev[id] };
@@ -292,15 +293,15 @@ function Approval() {
                         </div>
 
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboard" className={getSidebarItemClass()}>
+                            <a href="/dashboardSA" className={getSidebarItemClass()}>
                                 <IconHome size={20} />
                                 Dashboard
                             </a>
-                            <a href="/analytic" className={getSidebarItemClass()}>
+                            <a href="/analyticSA" className={getSidebarItemClass()}>
                                 <IconChartBar size={20} />
                                 Data Analitik
                             </a>
-                            <a href="/Approval" className={getSidebarItemClass(true)}>
+                            <a href="/ApprovalSA" className={getSidebarItemClass(true)}>
                                 <IconBell size={20} />
                                 Konfirmasi Data
                             </a>
@@ -687,7 +688,9 @@ function Approval() {
                                         {/* isianya dari db */}
                                         <tbody>
                                             {data.map((item, index) => ( //ssesuain sama db
-                                                <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}>
+                                                <tr key={item.id ?? index} 
+                                                className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
+                                                >
                                                     <td className="p-4">
                                                         <label className="flex items-center cursor-pointer">
                                                             <input
@@ -696,7 +699,9 @@ function Approval() {
                                                                 onChange={() => handleSingleCheck(item.id)}
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
                                                             />
-                                                            <div className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
+                                                            <div 
+                                                            key={item.id ?? index}
+                                                            className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
                                                                 ? 'bg-[#A8B5CB] border-white'
                                                                 : 'bg-white border-[#A8B5CB]'
                                                                 }`}
@@ -899,4 +904,4 @@ function Approval() {
     );
 }
 
-export default Approval;
+export default ApprovalSA;

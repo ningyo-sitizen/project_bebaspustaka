@@ -1,4 +1,5 @@
-const opac = require("../config/opac"); // pastiin path ke pool MySQL opac
+const { opac, bebaspustaka } = require("../config");
+
 
 //buat approval dan ket
 exports.getLoanHistoryByNim = async (req, res) => {

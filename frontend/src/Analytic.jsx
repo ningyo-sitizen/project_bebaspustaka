@@ -187,8 +187,6 @@ function Analytic() {
             );
         }
 
-
-
         const datasets = Object.keys(data.data).map((year) => {
             const yearData = data.data[year];
             const color = getRandomColor();

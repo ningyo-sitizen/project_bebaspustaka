@@ -191,7 +191,7 @@ export default function DashboardSA() {
                         </div>
 
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboard" className={getSidebarItemClass(true)}>
+                            <a href="/dashboardSA" className={getSidebarItemClass(true)}>
                                 <IconHome size={20} />
                                 Dashboard
                             </a>
