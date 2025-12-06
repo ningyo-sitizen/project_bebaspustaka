@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/checktoken');
-const {getAngkatan, getLembaga, getProgramStudi, getSummaryReport, getLoanHistory, getLoanHistoryByNim } = require('../controller/loansummarycontroller')
+const {getAngkatan, getLembaga, getProgramStudi, getSummaryReport, getLoanHistory } = require('../controller/loansummarycontroller')
+const { getLoanHistoryByNim } = require("../controller/keterangancontroller");
 
 router.get("/angkatan", verifyToken, getAngkatan);
 router.get("/lembaga", verifyToken, getLembaga);

@@ -8,6 +8,8 @@ import EditProfile from "./Editprofile.jsx";
 import DashboardSA from "./DashboardSA.jsx";
 import AnalyticSA from "./AnalyticSA.jsx";
 import ApprovalSA from "./ApprovalSA.jsx";
+import Approval from "./Approval.jsx";
+import Profile from "./ProfileSA.jsx";
 import ProfileSA from "./ProfileSA.jsx";
 import EditProfileSA from "./EditprofileSA.jsx";
 import UserControlSA from "./UserControlSA.jsx";
@@ -20,11 +22,11 @@ export default function App() {
   return (
     <Routes>
       <Route path="/" element={<Login />} />
-      {/* <Route path="/login" element={<Login />}/> */}
+      <Route path="/login" element={<Login />}/>
       <Route path="/dashboard" element={<Dashboard />} />
       <Route path="/analytic" element={<Analytic />}></Route>
-      {/* <Route path="/approval" element={<Approval />} /> */}
-      {/* <Route path="/profile" element = {<Profile />}/> */}
+      <Route path="/Approval" element={<Approval/>} />
+      <Route path="/profile" element = {<Profile />}/>
       <Route path="/edit-profile" element = {<EditProfile/>}/>
       <Route path="/dashboardSA" element={<DashboardSA />} />
       <Route path="/Keterangan" element={<Keterangan />} />
