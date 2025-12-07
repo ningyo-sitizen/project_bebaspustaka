@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import authCheck from "./authCheck";
+import authCheckSA from "./authCheckSA";
 import {
     IconHome,
     IconChartBar,
@@ -372,7 +372,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
 
 // --- KOMPONEN UTAMA USER CONTROL ---
 export default function UserControl() {
-    authCheck();
+    authCheckSA();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);

@@ -1,6 +1,6 @@
 import AppLayout from './AppLayout';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 import { useNavigate, useParams } from "react-router-dom";
 import {
     IconBookOff,
@@ -17,7 +17,7 @@ import {
 import { useState, useEffect } from 'react';
 
 export default function KeteranganSA() {
-    authCheck();
+    authCheckSA();
 
     const [data, setData] = useState([]);
     const [dataMahasiswa, setDataMahasiswa] = useState([]);

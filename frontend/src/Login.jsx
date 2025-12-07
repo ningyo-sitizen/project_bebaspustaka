@@ -60,7 +60,7 @@ function Login() {
 
         if (data.user.role == "super admin") {
           navigate("/dashboardSA")
-
+          
         } else {
           navigate("/dashboard");
         }

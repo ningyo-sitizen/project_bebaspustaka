@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "./AppLayout";
-import authCheck from "./authCheck";
+import authCheckSA from "./authCheckSA";
 import { DayPicker } from "react-day-picker";
 import 'react-day-picker/dist/style.css';
 import {
@@ -22,7 +22,7 @@ import "./App.css";
 import axios from "axios";
 
 function Approval() {
-    authCheck();
+    authCheckSA();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);

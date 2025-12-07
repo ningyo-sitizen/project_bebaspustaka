@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";;
 import axios from "axios";
-import authCheck from "./authCheck";
+import authCheckSA from "./authCheckSA";
 import {
   IconUsers,
   IconHistory,
@@ -19,7 +19,7 @@ import {
 import { useNavigate } from "react-router-dom";
 
 export default function EditProfile() {
-  authCheck();
+  authCheckSA();
   // --- STATE MANAGEMENT ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

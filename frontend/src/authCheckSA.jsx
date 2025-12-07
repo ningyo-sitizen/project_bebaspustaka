@@ -12,8 +12,8 @@ export default function authCheck() {
     const user_role = userk?.role;
 
     
-    if (user_role === "super admin") {
-      showNotif("error", "Akses ditolak untuk super admin.");
+    if (user_role === "admin") {
+      showNotif("error", "Akses ditolak untuk admin.");
       return;
     }
 
@@ -24,7 +24,7 @@ export default function authCheck() {
       return;
     }
 
-    // 3. Cek valid token
+    
     fetch("http://localhost:8080/api/landing/landingpagechart?year=2025", {
       method: "GET",
       headers: {

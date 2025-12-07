@@ -1,7 +1,7 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import AppLayout from './AppLayout';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 import { useNavigate } from "react-router-dom";
 import {
     IconHome,
@@ -50,7 +50,7 @@ ChartJS.register(
 );
 
 export default function DashboardSA() {
-    authCheck();
+    authCheckSA();
     //data dummy
     const [data, setData] = useState([
         { id: 1, name: "Hoshimi Miyabi", nim: "1234", jurusan: "TIK", statusbebaspustakanya: 0 },

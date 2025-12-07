@@ -1,6 +1,6 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 
 import {
     Chart as ChartJS,
@@ -40,7 +40,7 @@ ChartJS.register(
 );
 
 export default function Dashboard() {
-    authCheck()
+    authCheckSA()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [user, setUser] = useState(null);
 
