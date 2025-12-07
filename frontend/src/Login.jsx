@@ -61,11 +61,11 @@ function Login() {
         console.log(logger);
 
         if (data.user.role == "super admin") {
-          showNotif("success", "Berhasil login,selamat datang di sistem!!");
+          showNotif("success", `selamat datang di sistem! ${user_name}`);
           navigate("/dashboardSA")
 
         } else {
-          showNotif("success", "Berhasil login,selamat datang di sistem!!");
+          showNotif("success", `selamat datang di sistem! ${user_name}`);
           navigate("/dashboard");
         }
         fetch("http://localhost:8080/api/summary/sync", {
