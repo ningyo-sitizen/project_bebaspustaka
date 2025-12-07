@@ -47,7 +47,7 @@ export default function Dashboard() {
     authCheck()
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const [user, setUser] = useState(null);
+    const yearColors = {};
 
     const [tableData, setTableData] = useState(null);
 
@@ -65,6 +65,20 @@ export default function Dashboard() {
 
     const [isLoadingLeft, setIsLoadingLeft] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+    const [isClosing, setIsClosing] = useState(false);
+    const closeModal = () => {
+        setIsClosing(true); // start fade-out animation
+        setTimeout(() => {
+            setShowFilterL(false); // hide modal beneran
+            setIsClosing(false); // reset state
+        }, 300); // durasi animation sama kayak CSS transition
+    };
+
+    const openModal = () => {
+        setIsClosing(false); // pastiin modal buka dengan animasi fade-in
+        setShowFilterL(true);
+    };
+
     const [visitorPage, setVisitorPage] = useState(1);
     const [visitorLimit] = useState(12);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -142,7 +156,7 @@ export default function Dashboard() {
     const handleCancelFilters = () => {
         setSelectedYears(tempYears);
         setSelectedType(tempType);
-        setShowFilterL(false);
+        closeModal(true);
     };
 
     const handleResetFiltersRight = () => {
@@ -161,6 +175,35 @@ export default function Dashboard() {
         setShowFilterR(false);
     };
 
+    const getColorForYear = (year) => {
+        if (!yearColors[year]) {
+            const r = Math.floor(Math.random() * 255);
+            const g = Math.floor(Math.random() * 255);
+            const b = Math.floor(Math.random() * 255);
+            yearColors[year] = `rgba(${r}, ${g}, ${b}, 0.8)`;
+        }
+        return yearColors[year];
+    };
+
+    const buildQueryParams = ({ years = [], type = "", page = 1, limit = 10, tableOnly = false }) => {
+        const query = new URLSearchParams();
+        if (years.length > 0) query.append("year", years.join(","));
+        if (type) query.append("period", type);
+        if (page) query.append("page", page);
+        if (limit) query.append("limit", limit);
+        if (tableOnly) query.append("tableOnly", "true");
+        return query.toString();
+    };
+
+    let debounceTimer = null;
+
+    const debouncedApplyFiltersLeft = () => {
+        closeModal(false);
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            handleApplyFiltersLeft();
+        }, 250); // delay 250ms, bisa diubah sesuai selera
+    };
 
     //label buaat chart kiri
     const autoBuildChartData = (data, selectedType) => {
@@ -168,13 +211,6 @@ export default function Dashboard() {
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         ];
-
-        const getRandomColor = () => {
-            const r = Math.floor(Math.random() * 255);
-            const g = Math.floor(Math.random() * 255);
-            const b = Math.floor(Math.random() * 255);
-            return `rgba(${r}, ${g}, ${b}, 0.8)`;
-        };
 
         let baseLabels = [];
         if (selectedType === "monthly") baseLabels = monthLabels;
@@ -199,7 +235,7 @@ export default function Dashboard() {
 
         const datasets = Object.keys(data.data).map((year) => {
             const yearData = data.data[year];
-            const color = getRandomColor();
+            const color = getColorForYear(year);
 
             const values = baseLabels.map((label) => {
                 const found = yearData.find(r => String(r.label).startsWith(label));
@@ -229,7 +265,7 @@ export default function Dashboard() {
             query.append("limit", tableLimitLeft);
             query.append("tableOnly", "true");
 
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
+            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${buildQueryParams({ years: selectedYears, type: selectedType, page: pageNum, limit: tableLimitLeft, tableOnly: true })}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const data = await res.json();
@@ -314,22 +350,31 @@ export default function Dashboard() {
         }
     }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
 
+    let fetchController = null;
+
     const handleApplyFiltersLeft = useCallback(async () => {
+        const isFilterChanged = (
+            JSON.stringify(selectedYears) !== JSON.stringify(tempYears) ||
+            selectedType !== tempType
+        );
         setTempYears(selectedYears);
         setTempType(selectedType);
         setShowFilterL(false);
         setIsLoadingLeft(true);
 
+        if (fetchController) fetchController.abort();
+        fetchController = new AbortController();
+        const { signal } = fetchController;
+
         await new Promise(resolve => setTimeout(resolve, 100));
 
         try {
             const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
-            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
-            if (selectedType) query.append("period", selectedType);
+            const query = buildQueryParams({ years: selectedYears, type: selectedType });
 
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query.toString()}`, {
-                headers: { Authorization: `Bearer ${token}` }
+            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query}`, {
+                headers: { Authorization: `Bearer ${token}` },
+                signal
             });
             const responseData = await res.json();
 
@@ -345,14 +390,19 @@ export default function Dashboard() {
                 setTableData(responseData);
                 setIsLoadingLeft(false);
             });
-
-            fetchTableDataLeft(1);
+            fetchTableDataLeft(isFilterChanged ? 1 : tablePageLeft);
 
         } catch (err) {
-            console.error("Error applying filters:", err);
-            setIsLoadingLeft(false);
+            if (err.name === "AbortError") {
+                console.log("Previous fetch aborted due to new filter");
+            } else {
+                console.error("Error applying filters:", err);
+                setIsLoadingLeft(false);
+            }
         }
-    }, [selectedYears, selectedType, activeChartL]);
+
+    }, [[selectedYears, selectedType, activeChartL, tempYears, tempType, tablePageLeft]]);
+
 
 
     const autoBuildChartDataRight = (apiResponse) => {
@@ -565,15 +615,15 @@ export default function Dashboard() {
         const getHeaders = () => {
             switch (selectedType) {
                 case "daily":
-                    return ["Year", "Date", "Total Visitors"];
+                    return ["Tahun", "Tanggal", "Total Pengunjung"];
                 case "weekly":
-                    return ["Year", "Week", "Start Date", "End Date", "Total Visitors"];
+                    return ["Tahun", "Minggu", "Tanggal mulai", "Tanggal Akhir", "Total Pengunjung"];
                 case "monthly":
-                    return ["Year", "Month", "Total Visitors"];
+                    return ["Tahun", "Bulan", "Total Pengunjung"];
                 case "yearly":
-                    return ["Year", "Total Visitors"];
+                    return ["Tahun", "Total Pengunjung"];
                 default:
-                    return ["Year", "Label", "Total Visitors"];
+                    return ["Tahun", "Label", "Total Pengunjung"];
             }
         };
 
@@ -583,21 +633,21 @@ export default function Dashboard() {
             return Object.keys(data.data).map((year) =>
                 data.data[year].map((item, i) => (
                     <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-medium">{year}</td>
+                        <td className="p-3 font-regular text-sm">{year}</td>
 
                         {selectedType === "weekly" ? (
                             <>
-                                <td className="p-3">{item.label}</td>
-                                <td className="p-3">{item.start_date}</td>
-                                <td className="p-3">{item.end_date}</td>
-                                <td className="p-3">{item.total_visitor.toLocaleString()}</td>
+                                <td className="p-3 font-regular text-sm">{item.label}</td>
+                                <td className="p-3 font-regular text-sm">{item.start_date}</td>
+                                <td className="p-3 font-regular text-sm">{item.end_date}</td>
+                                <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
                             </>
                         ) : selectedType === "yearly" ? (
-                            <td className="p-3">{item.total_visitor.toLocaleString()}</td>
+                            <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
                         ) : (
                             <>
-                                <td className="p-3">{item.label}</td>
-                                <td className="p-3">{item.total_visitor.toLocaleString()}</td>
+                                <td className="p-3 font-regular text-sm">{item.label}</td>
+                                <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
                             </>
                         )}
                     </tr>
@@ -606,9 +656,11 @@ export default function Dashboard() {
         };
 
         return (
+
+            //table kiri visitor
             <div>
                 <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-lg capitalize">
+                    <h3 className="font-semibold text-base capitalize">
                         {selectedType} Visitor Data
                     </h3>
 
@@ -630,12 +682,12 @@ export default function Dashboard() {
                     </div>
                 ) : (
                     <>
-                        <div className="overflow-x-auto max-h-[600px]">
-                            <table className="w-full border-collapse border border-gray-300">
+                        <div className="overflow-x-auto max-h-[600px] border border-gray-100">
+                            <table className="w-full border-collapse">
                                 <thead className="bg-gray-100 sticky top-0">
                                     <tr>
                                         {headers.map((header, idx) => (
-                                            <th key={idx} className="p-3 border font-medium text-left">
+                                            <th key={idx} className="p-3 border font-normal text-center">
                                                 {header}
                                             </th>
                                         ))}
@@ -645,58 +697,14 @@ export default function Dashboard() {
                             </table>
                         </div>
 
-                        {/* ✅ Pagination hanya jika ada */}
-                        {pagination && pagination.totalPages > 1 && (
-                            <div className="flex items-center justify-between mt-6 px-4">
-                                <div className="text-sm text-gray-600">
-                                    Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
-                                    {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
-                                    {pagination.totalItems} entries
-                                </div>
-
-                                <div className="flex gap-2">
-                                    <button
-                                        onClick={() => onPageChange(1)}
-                                        disabled={!pagination.hasPrevPage}
-                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        First
-                                    </button>
-                                    <button
-                                        onClick={() => onPageChange(pagination.currentPage - 1)}
-                                        disabled={!pagination.hasPrevPage}
-                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Previous
-                                    </button>
-
-                                    <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
-                                        Page {pagination.currentPage} of {pagination.totalPages}
-                                    </span>
-
-                                    <button
-                                        onClick={() => onPageChange(pagination.currentPage + 1)}
-                                        disabled={!pagination.hasNextPage}
-                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Next
-                                    </button>
-                                    <button
-                                        onClick={() => onPageChange(pagination.totalPages)}
-                                        disabled={!pagination.hasNextPage}
-                                        className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                                    >
-                                        Last
-                                    </button>
-                                </div>
-                            </div>
-                        )}
                     </>
                 )}
             </div>
         );
     }
 
+
+    // ini kanan
     function DataTableRight({ data, pagination, onPageChange }) {
 
         if (!data) {
@@ -736,7 +744,7 @@ export default function Dashboard() {
             if (!years || years.length === 0) {
                 return (
                     <tr>
-                        <td colSpan={headers.length} className="text-center p-4 text-gray-500">
+                        <td colSpan={headers.length} className="text-center p-4  text-gray-500">
                             No data available
                         </td>
                     </tr>
@@ -751,8 +759,8 @@ export default function Dashboard() {
 
                     return (
                         <tr key={year} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{data.data[year][0].total.toLocaleString()}</td>
+                            <td className="p-3 font-regular text-sm">{year}</td>
+                            <td className="p-3 font-regular text-sm">{data.data[year][0].total.toLocaleString()}</td>
                         </tr>
                     );
                 }).filter(Boolean);
@@ -764,9 +772,9 @@ export default function Dashboard() {
 
                     return data.data[year].map((item, i) => (
                         <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga || '-'}</td>
-                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                            <td className="p-3 font-regular text-sm">{year}</td>
+                            <td className="p-3 font-regular text-sm">{item.lembaga || '-'}</td>
+                            <td className="p-3 font-regular text-sm">{(item.total || 0).toLocaleString()}</td>
                         </tr>
                     ));
                 });
@@ -778,10 +786,10 @@ export default function Dashboard() {
 
                     return data.data[year].map((item, i) => (
                         <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-semibold">{year}</td>
-                            <td className="p-3">{item.lembaga || '-'}</td>
-                            <td className="p-3">{item.program || '-'}</td>
-                            <td className="p-3">{(item.total || 0).toLocaleString()}</td>
+                            <td className="p-3 font-regular text-sm">{year}</td>
+                            <td className="p-3 font-regular text-sm">{item.lembaga || '-'}</td>
+                            <td className="p-3 font-regular text-sm">{item.program || '-'}</td>
+                            <td className="p-3 font-regular text-sm">{(item.total || 0).toLocaleString()}</td>
                         </tr>
                     ));
                 });
@@ -810,71 +818,25 @@ export default function Dashboard() {
         };
 
         return (
-            <div className="bg-white p-6 mt-8 rounded-xl shadow">
-                <h3 className="font-semibold text-lg mb-4">{getTitle()}</h3>
+            <div className="bg-white p-6 rounded-lg border border-gray-300">
+                <h3 className="font-semibold text-base mb-4 text-left">{getTitle()}</h3>
 
-                <div className="overflow-x-auto">
-                    <table className="w-full border-collapse border border-gray-300">
+                <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-100">
+                    <table className="w-full border-collapse ">
                         <thead className="bg-gray-100">
                             <tr>
                                 {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-medium text-left">
+                                    <th key={idx} className="p-3 border font-normal text-center">
                                         {header}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className='overflow-x-auto'>
                             {renderRows()}
                         </tbody>
                     </table>
                 </div>
-
-                {pagination && pagination.totalPages > 1 && (
-                    <div className="flex items-center justify-between mt-6 px-4">
-                        <div className="text-sm text-gray-600">
-                            Showing {((pagination.currentPage - 1) * pagination.itemsPerPage) + 1} to{' '}
-                            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
-                            {pagination.totalItems} entries
-                        </div>
-
-                        <div className="flex gap-2">
-                            <button
-                                onClick={() => onPageChange(1)}
-                                disabled={!pagination.hasPrevPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                First
-                            </button>
-                            <button
-                                onClick={() => onPageChange(pagination.currentPage - 1)}
-                                disabled={!pagination.hasPrevPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Previous
-                            </button>
-
-                            <span className="px-4 py-2 font-medium bg-blue-100 text-blue-700 rounded">
-                                Page {pagination.currentPage} of {pagination.totalPages}
-                            </span>
-
-                            <button
-                                onClick={() => onPageChange(pagination.currentPage + 1)}
-                                disabled={!pagination.hasNextPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Next
-                            </button>
-                            <button
-                                onClick={() => onPageChange(pagination.totalPages)}
-                                disabled={!pagination.hasNextPage}
-                                className="px-3 py-2 bg-gray-200 rounded hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                            >
-                                Last
-                            </button>
-                        </div>
-                    </div>
-                )}
             </div>
         );
     }
@@ -903,26 +865,6 @@ export default function Dashboard() {
                                         }
                                     }
                                 },
-
-                                title: {
-                                    display: true,
-                                    text: [
-                                        'Data kunjungan mahasiswa ke perpustakaan',
-                                        'mencatat jumlah dan frekuensi kehadiran mereka.'
-                                    ],
-                                    color: '#616161',
-                                    font: {
-                                        family: '"Plus Jakarta Sans", sans-serif',
-                                        size: 14,
-                                        weight: '300',
-                                    },
-                                    padding: {
-                                        top: 10,
-                                        bottom: 20,
-                                    },
-                                    align: 'center',
-                                },
-
                             },
                             scales: {
                                 x: {
@@ -1535,9 +1477,9 @@ export default function Dashboard() {
 
                             <div>
                                 <div className="flex justify-between items-center mb-4 w-full">
-                                    <h3 className="font-semibold text-lg">Data Analitik Mahasiswa</h3>
+                                    <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
                                     <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
-                                        onClick={() => setShowFilterL(!showFilterL)}>
+                                        onClick={openModal}>
                                         Filter &gt;
                                     </p>
                                 </div>
@@ -1548,9 +1490,14 @@ export default function Dashboard() {
                                         {/* //render filter */}
                                         {showFilterL && (
 
-                                            <div className="fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0">
+                                            <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
+                                                            transition-opacity duration-300 ${isClosing ? "opacity-0" : "opacity-100"}`}
+                                                onClick={handleApplyFiltersLeft}>
 
-                                                <div className="bg-white w-full max-w-md sm:max-w-lg md:max-w-xl rounded-lg shadow-lg flex flex-col gap-1">
+                                                <div className={`bg-white w-full max-w-md sm:max-w-lg md:max-w-xl rounded-lg shadow-lg flex flex-col gap-1
+                                                                transform transition-transform duration-300 ${isClosing ? "scale-95" : "scale-100"}`}
+                                                    onClick={(e) => e.stopPropagation()}>
+
                                                     <div className="px-5 pt-5">
                                                         <p className="font-bold text-lg text-left">Filter</p>
                                                         <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>
@@ -1569,7 +1516,7 @@ export default function Dashboard() {
                                                                     setSelectedYears(selectedYears.filter((y) => y !== year))
                                                                     : !maxReached && setSelectedYears([...selectedYears, year])}
                                                                     className={`px-3 py-1 rounded text-sm transition-colors 
-                                                                    ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#BFC0C0]"} 
+                                                                    ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161]"} 
                                                                     ${maxReached && !isSelected ? "opacity-40 cursor-not-allowed" : ""}`} >
                                                                     {year}
                                                                 </button>);
@@ -1593,7 +1540,7 @@ export default function Dashboard() {
                                                                         disabled={isBlocked}
                                                                         onClick={() => !isBlocked && setSelectedType(type)}
                                                                         className={`px-3 py-1 rounded text-sm transition-colors 
-                                                                ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#BFC0C0] bg-white"} 
+                                                                ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                 ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                     >
                                                                         {type}
@@ -1620,7 +1567,7 @@ export default function Dashboard() {
                                                                             disabled={isBlocked}
                                                                             onClick={() => !isBlocked && setActiveChartL(chart.value)}
                                                                             className={`px-3 py-1 rounded text-sm transition-colors 
-                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#BFC0C0] bg-white"} 
+                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                     ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                         >
                                                                             {chart.label}
@@ -1647,7 +1594,7 @@ export default function Dashboard() {
                                                             </button>
 
                                                             <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
-                                                                onClick={handleApplyFiltersLeft}>
+                                                                onClick={debouncedApplyFiltersLeft}>
                                                                 Filter Data
                                                             </button>
 
@@ -1668,7 +1615,7 @@ export default function Dashboard() {
 
                             <div>
                                 <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-semibold text-lg">Setujui Data Bebas Pustaka</h3>
+                                    <h3 className="font-semibold text-lg">Data Bebas Pustaka</h3>
                                     <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={() => setShowFilterR(!showFilterR)}>
                                         Filter &gt;
@@ -1866,11 +1813,11 @@ export default function Dashboard() {
                             </div>
 
                             <div className='mt-5'>
-                                <div className="relative inline-flex justify-between items-center mb-6">
-                                    <h3 className="font-semibold text-lg">Ringkasan</h3>
+                                <div className="relative mb-6">
+                                    <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-xl shadow">
+                                <div className="bg-white p-6 rounded-xl border border-gray-300">
                                     <div className="relative">
                                         {tableDataLeft ? (
                                             <DataTable
@@ -1892,9 +1839,10 @@ export default function Dashboard() {
                                     </div>
                                 </div>
                             </div>
+
                             <div className='mt-5'>
                                 <div className="mb-4 h-[32px]"></div>
-                                <div className="bg-white p-6">
+                                <div className="bg-white rounded-xl">
                                     <div className="relative">
                                         <div className="overflow-x-auto">
                                             {tableDataRight && (
@@ -1912,7 +1860,7 @@ export default function Dashboard() {
                         </div>
 
                         <div className='grid grid-cols-1 gap-8 '>
-                            <div className="relative inline-flex justify-between items-center mt-32 mb-4    ">
+                            <div className="relative inline-flex justify-between items-center mt-20">
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
                             </div>
 
@@ -1920,7 +1868,7 @@ export default function Dashboard() {
                                 <div className="relative bottom-0">
 
                                     <div className="overflow-x-auto">
-                                        <div className="font-semibold font-black">Data Bebas Pustaka</div>
+                                        <div className="font-semibold font-black text-left mb-4">Data Bebas Pustaka</div>
                                         <table className="w-full border-collapse">
                                             <thead>
                                                 <tr className="bg-gray-50 border-b-2 border-black">

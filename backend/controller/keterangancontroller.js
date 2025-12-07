@@ -43,13 +43,8 @@ exports.getLoanHistoryByNim = async (req, res) => {
       statusbuku: r.is_return === 1 ? 1 : 0,
     }));
 
-<<<<<<< HEAD
-    res.json({ success: true, history });
-    console.log(history)
-=======
     return res.json({ success: true, history });
 
->>>>>>> fa15759a610bca240efe94e004ebb24c66bfb3af
   } catch (err) {
     console.error("❌ Error getLoanHistoryByNim:", err);
     return res.status(500).json({ success: false, message: "Server error" });

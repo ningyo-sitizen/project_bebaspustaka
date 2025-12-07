@@ -282,10 +282,9 @@ export default function DashboardSA() {
 
                                 <div className="md:w-1/1 p-10 text-white flex flex-col justify-start text-left">
                                     <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
-                                    <p className="font-normal text-lg mb-2">Di Dashboard Analitik Bebas Pustaka</p>
+                                    <p className="font-normal text-lg mb-2">Di Dashboard admin Bebas Pustaka</p>
                                     <p className="font-light text-sm">
-                                        Dashboard ini menyajikan data kunjungan dan status bebas pustaka secara
-                                        terstruktur untuk membantu Admin dalam memantau dan mengelola informasi perpustakaan.
+                                        Tempat Admin memantau dan mengelola data  serta status bebas pustaka dengan lebih mudah dan terarah.
                                     </p>
                                 </div>
 
