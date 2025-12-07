@@ -10,13 +10,6 @@ export default function authCheck() {
     const token = localStorage.getItem("token");
     const userk = JSON.parse(localStorage.getItem("user"));
     const user_role = userk?.role;
-
-    
-    if (user_role === "super admin") {
-      showNotif("error", "Akses ditolak untuk super admin.");
-      return;
-    }
-
     
     if (!token) {
       showNotif("error", "Silakan login terlebih dahulu.");
@@ -48,6 +41,14 @@ export default function authCheck() {
         localStorage.removeItem("user");
         navigate("/login");
       });
+    
+          if (user_role === "super admin") {
+      showNotif("error", "anda melanggar aturan role-based view mohon login ulang");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login")
+      return;
+    }
 
   }, [navigate]);
 }

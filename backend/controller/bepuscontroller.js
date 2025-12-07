@@ -66,7 +66,6 @@ exports.listTI = async (req, res) => {
           approved_at: null
       }));
 
-      // ------------ AUTO INSERT PENDING --------------------
       const pendingInserts = data
           .filter(d => d.status_bepus === "Pending")
           .map(d => [d.nim, d.name, "Pending", new Date()]);

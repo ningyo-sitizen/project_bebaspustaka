@@ -11,13 +11,7 @@ export default function authCheck() {
     const userk = JSON.parse(localStorage.getItem("user"));
     const user_role = userk?.role;
 
-    
-    if (user_role === "admin") {
-      showNotif("error", "Akses ditolak untuk admin.");
-      return;
-    }
-
-    
+      
     if (!token) {
       showNotif("error", "Silakan login terlebih dahulu.");
       navigate("/login");
@@ -49,5 +43,12 @@ export default function authCheck() {
         navigate("/login");
       });
 
+          if (user_role === "admin") {
+      showNotif("error", "anda melanggar aturan role-based view mohon login ulang");
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        navigate("/login")
+      return;
+    }
   }, [navigate]);
 }
