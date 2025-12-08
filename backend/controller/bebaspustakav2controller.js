@@ -9,7 +9,6 @@ exports.getAndInsertDataBebasPustaka = async (req, res) => {
         const sql_get_last_date = `
             SELECT end_date 
             FROM bebas_pustaka_time_range
-            ORDER BY id DESC LIMIT 1
         `;
 
         const sql_get_status = `
@@ -19,7 +18,6 @@ exports.getAndInsertDataBebasPustaka = async (req, res) => {
 
         const [statusRows] = await bebaspustaka.query(sql_get_status);
 
-        // ==== IF pertama: tidak ada status sama sekali ====
         if (statusRows.length === 0) {
             const sql_insert = `
                 INSERT INTO bebaspustaka.bebas_pustaka
