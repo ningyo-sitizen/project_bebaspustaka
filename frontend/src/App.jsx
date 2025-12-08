@@ -17,9 +17,11 @@ import HistorySA from "./HistorySA.jsx";
 import Logout from "./logout.jsx";
 import Keterangan from "./Keterangan.jsx";
 import KeteranganSA from "./KeteranganSA.jsx";
+import {NotificationProvider } from "./NotificationContext.jsx";
 
 export default function App() {
   return (
+  <NotificationProvider>
     <Routes>
       <Route path="/" element={<Login />} />
       <Route path="/login" element={<Login />}/>
@@ -38,7 +40,7 @@ export default function App() {
       <Route path="/historySA" element = {<HistorySA/>}/>
       <Route path="/logout" element = {<Logout/>}/>
       <Route path="/KeteranganSA/:nim" element={<KeteranganSA />} />
-
     </Routes>
+    </NotificationProvider>
   );
 }

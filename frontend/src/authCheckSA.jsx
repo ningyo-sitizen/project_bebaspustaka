@@ -10,14 +10,15 @@ export default function authCheck() {
     const token = localStorage.getItem("token");
     const userk = JSON.parse(localStorage.getItem("user"));
     const user_role = userk?.role;
-    
+
+      
     if (!token) {
       showNotif("error", "Silakan login terlebih dahulu.");
       navigate("/login");
       return;
     }
 
-    // 3. Cek valid token
+    
     fetch("http://localhost:8080/api/landing/landingpagechart?year=2025", {
       method: "GET",
       headers: {
@@ -41,14 +42,13 @@ export default function authCheck() {
         localStorage.removeItem("user");
         navigate("/login");
       });
-    
-          if (user_role === "super admin") {
+
+          if (user_role === "admin") {
       showNotif("error", "anda melanggar aturan role-based view mohon login ulang");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login")
       return;
     }
-
   }, [navigate]);
 }

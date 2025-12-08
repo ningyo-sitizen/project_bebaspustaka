@@ -1,7 +1,6 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
 import authCheck from './authCheck';
-import AppLayout from './AppLayout';
 
 import {
     Chart as ChartJS,
@@ -45,8 +44,6 @@ ChartJS.register(
 
 export default function Dashboard() {
     authCheck()
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
 

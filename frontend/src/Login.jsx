@@ -1,7 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useNotif } from "./NotificationContext"
 
 function Login() {
+  const { showNotif } = useNotif();
   const [name, setName] = useState("");
   const [failedLogin, setFailedLogin] = useState("");
   const [password, setPassword] = useState("");
@@ -59,9 +61,11 @@ function Login() {
         console.log(logger);
 
         if (data.user.role == "super admin") {
+          showNotif("success", `selamat datang di sistem! ${user_name}`);
           navigate("/dashboardSA")
 
         } else {
+          showNotif("success", `selamat datang di sistem! ${user_name}`);
           navigate("/dashboard");
         }
         fetch("http://localhost:8080/api/summary/sync", {

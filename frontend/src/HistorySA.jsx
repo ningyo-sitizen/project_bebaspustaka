@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import authCheck from "./authCheck";
+import authCheckSA from "./authCheckSA";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
@@ -304,7 +304,7 @@ const SortDropdown = ({ isOpen, onClose, selectedSort, setSelectedSort }) => {
 // KOMPONEN UTAMA HISTORY
 // ---------------------------------------------------
 const History = () => {
-    authCheck();
+    authCheckSA();
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isFilterOpen, setIsFilterOpen] = useState(false);
