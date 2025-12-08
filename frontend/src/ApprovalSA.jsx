@@ -21,8 +21,8 @@ import "./App.css";
 
 import axios from "axios";
 
-function Approval() {
-    authCheck();
+function ApprovalSA() {
+    authCheckSA();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);

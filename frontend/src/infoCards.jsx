@@ -13,7 +13,7 @@ function InfoCards() {
   const fetchInfoData = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      
+
       const [todayRes, borrowedRes, weeklyRes] = await Promise.all([
         fetch("http://localhost:8080/api/infoCard/todayVisitorCount", {
           headers: { Authorization: `Bearer ${token}` }
@@ -53,7 +53,7 @@ function InfoCards() {
 
   useEffect(() => {
     const cachedData = localStorage.getItem('dashboardInfoData');
-    
+
     if (cachedData) {
       const parsed = JSON.parse(cachedData);
       const lastUpdated = new Date(parsed.lastUpdated);
@@ -64,7 +64,7 @@ function InfoCards() {
         setInfoData(parsed);
         setIsLoading(false);
       } else {
-        
+
         fetchInfoData();
       }
     } else {
@@ -131,23 +131,40 @@ function InfoCards() {
       {/* Card 1: Kunjungan Hari Ini */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-600 font-medium">Kunjungan Hari Ini</h3>
-          <div className="bg-blue-50 p-3 rounded-lg">
-            <Users className="w-6 h-6 text-blue-600" />
+          <h3 className="text-black font-semibold">Data Kunjungan Mahasiswa</h3>
+          <div className="bg-[#EDF1F3] p-1 rounded-lg">
+            <div className="bg-[#bg-[#667790]]">
+            <svg xmlns="http://www.w3.org/2000/svg"
+              width="30"
+              height="30"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-eye-search">
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
+              <path d="M12 18c-.328 0 -.652 -.017 -.97 -.05c-3.172 -.332 -5.85 -2.315 -8.03 -5.95c2.4 -4 5.4 -6 9 -6c3.465 0 6.374 1.853 8.727 5.558" />
+              <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
+              <path d="M20.2 20.2l1.8 1.8" />
+            </svg>
+            </div>
           </div>
         </div>
         <p className="text-3xl font-bold text-gray-900 mb-2">
           {infoData.todayVisitors?.toLocaleString() || '0'}
         </p>
-        <p className="text-sm text-gray-500">
-          Pengunjung perpustakaan hari ini
+        <p className="text-xs text-gray-500 text-left">
+          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
         </p>
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-600 font-medium">Kunjungan Minggu Ini</h3>
+          <h3 className="text-black font-semibold">Data Peminjaman Buku</h3>
           <div className="bg-purple-50 p-3 rounded-lg">
             <Calendar className="w-6 h-6 text-purple-600" />
           </div>
@@ -155,7 +172,7 @@ function InfoCards() {
         <p className="text-3xl font-bold text-gray-900 mb-2">
           {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'}
         </p>
-        
+
         {weeklyIndicator && (
           <div className={`flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg`}>
             <span className={weeklyIndicator.color}>
@@ -171,7 +188,7 @@ function InfoCards() {
       {/* Card 3: Buku yang Dipinjam */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-gray-600 font-medium">Buku Dipinjam</h3>
+          <h3 className="text-black font-semibold text-left">Data Mahasiswa Bebas Pustaka</h3>
           <div className="bg-orange-50 p-3 rounded-lg">
             <BookOpen className="w-6 h-6 text-orange-600" />
           </div>
@@ -179,8 +196,8 @@ function InfoCards() {
         <p className="text-3xl font-bold text-gray-900 mb-2">
           {infoData.borrowedBooks?.toLocaleString() || '0'}
         </p>
-        <p className="text-sm text-gray-500">
-          Buku yang belum dikembalikan
+        <p className="text-xs text-gray-500 text-left">
+          Jumlah mahasiswa bebas pustaka mengalami peningkatan sebesar 0,1% pada minggu ini
         </p>
       </div>
 

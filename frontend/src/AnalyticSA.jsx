@@ -15,6 +15,7 @@ import {
     Legend
 } from 'chart.js';
 import { useState, useEffect, useCallback } from 'react';
+import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
 import { data, Link } from 'react-router-dom';
@@ -46,7 +47,8 @@ export default function Dashboard() {
     authCheck()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
-
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [toggleSidebar, setToggleSidebar] = useState(false);
 
     //setup chart
     const [chartDataR, setChartDataR] = useState({
@@ -1495,7 +1497,7 @@ export default function Dashboard() {
 
                         </div>
                         <p className="font-semibold text-xl text-left text-black mb-8 overflow-x-hidden">
-                            Silakan cek data yang ingin anda lihat di sini!
+                            Ringkasan Analitik
                         </p>
                         {/* kontennya */}
                         <InfoCards />
@@ -1903,15 +1905,15 @@ export default function Dashboard() {
                                         <div className="font-semibold font-black text-left mb-4">Data Bebas Pustaka</div>
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="bg-gray-50 border-b-2 border-black">
-                                                    <th className="text-left p-4 font-normal text-gray-600">No</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">loan id</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Member ID</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">item code</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Tanggal Pinjam</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Deadline</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Tanggal di kembalikan</th>
-                                                    <th className="text-left p-4 font-normal text-gray-600">Status Buku</th>
+                                                <tr className="bg-[#667790] border-b-2 border-black">
+                                                    <th className="text-left p-4 font-normal text-white text-sm">No</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">loan id</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">Member ID</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">item code</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal Pinjam</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">Deadline</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal di kembalikan</th>
+                                                    <th className="text-left p-4 font-normal text-white text-sm">Status Buku</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1922,7 +1924,7 @@ export default function Dashboard() {
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                            <td className="p-4"><div className="h-4 bg-gray-200 text-left rounded"></div></td>
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
                                                             <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
@@ -1935,14 +1937,14 @@ export default function Dashboard() {
                                                 ) : (
                                                     loanHistory.map((item, index) => (
                                                         <tr key={item.loan_id} className="border-b hover:bg-gray-50">
-                                                            <td className="p-4">{index + 1}</td>
-                                                            <td className="p-4">{item.loan_id}</td>
-                                                            <td className="p-4">{item.member_id}</td>
-                                                            <td className="p-4">{item.item_code}</td>
-                                                            <td className="p-4">{item.loan_date || "-"}</td>
-                                                            <td className="p-4">{item.due_date || "-"}</td>
-                                                            <td className="p-4">{item.return_date || "-"}</td>
-                                                            <td className={`p-4 font-semibold ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
+                                                            <td className="p-3 text-sm">{index + 1}</td>
+                                                            <td className="p-3 text-sm">{item.loan_id}</td>
+                                                            <td className="p-3 text-sm">{item.member_id}</td>
+                                                            <td className="p-3 text-sm">{item.item_code}</td>
+                                                            <td className="p-3 text-sm">{item.loan_date || "-"}</td>
+                                                            <td className="p-3 text-sm">{item.due_date || "-"}</td>
+                                                            <td className="p-3 text-sm">{item.return_date || "-"}</td>
+                                                            <td className={`p-3 font-semibold text-sm ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
                                                                 {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
                                                             </td>
                                                         </tr>
