@@ -45,11 +45,11 @@ ChartJS.register(
 
 export default function Dashboard() {
     authCheck()
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
 
-    const [tableData, setTableData] = useState(null);
 
     //setup chart
     const [chartDataR, setChartDataR] = useState({
@@ -65,6 +65,8 @@ export default function Dashboard() {
 
     const [isLoadingLeft, setIsLoadingLeft] = useState(false);
     const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+
     const [isClosing, setIsClosing] = useState(false);
     const closeModal = () => {
         setIsClosing(true); // start fade-out animation
@@ -73,15 +75,24 @@ export default function Dashboard() {
             setIsClosing(false); // reset state
         }, 300); // durasi animation sama kayak CSS transition
     };
-
     const openModal = () => {
         setIsClosing(false); // pastiin modal buka dengan animasi fade-in
         setShowFilterL(true);
     };
 
+    const [isClosingR, setIsClosingR] = useState(false);
+    const closeModalR = () => {
+        setIsClosingR(true);
+        setTimeout(() => {
+            setShowFilterR(false);
+            setIsClosingR(false);
+        }, 300);
+    }
+
+    const [tableData, setTableData] = useState(null);
     const [visitorPage, setVisitorPage] = useState(1);
     const [visitorLimit] = useState(12);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
     const [visitorPagination, setVisitorPagination] = useState(null);
     const [showFilterR, setShowFilterR] = useState(false);
     const [showFilterL, setShowFilterL] = useState(false);
@@ -101,22 +112,27 @@ export default function Dashboard() {
     const [tempYears, setTempYears] = useState([]);
     const [tempType, setTempType] = useState("");
 
+
+
     const [tablePageLeft, setTablePageLeft] = useState(1);
     const [tableLimitLeft] = useState(50);
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
     const [tableDataLeft, setTableDataLeft] = useState(null);
 
 
-
+    const [isLoadingR, setIsLoadingR] = useState(false);
     const [angkatan, setAngkatan] = useState([]);
     const [selectedAngkatan, setSelectedAngkatan] = useState([]);
-    const [tempAngkatan, setTempAngkatan] = useState([])
+    const [tempAngkatan, setTempAngkatan] = useState([]);
+    const [actAngkatan, setActAngkatan] = useState([]);
     const [lembaga, setLembaga] = useState([]);
     const [selectedLembaga, setSelectedLembaga] = useState([]);
     const [tempLembaga, setTempLembaga] = useState([]);
+    const [actLembaga, setActLembaga] = useState([]);
     const [prodi, setProdi] = useState({});
     const [selectedProdi, setSelectedProdi] = useState([]);
     const [tempProdi, setTempProdi] = useState([]);
+    const [actProdi, setActProdi] = useState([]);
 
     const [activeProdiR, setActiveProdiR] = useState(false);
     const [tableDataRight, setTableDataRight] = useState(null);
@@ -166,13 +182,16 @@ export default function Dashboard() {
         setTempAngkatan([]);
         setTempLembaga([]);
         setTempProdi([]);
+        setActAngkatan([]);
+        setActLembaga([]);
+        setActProdi([]);
         fetchChartDataRight();
     };
     const handleCancelFiltersRight = () => {
         setSelectedAngkatan(tempAngkatan);
         setSelectedLembaga(tempLembaga);
         setSelectedProdi(tempProdi);
-        setShowFilterR(false);
+        closeModalR(true);
     };
 
     const getColorForYear = (year) => {
@@ -204,6 +223,17 @@ export default function Dashboard() {
             handleApplyFiltersLeft();
         }, 250); // delay 250ms, bisa diubah sesuai selera
     };
+
+    let debounceTimerRight = null;
+
+    const debouncedApplyFiltersRight = () => {
+        closeModalR(false);
+        if (debounceTimerRight) clearTimeout(debounceTimerRight);
+        debounceTimerRight = setTimeout(() => {
+            handleApplyFiltersRight();
+        }, 250); // delay 250ms, bisa diubah sesuai selera
+    };
+
 
     //label buaat chart kiri
     const autoBuildChartData = (data, selectedType) => {
@@ -278,77 +308,64 @@ export default function Dashboard() {
         }
     }, [selectedYears, selectedType, tableLimitLeft]);
 
-    const fetchTableDataRight = useCallback(async (pageNum) => {
+    const fetchTableDataRight = useCallback(async (pageNum = 1) => {
         try {
             const token = localStorage.getItem("token");
             const query = new URLSearchParams();
 
-            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+            // pake ACTIVE FILTER, bukan selected*
+            if (actAngkatan.length) query.append("tahun", actAngkatan.join(","));
+            if (actLembaga.length) query.append("lembaga", actLembaga.join(","));
+            if (actProdi.length) query.append("program", actProdi.join(","));
 
             query.append("page", pageNum);
             query.append("limit", tableLimitRight);
 
-            const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await fetch(
+                `http://localhost:8080/api/loan/summary?${query.toString()}`,
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-            if (!res.ok) {
-                throw new Error(`HTTP error! status: ${res.status}`);
-            }
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
             const apiData = await res.json();
 
-            console.log("📦 Raw API Response:", apiData);
-
-            if (apiData.totalPages) {
-                setTablePaginationRight({
-                    currentPage: apiData.page || 1,
-                    totalPages: apiData.totalPages || 1,
-                    totalItems: apiData.totalRows || 0,
-                    itemsPerPage: apiData.limit || tableLimitRight,
-                    hasPrevPage: (apiData.page || 1) > 1,
-                    hasNextPage: (apiData.page || 1) < (apiData.totalPages || 1)
-                });
-            }
+            // Pagination
+            setTablePaginationRight({
+                currentPage: apiData.page ?? 1,
+                totalPages: apiData.totalPages ?? 1,
+                totalItems: apiData.totalRows ?? 0,
+                itemsPerPage: apiData.limit ?? tableLimitRight,
+                hasPrevPage: (apiData.page ?? 1) > 1,
+                hasNextPage: (apiData.page ?? 1) < (apiData.totalPages ?? 1)
+            });
 
             setTablePageRight(pageNum);
 
-            const transformedData = transformPagedDataForChart(apiData);
-            console.log("🔄 Transformed Data:", transformedData);
+            const transformed = transformPagedDataForChart(apiData);
 
-            if (transformedData && transformedData.data && transformedData.years) {
-                const chart = autoBuildChartDataRight(transformedData);
-                setChartDataR({
-                    lineChart: chart,
-                    barChart: chart,
-                    pieChart: chart,
-                    doughnutChart: chart
-                });
-
-                setTableDataRight(transformedData);
-            } else {
-                console.error("❌ Invalid transformed data structure");
-                setTableDataRight({
-                    mode: "default_year",
-                    years: [],
-                    data: {}
-                });
+            if (!transformed?.data || !transformed?.years) {
+                return setTableDataRight({ mode: "default_year", years: [], data: {} });
             }
 
-        } catch (err) {
-            console.error("❌ Error fetching table data right:", err);
-
-            setTableDataRight({
-                mode: "default_year",
-                years: [],
-                data: {}
+            const chart = autoBuildChartDataRight(transformed);
+            setChartDataR({
+                lineChart: chart,
+                barChart: chart,
+                pieChart: chart,
+                doughnutChart: chart
             });
 
+            setTableDataRight(transformed);
+
+        } catch (err) {
+            console.error("❌ Fetch Right Error:", err);
+            setTableDataRight({ mode: "default_year", years: [], data: {} });
             setTablePaginationRight(null);
         }
-    }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+
+
+    }, [actAngkatan, actLembaga, actProdi, tableLimitRight]);
 
     let fetchController = null;
 
@@ -524,12 +541,26 @@ export default function Dashboard() {
     };
 
     const handleApplyFiltersRight = async () => {
-        setTempAngkatan(selectedAngkatan);
-        setTempLembaga(selectedLembaga);
-        setTempProdi(selectedProdi);
-        setShowFilterR(false);
+        const setupfilter = {
+            angkatan: selectedAngkatan,
+            lembaga: selectedLembaga,
+            prodi: selectedProdi
+        };
+        localStorage.setItem("filters_right", JSON.stringify(setupfilter));
 
-        await fetchChartDataRight(1)
+
+        setTempAngkatan(setupfilter.angkatan);
+        setTempLembaga(setupfilter.lembaga);
+        setTempProdi(setupfilter.prodi);
+
+        setActAngkatan(setupfilter.angkatan);
+        setActLembaga(setupfilter.lembaga);
+        setActProdi(setupfilter.prodi);
+        closeModalR(true);
+
+        setIsLoadingR(true);
+        await fetchTableDataRight(1);
+        setIsLoadingR(false);
 
     };
     const transformPagedDataForChart = (pagedData) => {
@@ -1072,6 +1103,9 @@ export default function Dashboard() {
                 );
         }
     };
+    useEffect(() => {
+        fetchChartDataRight();
+    }, [actAngkatan, actLembaga, actProdi]);
 
     useEffect(() => {
         const savedUser = localStorage.getItem("user");
@@ -1104,21 +1138,16 @@ export default function Dashboard() {
         fetchProfile();
         fetchYears();
         fetchChartDataLeft();
-        fetchChartDataRight();
         fetchAngkatan();
         fetchLoanHistory(1);
         fetchLembaga();
 
     }, []);
 
-    // useEffect(() => {
-    //     if (selectedLembaga.length > 0) {
-    //         fetchProdi(selectedLembaga);
-    //     } else {
-    //         setProdi({});
-    //         setSelectedProdi([]);
-    //     }
-    // }, [selectedLembaga]);
+    useEffect(() => {
+        fetchChartDataRight();
+    }, [actAngkatan, actLembaga, actProdi, tableLimitRight]);
+
 
     useEffect(() => {
         if (selectedYears.length > 1 && (selectedType === "daily" || selectedType === "weekly")) {
@@ -1265,17 +1294,17 @@ export default function Dashboard() {
             const token = localStorage.getItem("token");
             const query = new URLSearchParams();
 
-            if (selectedAngkatan.length > 0) query.append("tahun", selectedAngkatan.join(","));
-            if (selectedLembaga.length > 0) query.append("lembaga", selectedLembaga.join(","));
-            if (selectedProdi.length > 0) query.append("program", selectedProdi.join(","));
+            if (actAngkatan.length > 0) query.append("tahun", actAngkatan.join(","));
+            if (actLembaga.length > 0) query.append("lembaga", actLembaga.join(","));
+            if (actProdi.length > 0) query.append("program", actProdi.join(","));
 
             query.append("page", pageNum);
             query.append("limit", tableLimitRight);
 
             console.log("🌐 Fetching with filters:", {
-                tahun: selectedAngkatan,
-                lembaga: selectedLembaga,
-                program: selectedProdi
+                tahun: actAngkatan,
+                lembaga: actLembaga,
+                program: actProdi
             });
 
             const res = await fetch(`http://localhost:8080/api/loan/summary?${query.toString()}`, {
@@ -1338,7 +1367,7 @@ export default function Dashboard() {
                 data: {}
             });
         }
-    }, [selectedAngkatan, selectedLembaga, selectedProdi, tableLimitRight]);
+    }, [actAngkatan, actLembaga, actProdi, tableLimitRight]);
 
 
 
@@ -1626,8 +1655,13 @@ export default function Dashboard() {
                                 <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
                                     <div className="relative">
                                         {showFilterR && (
-                                            <div className="fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0">
-                                                <div className="bg-white w-full max-w-6xl rounded-lg shadow-lg flex flex-col gap-1">
+                                            <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
+                                                            transition-opacity duration-300 ${isClosingR ? "opacity-0" : "opacity-100"}`}
+                                                onClick={handleApplyFiltersRight}>
+
+                                                <div className={`bg-white w-full max-w-6xl rounded-lg shadow-lg flex flex-col gap-1
+                                                                 transform transition-transform duration-300 ${isClosingR ? "scale-95" : "scale-100"}`}
+                                                    onClick={(e) => e.stopPropagation()}>
 
                                                     {/* Header */}
                                                     <div className="px-5 pt-5">
@@ -1770,8 +1804,8 @@ export default function Dashboard() {
                                                                                 key={chart.value}
                                                                                 onClick={() => setActiveChartR(chart.value)}
                                                                                 className={`px-3 py-1 rounded text-sm transition-colors 
-                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
-                                                                   `}
+                                                                                            ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
+                                                                                          `}
                                                                             >
                                                                                 {chart.label}
                                                                             </button>
@@ -1793,7 +1827,8 @@ export default function Dashboard() {
                                                             </button>
 
                                                             <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
-                                                                onClick={handleApplyFiltersRight}>
+                                                                disabled={isLoadingR}
+                                                                onClick={debouncedApplyFiltersRight}>
                                                                 Filter Data
                                                             </button>
 
