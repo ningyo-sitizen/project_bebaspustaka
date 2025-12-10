@@ -3,6 +3,8 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
+
+
 exports.getYearlyVisitors = async (req, res) => {
   try {
     const sql = `

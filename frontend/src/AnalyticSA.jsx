@@ -434,125 +434,131 @@ export default function Dashboard() {
 
 
 
-    const autoBuildChartDataRight = (apiResponse) => {
-        console.log("📊 Chart Builder Input:", apiResponse);
+const autoBuildChartDataRight = (apiResponse) => {
+    console.log("📊 Chart Builder Input:", apiResponse);
 
-        if (!apiResponse || !apiResponse.data) {
-            console.warn("⚠️ Invalid apiResponse");
-            return { labels: [], datasets: [] };
-        }
-
-        const { mode, data, years = [] } = apiResponse;
-
-        if (!years || years.length === 0) {
-            console.warn("⚠️ No years available");
-            return { labels: [], datasets: [] };
-        }
-
-        const generateColors = (count) => {
-            const baseColors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-                '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12'
-            ];
-            return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
-        };
-
-        const sortedYears = [...years].sort((a, b) => a - b);
-        console.log("📅 Sorted Years:", sortedYears);
-
-        if (mode === "default_year") {
-            const chartData = sortedYears.map(year => {
-                const yearData = data[year];
-                console.log(`📍 Year ${year} data:`, yearData);
-
-                if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
-                    return 0;
-                }
-
-                const total = yearData[0].total || yearData[0].total_pinjam || 0;
-                console.log(`💰 Year ${year} total:`, total);
-                return total;
-            });
-
-            console.log("📊 Final Chart Data:", chartData);
-
-            return {
-                labels: sortedYears.map(y => String(y)),
-                datasets: [{
-                    label: "Total Peminjaman",
-                    data: chartData,
-                    backgroundColor: generateColors(sortedYears.length),
-                    borderColor: generateColors(sortedYears.length),
-                    borderWidth: 2,
-                    tension: 0.3
-                }]
-            };
-        }
-
-        if (mode === "per_lembaga") {
-            const lembagaSet = new Set();
-            sortedYears.forEach(year => {
-                if (data[year] && Array.isArray(data[year])) {
-                    data[year].forEach(item => lembagaSet.add(item.lembaga));
-                }
-            });
-
-            const lembagaList = Array.from(lembagaSet);
-            const colors = generateColors(lembagaList.length);
-
-            console.log("🏢 Lembaga found:", lembagaList);
-
-            return {
-                labels: sortedYears.map(y => String(y)),
-                datasets: lembagaList.map((lem, idx) => ({
-                    label: lem,
-                    data: sortedYears.map(year => {
-                        if (!data[year]) return 0;
-                        const found = data[year].find(item => item.lembaga === lem);
-                        return found ? (found.total || found.total_pinjam || 0) : 0;
-                    }),
-                    backgroundColor: colors[idx],
-                    borderColor: colors[idx],
-                    borderWidth: 2,
-                    tension: 0.3
-                }))
-            };
-        }
-
-        if (mode === "per_program") {
-            const programSet = new Set();
-            sortedYears.forEach(year => {
-                if (data[year] && Array.isArray(data[year])) {
-                    data[year].forEach(item => programSet.add(item.program));
-                }
-            });
-
-            const programList = Array.from(programSet);
-            const colors = generateColors(programList.length);
-
-            console.log("🎓 Programs found:", programList);
-
-            return {
-                labels: sortedYears.map(y => String(y)),
-                datasets: programList.map((prog, idx) => ({
-                    label: prog,
-                    data: sortedYears.map(year => {
-                        if (!data[year]) return 0;
-                        const found = data[year].find(item => item.program === prog);
-                        return found ? (found.total || found.total_pinjam || 0) : 0;
-                    }),
-                    backgroundColor: colors[idx],
-                    borderColor: colors[idx],
-                    borderWidth: 2,
-                    tension: 0.3
-                }))
-            };
-        }
-
+    if (!apiResponse || !apiResponse.data) {
+        console.warn("⚠️ Invalid apiResponse");
         return { labels: [], datasets: [] };
+    }
+
+    const { mode, data, years = [] } = apiResponse;
+
+    if (!years || years.length === 0) {
+        console.warn("⚠️ No years available");
+        return { labels: [], datasets: [] };
+    }
+
+    const generateColors = (count) => {
+        const baseColors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
+            '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
+        ];
+        return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
     };
 
-    const handleApplyFiltersRight = () => {
+    const sortedYears = [...years].sort((a, b) => a - b);
+
+    if (mode === "default_year") {
+        const chartData = sortedYears.map(year => {
+            const yearData = data[year];
+            if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
+                return 0;
+            }
+            return yearData[0].total || yearData[0].total_pinjam || 0;
+        });
+
+        return {
+            labels: sortedYears.map(y => String(y)),
+            datasets: [{
+                label: "Total Peminjaman",
+                data: chartData,
+                backgroundColor: generateColors(sortedYears.length),
+                borderColor: generateColors(sortedYears.length),
+                borderWidth: 2,
+                tension: 0.3
+            }]
+        };
+    }
+
+    if (mode === "per_lembaga") {
+        const lembagaSet = new Set();
+        sortedYears.forEach(year => {
+            if (data[year] && Array.isArray(data[year])) {
+                data[year].forEach(item => {
+                    if (item.lembaga) lembagaSet.add(item.lembaga);
+                });
+            }
+        });
+
+        const lembagaList = Array.from(lembagaSet);
+        const colors = generateColors(lembagaList.length);
+
+        console.log("🏢 Lembaga found:", lembagaList);
+
+        return {
+            labels: sortedYears.map(y => String(y)),
+            datasets: lembagaList.map((lem, idx) => ({
+                label: lem,
+                data: sortedYears.map(year => {
+                    if (!data[year]) return 0;
+                    const found = data[year].find(item => item.lembaga === lem);
+                    return found ? (found.total || found.total_pinjam || 0) : 0;
+                }),
+                backgroundColor: colors[idx],
+                borderColor: colors[idx],
+                borderWidth: 2,
+                tension: 0.3
+            }))
+        };
+    }
+
+    if (mode === "per_program") {
+        const programSet = new Set();
+        sortedYears.forEach(year => {
+            if (data[year] && Array.isArray(data[year])) {
+                data[year].forEach(item => {
+                    if (item.program) programSet.add(item.program);
+                });
+            }
+        });
+
+        const programList = Array.from(programSet);
+        
+        console.log("🎓 Total Programs found:", programList.length);
+        console.log("🎓 Programs:", programList);
+        
+        // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
+        const MAX_PROGRAMS = 30; // Adjust sesuai kebutuhan
+        const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
+        
+        if (programList.length > MAX_PROGRAMS) {
+            console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+        }
+
+        const colors = generateColors(limitedPrograms.length);
+
+        return {
+            labels: sortedYears.map(y => String(y)),
+            datasets: limitedPrograms.map((prog, idx) => ({
+                label: prog,
+                data: sortedYears.map(year => {
+                    if (!data[year]) return 0;
+                    const found = data[year].find(item => item.program === prog);
+                    return found ? (found.total || found.total_pinjam || 0) : 0;
+                }),
+                backgroundColor: colors[idx],
+                borderColor: colors[idx],
+                borderWidth: 2,
+                tension: 0.3
+            }))
+        };
+    }
+
+    return { labels: [], datasets: [] };
+};
+    const handleApplyFiltersRight = async () => {
         const setupfilter = {
             angkatan: selectedAngkatan,
             lembaga: selectedLembaga,
@@ -575,81 +581,91 @@ export default function Dashboard() {
         closeModalR(true);
     };
 
-    const transformPagedDataForChart = (pagedData) => {
-        console.log("🔄 Transform input:", pagedData);
+const transformPagedDataForChart = (pagedData) => {
+    console.log("🔄 Transform input:", pagedData);
 
-        if (!pagedData || (!pagedData.data && !pagedData.allData)) {
-            console.warn("⚠️ Invalid pagedData structure");
-            return {
-                mode: "default_year",
-                years: [],
-                data: {}
-            };
-        }
-
-        const dataSource = pagedData.allData || pagedData.data;
-
-        if (!Array.isArray(dataSource) || dataSource.length === 0) {
-            console.warn("⚠️ No data to transform");
-            return {
-                mode: "default_year",
-                years: [],
-                data: {}
-            };
-        }
-
-        const grouped = {};
-        const years = new Set();
-
-        dataSource.forEach(row => {
-            const year = row.tahun;
-            years.add(year);
-
-            if (!grouped[year]) {
-                grouped[year] = [];
-            }
-
-            if (row.program && row.lembaga) {
-                grouped[year].push({
-                    program: row.program,
-                    lembaga: row.lembaga,
-                    total: row.total_pinjam,
-                    total_pinjam: row.total_pinjam
-                });
-            } else if (row.lembaga) {
-                grouped[year].push({
-                    lembaga: row.lembaga,
-                    total: row.total_pinjam,
-                    total_pinjam: row.total_pinjam
-                });
-            } else {
-                grouped[year].push({
-                    total: row.total_pinjam,
-                    total_pinjam: row.total_pinjam
-                });
-            }
-        });
-
-        let mode = "default_year";
-        const firstRow = dataSource[0];
-        if (firstRow.program && firstRow.lembaga) {
-            mode = "per_program";
-        } else if (firstRow.lembaga) {
-            mode = "per_lembaga";
-        }
-
-        const result = {
-            mode,
-            years: Array.from(years).sort((a, b) => a - b),
-            data: grouped
+    if (!pagedData) {
+        console.warn("⚠️ Invalid pagedData structure");
+        return {
+            mode: "default_year",
+            years: [],
+            data: {}
         };
+    }
 
-        console.log("✅ Transform output:", result);
-        console.log("✅ Years found:", result.years);
-        console.log("✅ Data structure:", Object.keys(result.data));
+    // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
+    const dataSource = pagedData.allData || pagedData.data;
 
-        return result;
+    if (!Array.isArray(dataSource) || dataSource.length === 0) {
+        console.warn("⚠️ No data to transform");
+        return {
+            mode: "default_year",
+            years: [],
+            data: {}
+        };
+    }
+
+    console.log("📊 Data source length:", dataSource.length);
+    console.log("📊 First 3 rows:", dataSource.slice(0, 3));
+
+    const grouped = {};
+    const years = new Set();
+
+    dataSource.forEach(row => {
+        const year = row.tahun;
+        years.add(year);
+
+        if (!grouped[year]) {
+            grouped[year] = [];
+        }
+
+        if (row.program) {
+            grouped[year].push({
+                program: row.program,
+                lembaga: row.lembaga,
+                total: row.total_pinjam,
+                total_pinjam: row.total_pinjam
+            });
+        } else if (row.lembaga) {
+            grouped[year].push({
+                lembaga: row.lembaga,
+                total: row.total_pinjam,
+                total_pinjam: row.total_pinjam
+            });
+        } else {
+            grouped[year].push({
+                total: row.total_pinjam,
+                total_pinjam: row.total_pinjam
+            });
+        }
+    });
+
+    let mode = "default_year";
+    const firstRow = dataSource[0];
+    
+    if (firstRow.program) {
+        mode = "per_program";
+    } else if (firstRow.lembaga) {
+        mode = "per_lembaga";
+    }
+
+    const result = {
+        mode,
+        years: Array.from(years).sort((a, b) => a - b),
+        data: grouped
     };
+
+    console.log("✅ Transform output mode:", mode);
+    console.log("✅ Years:", result.years);
+    console.log("✅ Data keys:", Object.keys(result.data));
+    
+    // Debug: tampilkan berapa banyak item per tahun
+    Object.keys(result.data).forEach(year => {
+        console.log(`📅 Year ${year}: ${result.data[year].length} items`);
+    });
+
+    return result;
+};
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;

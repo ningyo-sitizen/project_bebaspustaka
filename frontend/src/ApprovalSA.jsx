@@ -35,41 +35,71 @@ function ApprovalSA() {
     const [checkedItems, setCheckedItems] = useState({});
     const [approvedAll, setApprovedAll] = useState(false);
 
+    const [searchTimeout, setSearchTimeout] = useState(null);
     const [backendTotal, setBackendTotal] = useState(0);
+
+    const [sortBy, setSortBy] = useState('priority');
+    const [sortOrder, setSortOrder] = useState('asc');
+    const [rowsInput, setRowsInput] = useState(10);
 
 
     const fetchData = useCallback(async () => {
         try {
             setLoading(true);
+            const token = localStorage.getItem("token");
 
-            const res = await axios.get("http://localhost:8080/api/approval/data", {
-                params: { search, page: currentPage, limit: rowsPerPage }
+            const res = await axios.get("http://localhost:8080/api/bebaspustaka/dataMahasiswa", {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                params: {
+                    search,
+                    page: currentPage,
+                    limit: rowsPerPage,
+                    sortBy,
+                    sortOrder
+                }
             });
 
             const result = res.data?.data || [];
 
             const formatted = result.map(d => ({
                 id: d.id,
-                name: d.nama || d.member_name,
-                nim: d.nim || d.member_id,
-                pengembalian: d.status_peminjaman,
-                status: d.approved,
-                statusbebaspustakanya: d.status_bepus,
-                keterangan: d.keterangan,
-                approved_at: d.approved_at,
-                ...d
+                name: d.nama_mahasiswa || '',
+                nim: d.nim ? String(d.nim) : '',
+                status_peminjaman: d.STATUS_peminjaman || 0,
+                status_denda: d.STATUS_denda || 0,
+                status_bepus: d.STATUS_bebas_pustaka === 'approved' ? 1 : 0,
+                institusi: d.institusi || '',
+                program_studi: d.program_studi || ''
             }));
-            setTotal(res.data.total);
-            setData(formatted);          // langsung set 10 data, JANGAN SLICE
+
+            setTotal(res.data.total || 0);
+            setData(formatted);
 
         } catch (err) {
-            console.error(err);
-            alert("Gagal mengambil data.");
+            console.error("Error fetchData:", err);
+            alert("Gagal mengambil data: " + (err.response?.data?.message || err.message));
         } finally {
             setLoading(false);
         }
-    }, [search, currentPage, rowsPerPage]);
+    }, [search, currentPage, rowsPerPage, sortBy, sortOrder]);
 
+    const handleSearchChange = (e) => {
+        const value = e.target.value;
+        setSearch(value);
+
+        // Clear previous timeout
+        if (searchTimeout) clearTimeout(searchTimeout);
+
+        // Set new timeout
+        const timeout = setTimeout(() => {
+            setCurrentPage(1); // Reset to first page when searching
+        }, 500); // 500ms delay
+
+        setSearchTimeout(timeout);
+    };
 
 
     //GET login user
@@ -125,12 +155,6 @@ function ApprovalSA() {
         });
     };
 
-    //search
-    const filteredData = data.filter(
-        item =>
-            item.name.toLowerCase().includes(search.toLowerCase()) ||
-            item.nim.toLowerCase().includes(search.toLowerCase())
-    );
 
     //pagination
     const totalPages = Math.ceil(total / rowsPerPage);
@@ -157,15 +181,37 @@ function ApprovalSA() {
     const [alertBebasPustakaAll, setAlertBebasPustakaAll] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
     const [urutkanBy, setUrutkanBy] = useState(false);
-
     //sort by
-    const sortAZ = () => {
-        const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
-        setData(sorted);
-    };
-    const sortZA = () => {
-        const sorted = [...data].sort((a, b) => b.name.localeCompare(a.name));
-        setData(sorted);
+    // Ganti fungsi sortAZ dan sortZA dengan ini:
+    const handleSort = (sortType) => {
+        setCurrentPage(1); // Reset ke halaman pertama saat sorting
+
+        switch (sortType) {
+            case 'priority':
+                setSortBy('priority');
+                setSortOrder('asc');
+                break;
+            case 'name_asc':
+                setSortBy('name_asc');
+                setSortOrder('asc');
+                break;
+            case 'name_desc':
+                setSortBy('name_desc');
+                setSortOrder('desc');
+                break;
+            case 'latest':
+                setSortBy('latest');
+                setSortOrder('desc');
+                break;
+            case 'oldest':
+                setSortBy('oldest');
+                setSortOrder('asc');
+                break;
+            default:
+                setSortBy('priority');
+                setSortOrder('asc');
+        }
+        setUrutkanBy(false); // Tutup dropdown setelah memilih
     };
 
     //pick date
@@ -196,31 +242,61 @@ function ApprovalSA() {
             setRangeText("");
         }
     };
-    const handleStartInput = (e) => {
-        setStartDate(e.target.value);
-        setRange((prev) => ({ ...prev, from: e.target.value ? new Date(e.target.value) : undefined }));
+const handleStartInput = (e) => {
+    const value = e.target.value;
+    setStartDate(value);
+    setRange((prev) => ({ ...prev, from: value ? new Date(value) : undefined }));
 
-        if (value && endDate) {
-            setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
-        } else {
-            setRangeText("");
-        }
-    };
-    const handleEndInput = (e) => {
-        setEndDate(e.target.value);
-        setRange((prev) => ({ ...prev, to: e.target.value ? new Date(e.target.value) : undefined }));
+    if (value && endDate) {
+        setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
+    } else {
+        setRangeText("");
+    }
+};
 
-        if (startDate && value) {
-            setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
-        } else {
-            setRangeText("");
+const handleEndInput = (e) => {
+    const value = e.target.value;
+    setEndDate(value);
+    setRange((prev) => ({ ...prev, to: value ? new Date(value) : undefined }));
+
+    if (startDate && value) {
+        setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
+    } else {
+        setRangeText("");
+    }
+};
+    const date_change = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const res = await fetch("http://localhost:8080/api/bebaspustaka/seTanggal", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.success) {
+                alert("Tanggal berhasil disimpan dan data berhasil digenerate!");
+            } else {
+                alert("Gagal: " + data.message);
+            }
+
+        } catch (error) {
+            console.error("Error saving date:", error);
+            alert("Terjadi kesalahan saat menyimpan tanggal");
         }
-    };
-    const SortByDate = async () => {
+
         setShowFilter(false);
-
-        //sisanya tar taro UPDATE status bebas pustaka ya
     };
+
     //acc n
     const SetujuiBepus = async () => {
         setAlertBebasPustaka(false);
@@ -240,6 +316,24 @@ function ApprovalSA() {
     }, [fetchData]);
 
     useEffect(() => {
+        const fetchdate = async () => {
+            try {
+                const token = localStorage.getItem('token')
+                const response = await axios.get(`http://localhost:8080/api/bebaspustaka/kompenDate`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+                if (response.data.start_date && response.data.end_date) {
+                    setStartDate(response.data.start_date);
+                    setEndDate(response.data.end_date);
+                }
+            } catch (error) {
+                console.error("Gagal mengambil data :", error);
+            }
+        }
+        fetchdate();
         const fetchProfile = async () => {
             const user = JSON.parse(localStorage.getItem('user'))
             const user_id = user.user_id;
@@ -402,7 +496,7 @@ function ApprovalSA() {
                                     <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                                 </svg>
                                 <div className="flex">
-                                    <p className="text-lg ml-1">xxxx &nbsp;</p>
+                                    <p className="text-lg ml-1">{total} &nbsp;</p>
                                     <p className="text-lg m-0">permohonan bebas pustaka</p>
                                 </div>
                             </div>
@@ -411,19 +505,27 @@ function ApprovalSA() {
 
                             <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
                                 <div className="flex items-center text-[#9A9A9A] font-semibold">
-
                                     <p className="mr-2">Tunjukkan</p>
                                     <input
                                         type="number"
                                         min="1"
-                                        max="20" //nanti diganti based on db
-                                        // value={bikin function nya}
+                                        max="100"
+                                        value={rowsPerPage}
+                                        onChange={(e) => {
+                                            const value = parseInt(e.target.value);
+                                            if (value >= 1 && value <= 100) {
+                                                setRowsPerPage(value);
+                                                setCurrentPage(1);
+                                            }
+                                        }}
                                         className="w-16 h-8 bg-transparent border border-[#9A9A9A] rounded-lg shadow-sm text-center focus:outline-none"
                                     />
                                     <p className="ml-2">Entitas</p>
                                 </div>
 
-
+                                <p>
+                                    Range aktif: {startDate} — {endDate}
+                                </p>
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
                                         <button
@@ -507,7 +609,7 @@ function ApprovalSA() {
 
                                                     <button
                                                         className="px-3 py-2 text-sm rounded-md bg-[#023048] text-white hover:bg-[#012C3F] active:scale-95 transition"
-                                                        onClick={SortByDate}
+                                                        onClick={date_change}
                                                     >
                                                         Cari Data
                                                     </button>
@@ -586,20 +688,35 @@ function ApprovalSA() {
                                                     </p>
                                                 </div>
 
-                                                <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terbaru</p>
-                                                <p className="font-normal text-sm px-3 py-1 cursor-pointer hover:bg-gray-300 rounded-sm">Terlama</p>
-
                                                 <button
-                                                    onClick={sortAZ}
+                                                    onClick={() => handleSort('priority')}
                                                     className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
                                                 >
-                                                    A &gt; Z
+                                                    Prioritas (Status Bermasalah)
                                                 </button>
                                                 <button
-                                                    onClick={sortZA}
+                                                    onClick={() => handleSort('latest')}
                                                     className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
                                                 >
-                                                    Z &gt; A
+                                                    Terbaru
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSort('oldest')}
+                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                >
+                                                    Terlama
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSort('name_asc')}
+                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                >
+                                                    A → Z
+                                                </button>
+                                                <button
+                                                    onClick={() => handleSort('name_desc')}
+                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                >
+                                                    Z → A
                                                 </button>
                                             </div>
                                         )}
@@ -610,7 +727,7 @@ function ApprovalSA() {
                                             type="text"
                                             placeholder="Search..."
                                             value={search}
-                                            onChange={(e) => setSearch(e.target.value)}
+                                            onChange={handleSearchChange}
                                             className="w-full pl-8 pr-2 py-2 text-sm rounded-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#A8B5CB]"
                                         />
                                         <svg
@@ -687,7 +804,8 @@ function ApprovalSA() {
 
                                         {/* isianya dari db */}
                                         <tbody>
-                                            {data.map((item, index) => ( //ssesuain sama db
+
+                                            {data.map((item, index) => (
                                                 <tr key={item.id ?? index}
                                                     className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
                                                 >
@@ -700,59 +818,53 @@ function ApprovalSA() {
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
                                                             />
                                                             <div
-                                                                key={item.id ?? index}
                                                                 className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
                                                                     ? 'bg-[#A8B5CB] border-white'
                                                                     : 'bg-white border-[#A8B5CB]'
                                                                     }`}
                                                             >
-
-                                                                <svg
-                                                                    width="12"
-                                                                    height="10"
-                                                                    viewBox="0 0 12 10"
-                                                                    fill="none"
-                                                                >
-                                                                    <path
-                                                                        d="M1 5L4 8L11 1"
-                                                                        stroke="white"
-                                                                        strokeWidth="2"
-                                                                        strokeLinecap="round"
-                                                                        strokeLinejoin="round"
-                                                                    />
-                                                                </svg>
-
+                                                                {checkedItems[item.id] && (
+                                                                    <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
+                                                                        <path d="M1 5L4 8L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                                                                    </svg>
+                                                                )}
                                                             </div>
                                                         </label>
                                                     </td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate text-sm">{item.name}</td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate text-sm">{item.nim}</td>
+                                                    <td className="px-4">
+                                                        <div className="relative bg-[url('https://cdn.designfast.io/image/2025-11-21/b89ae749-b5b2-40e4-967d-18be9ef8aed8.png')] bg-cover bg-no-repeat bg-center w-12 h-12"></div>
+                                                    </td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name || 'N/A'}</td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim || 'N/A'}</td>
 
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.pengembalian === 1 ? "text-[#4ABC4C] text-sm" : "text-[#FF1515]"}`}>
-                                                        {item.pengembalian === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan"}
+                                                    {/* Status Peminjaman */}
+                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status_peminjaman === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
+                                                        {item.status_peminjaman === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan"}
                                                     </td>
 
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status === 1 ? "text-[#4ABC4C]" : "text-[#FF1515] text-sm"}`}>
-                                                        {item.status === 1 ? "Bebas Pustaka" : "Tidak Bebas Pustaka"}
-                                                    </td>
-                                                    <td className="p-4 text-[#4ABC4C] whitespace-nowrap overflow-x-auto">
+                                                    {/* Status - Kombinasi peminjaman & denda */}
+                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "text-[#4ABC4C]" : "text-[#FF1515]"
+                                                        }`}>
+                                                        {(item.status_peminjaman === 1 && item.status_denda === 1) ? "Memenuhi Syarat" : "Belum Memenuhi Syarat"}
 
-                                                        {item.statusbebaspustakanya === 0 ? (
-                                                            <>
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
-                                                                    className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] text-sm font-mwdium
-                                                                               active:scale-90 transition-transform duration-100 hover:bg-[#A8B5CB] hover:text-white hover:border-white"
-                                                                >
-                                                                    Setujui
-                                                                </button>
-                                                            </>
+                                                    </td>
+
+                                                    {/* Tindakan - Approval SA */}
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto">
+                                                        {item.status_bepus === 0 ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
+                                                                className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] font-semibold active:scale-90 transition-transform duration-100"
+                                                            >
+                                                                Setujui
+                                                            </button>
                                                         ) : (
-                                                            <p className="text-[#A8B5CB] font-semibold">Bebas Pustaka</p>
+                                                            <p className="text-[#4ABC4C] font-semibold">Sudah Disetujui</p>
                                                         )}
                                                     </td>
 
+                                                    {/* Keterangan */}
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
                                                         <button
                                                             className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
@@ -760,24 +872,13 @@ function ApprovalSA() {
 
                                                             onClick={() => goto(`/KeteranganSA/${item.nim}`)}
                                                         >
-                                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                                width="24"
-                                                                height="24"
-                                                                viewBox="0 0 24 24"
-                                                                fill="none"
-                                                                stroke="currentColor"
-                                                                strokeWidth="2"
-                                                                strokeLinecap="round"
-                                                                strokeLinejoin="round"
-                                                                className="icon icon-tabler icons-tabler-outline icon-tabler-file"
-                                                            >
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                                                 <path d="M14 3v4a1 1 0 0 0 1 1h4" />
                                                                 <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
                                                             </svg>
                                                         </button>
                                                     </td>
-
                                                 </tr>
                                             ))}
                                         </tbody>

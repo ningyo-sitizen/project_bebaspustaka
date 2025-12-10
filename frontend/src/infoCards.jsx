@@ -41,7 +41,6 @@ function InfoCards() {
         lastUpdated: new Date().toISOString()
       };
 
-      // Simpan ke localStorage
       localStorage.setItem('dashboardInfoData', JSON.stringify(newData));
       setInfoData(newData);
       setIsLoading(false);
@@ -68,12 +67,10 @@ function InfoCards() {
         fetchInfoData();
       }
     } else {
-      // Tidak ada cache, fetch data
       fetchInfoData();
     }
   }, [fetchInfoData]);
 
-  // Auto-refresh setiap 5 menit
   useEffect(() => {
     const interval = setInterval(() => {
       fetchInfoData();
@@ -154,39 +151,21 @@ function InfoCards() {
           </div>
           <h3 className="text-black font-semibold ml-3">Data Kunjungan Mahasiswa</h3>
         </div>
-
-        <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
-
-          <p className="text-xl font-bold text-gray-900 text-left mb-1">
-            {infoData.todayVisitors?.toLocaleString() || '0'} Orang
-          </p>
-
-        <p className="text-xs text-gray-500 mt-2 text-left">
-          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
+        <p className="text-3xl font-bold text-gray-900 mb-2">
+          {infoData.todayVisitors?.toLocaleString() || '0'}
+        </p>
+        <p className="text-xs text-gray-500 text-left">
+          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada hari ini
         </p>
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
-      <div className="bg-white p-6 rounded shadow hover:shadow-lg transition-shadow">
-        <div className="flex mb-4 items-center">
-          <div className="bg-[#D9CFED] p-2 rounded-2xl">
-            <svg xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="#8C63DA"
-              strokeWidth="1"
-              strokeLinecap="round" strokeLinejoin="round"
-              className="icon icon-tabler icons-tabler-outline icon-tabler-book"
-            >
-              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-              <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
-              <path d="M3 6l0 13" />
-              <path d="M12 6l0 13" />
-              <path d="M21 6l0 13" />
-            </svg>
+
+      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-black font-semibold">Data jumlah pengunjung perpustakaan minggu ini</h3>
+          <div className="bg-purple-50 p-3 rounded-lg">
+            <Calendar className="w-6 h-6 text-purple-600" />
           </div>
 
           <h3 className="text-black font-semibold ml-3">Data Peminjaman Buku</h3>
@@ -198,8 +177,31 @@ function InfoCards() {
           {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'} Buku
         </p>
 
-        <p className="text-xs text-gray-500 mt-2 text-left">
-          Data ini merupakan jumlah buku yang dipinjam sejauh ini.
+
+        {weeklyIndicator && (
+          <div className={`flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg`}>
+            <span className={weeklyIndicator.color}>
+              {weeklyIndicator.icon}
+            </span>
+            <span className={`text-sm font-medium ${weeklyIndicator.color}`}>
+              {weeklyIndicator.text}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Card 3: Buku yang Dipinjam */}
+      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-black font-semibold text-left">jumlah buku yang belum dikembalikan</h3>
+          <div className="bg-orange-50 p-3 rounded-lg">
+            <BookOpen className="w-6 h-6 text-orange-600" />
+          </div>
+        </div>
+        <p className="text-3xl font-bold text-gray-900 mb-2">
+          {infoData.borrowedBooks?.toLocaleString() || '0'}
+        </p>
+        <p className="text-xs text-gray-500 text-left">
         </p>
       </div>
 

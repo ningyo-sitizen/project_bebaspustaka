@@ -79,32 +79,35 @@ exports.getSummaryReport = async (req, res) => {
 
     console.log("🔍 Filter params:", { tahunList, lembagaList, programList });
 
-
     const hasProgram = programList.length > 0;
     const hasLembaga = lembagaList.length > 0;
     const hasTahun = tahunList.length > 0;
 
     let sql = '';
+    let groupBy = '';
     const params = [];
 
-    if (hasProgram && hasLembaga) {
+    if (hasProgram) {
       sql = `
         SELECT tahun, lembaga, programs_studi AS program, total_pinjam
         FROM summary_loan_jurusan
         WHERE 1=1
       `;
+      groupBy = ` GROUP BY tahun, lembaga, programs_studi`;
     } else if (hasLembaga) {
       sql = `
         SELECT tahun, lembaga, SUM(total_pinjam) AS total_pinjam
         FROM summary_loan_jurusan
         WHERE 1=1
       `;
+      groupBy = ` GROUP BY tahun, lembaga`;
     } else {
       sql = `
         SELECT tahun, SUM(total_pinjam) AS total_pinjam
         FROM summary_loan_jurusan
         WHERE 1=1
       `;
+      groupBy = ` GROUP BY tahun`;
     }
 
     if (hasTahun) {
@@ -125,26 +128,26 @@ exports.getSummaryReport = async (req, res) => {
       params.push(...programList);
     }
 
-    if (hasProgram && hasLembaga) {
-      sql += ` GROUP BY tahun, lembaga, programs_studi`;
-    } else if (hasLembaga) {
-      sql += ` GROUP BY tahun, lembaga`;
-    } else {
-      sql += ` GROUP BY tahun`;
+    sql += groupBy;
+    sql += ` ORDER BY tahun ASC, lembaga ASC`;
+    
+    if (hasProgram) {
+      sql += `, programs_studi ASC`;
     }
-
-    sql += ` ORDER BY tahun ASC`;
 
     console.log("📊 SQL Query:", sql);
     console.log("📊 Params:", params);
 
+    // PERBAIKAN: Ambil SEMUA data untuk chart
     const [allRows] = await bebaspustaka.query(sql, params);
 
     console.log("📦 All Rows Count:", allRows.length);
-    console.log("📦 Sample Data:", allRows.slice(0, 3));
+    console.log("📦 Sample Data:", allRows.slice(0, 5));
 
     const totalRows = allRows.length;
     const totalPages = Math.ceil(totalRows / limit);
+    
+    // Paginate hanya untuk table, bukan untuk chart
     const paginatedRows = allRows.slice(offset, offset + limit);
 
     console.log("📄 Paginated:", {
@@ -160,8 +163,8 @@ exports.getSummaryReport = async (req, res) => {
       limit,
       totalRows,
       totalPages,
-      data: paginatedRows,
-      allData: allRows
+      data: paginatedRows,      // Untuk table
+      allData: allRows           // PENTING: Untuk chart (semua data)
     });
 
   } catch (err) {
