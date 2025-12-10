@@ -1,6 +1,6 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 
 import {
     Chart as ChartJS,
@@ -14,7 +14,7 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
@@ -44,11 +44,13 @@ ChartJS.register(
 );
 
 export default function Dashboard() {
-    authCheck()
+    authCheckSA()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [toggleSidebar, setToggleSidebar] = useState(false);
+
+
 
     //setup chart
     const [chartDataR, setChartDataR] = useState({
@@ -74,8 +76,8 @@ export default function Dashboard() {
             setIsClosing(false); // reset state
         }, 300); // durasi animation sama kayak CSS transition
     };
-    const openModal = () => {
-        setIsClosing(false); // pastiin modal buka dengan animasi fade-in
+    const openModalLeft = () => {
+        setIsClosing(false);
         setShowFilterL(true);
     };
 
@@ -87,6 +89,10 @@ export default function Dashboard() {
             setIsClosingR(false);
         }, 300);
     }
+    const openModalRight = () => {
+        setIsClosingR(false);
+        setShowFilterR(true);
+    };
 
     const [tableData, setTableData] = useState(null);
     const [visitorPage, setVisitorPage] = useState(1);
@@ -102,8 +108,9 @@ export default function Dashboard() {
     const [actJurusanR, setActJurusanR] = useState(false);
     const [actJurusanL, setActJurusanL] = useState(false);
 
-    const [activeChartR, setActiveChartR] = useState("Line");
+    const [activeChartR, setActiveChartR] = useState(localStorage.getItem("chart_type_right") || "Line");
     const [activeChartL, setActiveChartL] = useState("Line");
+    const [draftChartTypeL, setDraftChartTypeL] = useState(activeChartL);
 
     const [years, setYears] = useState([]);
     const [selectedYears, setSelectedYears] = useState([]);
@@ -111,27 +118,27 @@ export default function Dashboard() {
     const [tempYears, setTempYears] = useState([]);
     const [tempType, setTempType] = useState("");
 
-
-
     const [tablePageLeft, setTablePageLeft] = useState(1);
     const [tableLimitLeft] = useState(50);
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
     const [tableDataLeft, setTableDataLeft] = useState(null);
 
+    const statefilterKanan = JSON.parse(localStorage.getItem("filters_right")) || {};
+
 
     const [isLoadingR, setIsLoadingR] = useState(false);
     const [angkatan, setAngkatan] = useState([]);
-    const [selectedAngkatan, setSelectedAngkatan] = useState([]);
+    const [selectedAngkatan, setSelectedAngkatan] = useState(statefilterKanan.angkatan || []);
     const [tempAngkatan, setTempAngkatan] = useState([]);
-    const [actAngkatan, setActAngkatan] = useState([]);
+    const [actAngkatan, setActAngkatan] = useState(statefilterKanan.angkatan || []);
     const [lembaga, setLembaga] = useState([]);
-    const [selectedLembaga, setSelectedLembaga] = useState([]);
+    const [selectedLembaga, setSelectedLembaga] = useState(statefilterKanan.lembaga || []);
     const [tempLembaga, setTempLembaga] = useState([]);
-    const [actLembaga, setActLembaga] = useState([]);
+    const [actLembaga, setActLembaga] = useState(statefilterKanan.lembaga || []);
     const [prodi, setProdi] = useState({});
-    const [selectedProdi, setSelectedProdi] = useState([]);
+    const [selectedProdi, setSelectedProdi] = useState(statefilterKanan.prodi || []);
     const [tempProdi, setTempProdi] = useState([]);
-    const [actProdi, setActProdi] = useState([]);
+    const [actProdi, setActProdi] = useState(statefilterKanan.prodi || []);
 
     const [activeProdiR, setActiveProdiR] = useState(false);
     const [tableDataRight, setTableDataRight] = useState(null);
@@ -140,8 +147,10 @@ export default function Dashboard() {
     const [tablePaginationRight, setTablePaginationRight] = useState(null);
 
     const [loanHistory, setLoanHistory] = useState([]);
+    const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
+
 
     const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
 
@@ -213,22 +222,22 @@ export default function Dashboard() {
         return query.toString();
     };
 
-    let debounceTimer = null;
+    const debounceTimer = useRef(null);
 
     const debouncedApplyFiltersLeft = () => {
         closeModal(false);
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+        debounceTimer.current = setTimeout(() => {
             handleApplyFiltersLeft();
         }, 250); // delay 250ms, bisa diubah sesuai selera
     };
 
-    let debounceTimerRight = null;
+    const debounceTimerRight = useRef(null);
 
     const debouncedApplyFiltersRight = () => {
         closeModalR(false);
-        if (debounceTimerRight) clearTimeout(debounceTimerRight);
-        debounceTimerRight = setTimeout(() => {
+        if (debounceTimerRight.current) clearTimeout(debounceTimerRight.current);
+        debounceTimerRight.current = setTimeout(() => {
             handleApplyFiltersRight();
         }, 250); // delay 250ms, bisa diubah sesuai selera
     };
@@ -366,21 +375,25 @@ export default function Dashboard() {
 
     }, [actAngkatan, actLembaga, actProdi, tableLimitRight]);
 
-    let fetchController = null;
+    const handlePickChartType = (type) => {
+        setDraftChartTypeL(type);
+    };
+
+    const fetchController = useRef(null);
 
     const handleApplyFiltersLeft = useCallback(async () => {
-        const isFilterChanged = (
-            JSON.stringify(selectedYears) !== JSON.stringify(tempYears) ||
-            selectedType !== tempType
-        );
+        setActiveChartL(draftChartTypeL);
         setTempYears(selectedYears);
         setTempType(selectedType);
-        setShowFilterL(false);
         setIsLoadingLeft(true);
 
-        if (fetchController) fetchController.abort();
-        fetchController = new AbortController();
-        const { signal } = fetchController;
+
+        if (fetchController.current) {
+            fetchController.current.abort();
+        }
+
+        fetchController.current = new AbortController();
+        const { signal } = fetchController.current;
 
         await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -395,7 +408,7 @@ export default function Dashboard() {
             const responseData = await res.json();
 
             requestAnimationFrame(() => {
-                const chart = autoBuildChartData(responseData, selectedType, activeChartL);
+                const chart = autoBuildChartData(responseData, selectedType, draftChartTypeL);
 
                 setChartDataL({
                     lineChart: chart,
@@ -417,7 +430,7 @@ export default function Dashboard() {
             }
         }
 
-    }, [[selectedYears, selectedType, activeChartL, tempYears, tempType, tablePageLeft]]);
+    }, [selectedYears, selectedType, draftChartTypeL, tempYears, tempType, tablePageLeft]);
 
 
 
@@ -539,29 +552,29 @@ export default function Dashboard() {
         return { labels: [], datasets: [] };
     };
 
-    const handleApplyFiltersRight = async () => {
+    const handleApplyFiltersRight = () => {
         const setupfilter = {
             angkatan: selectedAngkatan,
             lembaga: selectedLembaga,
             prodi: selectedProdi
         };
+
+        // 1. Simpan ke LocalStorage agar saat refresh tidak hilang
         localStorage.setItem("filters_right", JSON.stringify(setupfilter));
 
+        // 2. Update state 'Act' untuk memicu useEffect fetching
+        setActAngkatan(selectedAngkatan);
+        setActLembaga(selectedLembaga);
+        setActProdi(selectedProdi);
 
-        setTempAngkatan(setupfilter.angkatan);
-        setTempLembaga(setupfilter.lembaga);
-        setTempProdi(setupfilter.prodi);
+        // 3. Update state temporer jika digunakan untuk display UI
+        setTempAngkatan(selectedAngkatan);
+        setTempLembaga(selectedLembaga);
+        setTempProdi(selectedProdi);
 
-        setActAngkatan(setupfilter.angkatan);
-        setActLembaga(setupfilter.lembaga);
-        setActProdi(setupfilter.prodi);
         closeModalR(true);
-
-        setIsLoadingR(true);
-        await fetchTableDataRight(1);
-        setIsLoadingR(false);
-
     };
+
     const transformPagedDataForChart = (pagedData) => {
         console.log("🔄 Transform input:", pagedData);
 
@@ -717,7 +730,7 @@ export default function Dashboard() {
                                 <thead className="bg-gray-100 sticky top-0">
                                     <tr>
                                         {headers.map((header, idx) => (
-                                            <th key={idx} className="p-3 border font-normal text-center">
+                                            <th key={idx} className="p-3 font-normal text-sm text-center">
                                                 {header}
                                             </th>
                                         ))}
@@ -847,8 +860,9 @@ export default function Dashboard() {
             }
         };
 
+        //tabel kanan yang benar
         return (
-            <div className="bg-white p-6 rounded-lg border border-gray-300">
+            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                 <h3 className="font-semibold text-base mb-4 text-left">{getTitle()}</h3>
 
                 <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-100">
@@ -856,7 +870,7 @@ export default function Dashboard() {
                         <thead className="bg-gray-100">
                             <tr>
                                 {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-normal text-center">
+                                    <th key={idx} className="p-3 font-normal text-sm text-center">
                                         {header}
                                     </th>
                                 ))}
@@ -920,24 +934,6 @@ export default function Dashboard() {
                                 }
                             }
                         },
-                        title: {
-                            display: true,
-                            text: [
-                                'Data kunjungan mahasiswa ke perpustakaan',
-                                'mencatat jumlah dan frekuensi kehadiran mereka.'
-                            ],
-                            color: '#616161',
-                            font: {
-                                family: '"Plus Jakarta Sans", sans-serif',
-                                size: 14,
-                                weight: '300',
-                            },
-                            padding: {
-                                top: 10,
-                                bottom: 20,
-                            },
-                            align: 'center',
-                        },
                     },
                     scales: {
                         x: {
@@ -966,24 +962,6 @@ export default function Dashboard() {
                                         family: '"Plus Jakarta Sans", sans-serif',
                                     }
                                 }
-                            },
-                            title: {
-                                display: true,
-                                text: [
-                                    'Data kunjungan mahasiswa ke perpustakaan',
-                                    'mencatat jumlah dan frekuensi kehadiran mereka.'
-                                ],
-                                color: '#616161',
-                                font: {
-                                    family: '"Plus Jakarta Sans", sans-serif',
-                                    size: 14,
-                                    weight: '300',
-                                },
-                                padding: {
-                                    top: 10,
-                                    bottom: 20,
-                                },
-                                align: 'center',
                             },
                         },
                         scales: {
@@ -1191,17 +1169,50 @@ export default function Dashboard() {
             console.log("gagal mengambil lembaga")
         }
     })
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageNumbers, setPageNumbers] = useState([]);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const fetchLoanHistory = useCallback(async (page = 1) => {
         const res = await fetch(
-            `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${limit}`,
+            `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${rowsPerPage}`,
             { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
 
         const result = await res.json();
+
+        // Set data dari API
         setLoanHistory(result.data);
-        setPage(result.page);
-    });
+        setTotal(result.total);
+
+        // Update currentPage biar sinkron
+        setCurrentPage(page);
+
+        // Hitung totalPages
+        const totalPageCount = Math.ceil(result.total / rowsPerPage);
+        setTotalPages(totalPageCount);
+
+        // Generate visible page numbers
+        const maxVisible = 5;
+        let start = Math.max(1, page - Math.floor(maxVisible / 2));
+        let end = start + maxVisible - 1;
+
+        if (end > totalPageCount) {
+            end = totalPageCount;
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        const pages = [];
+        for (let i = start; i <= end; i++) pages.push(i);
+
+        setPageNumbers(pages);
+
+    }, [rowsPerPage]);
+
+
+
+
 
 
     const fetchProdi = useCallback(async (lembagaList) => {
@@ -1421,7 +1432,7 @@ export default function Dashboard() {
                     ></div>
                 )}
                 <div className="flex-1 flex flex-col min-h-screen">
-                    <header className="w-full bg-white border-b px-8 flex justify-between lg:justify-end relative z-20">
+                    <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
                             onClick={toggleSidebar}
@@ -1507,7 +1518,7 @@ export default function Dashboard() {
                                 <div className="flex justify-between items-center mb-4 w-full">
                                     <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
                                     <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
-                                        onClick={openModal}>
+                                        onClick={openModalLeft}>
                                         Filter &gt;
                                     </p>
                                 </div>
@@ -1587,13 +1598,13 @@ export default function Dashboard() {
                                                             { label: "Diagram Garis", value: "Line" },
                                                             { label: "Diagram Batang", value: "Bar" },]
                                                                 .map((chart) => {
-                                                                    const isActive = activeChartL === chart.value;
+                                                                    const isActive = draftChartTypeL === chart.value;
                                                                     const isBlocked = selectedYears.length > 1 && chart.value === "circle";
                                                                     return (
                                                                         <button
                                                                             key={chart.value}
                                                                             disabled={isBlocked}
-                                                                            onClick={() => !isBlocked && setActiveChartL(chart.value)}
+                                                                            onClick={() => !isBlocked && handlePickChartType(chart.value)}
                                                                             className={`px-3 py-1 rounded text-sm transition-colors 
                                                                     ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                     ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
@@ -1801,7 +1812,10 @@ export default function Dashboard() {
                                                                         return (
                                                                             <button
                                                                                 key={chart.value}
-                                                                                onClick={() => setActiveChartR(chart.value)}
+                                                                                onClick={() => {
+                                                                                    setActiveChartR(chart.value);
+                                                                                    localStorage.setItem("chart_type_right", chart.value);
+                                                                                }}
                                                                                 className={`px-3 py-1 rounded text-sm transition-colors 
                                                                                             ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
                                                                                           `}
@@ -1846,12 +1860,12 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <div className='mt-5'>
-                                <div className="relative mb-6">
+                            <div>
+                                <div className="relative mb-4">
                                     <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-xl border border-gray-300">
+                                <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                                     <div className="relative">
                                         {tableDataLeft ? (
                                             <DataTable
@@ -1874,18 +1888,19 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <div className='mt-5'>
-                                <div className="mb-4 h-[32px]"></div>
-                                <div className="bg-white rounded-xl">
-                                    <div className="relative">
-                                        <div className="overflow-x-auto">
-                                            {tableDataRight && (
-                                                <DataTableRight
-                                                    data={tableDataRight}
-                                                    pagination={tablePaginationRight}
-                                                    onPageChange={fetchTableDataRight}
-                                                />
-                                            )}
+                            <div >
+                                <div className="mb-4 h-[32px]">
+                                    <div className="bg-white rounded-xl">
+                                        <div className="relative">
+                                            <div className="overflow-x-auto">
+                                                {tableDataRight && (
+                                                    <DataTableRight
+                                                        data={tableDataRight}
+                                                        pagination={tablePaginationRight}
+                                                        onPageChange={fetchTableDataRight}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1898,14 +1913,13 @@ export default function Dashboard() {
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
                             </div>
 
-                            <div className="bg-white p-6 ">
+                            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                                 <div className="relative bottom-0">
 
                                     <div className="overflow-x-auto">
-                                        <div className="font-semibold font-black text-left mb-4">Data Bebas Pustaka</div>
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="bg-[#667790] border-b-2 border-black">
+                                                <tr className="bg-[#667790]">
                                                     <th className="text-left p-4 font-normal text-white text-sm">No</th>
                                                     <th className="text-left p-4 font-normal text-white text-sm">loan id</th>
                                                     <th className="text-left p-4 font-normal text-white text-sm">Member ID</th>
@@ -1954,21 +1968,40 @@ export default function Dashboard() {
 
 
                                         </table>
-                                        <div className="flex gap-3 mt-4">
+                                        <div className="flex gap-3 mt-12 justify-center text-sm">
+
+                                            {/* Prev */}
                                             <button
-                                                className="px-4 py-2 bg-gray-300 rounded"
-                                                onClick={() => page > 1 && fetchLoanHistory(page - 1)}
+                                                className="flex gap-3 px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                disabled={currentPage <= 1}
+                                                onClick={() => fetchLoanHistory(currentPage - 1)}
                                             >
-                                                Prev
+                                                <p>←</p>
+                                                <span>Sebelumnya</span>
                                             </button>
 
-                                            <span className="px-4 py-2">Page {page}</span>
+                                            {/* Number buttons */}
+                                            {pageNumbers.map(num => (
+                                                <button
+                                                    key={num}
+                                                    onClick={() => fetchLoanHistory(num)}
+                                                    className={`px-3 py-1 rounded-md transition-all duration-150
+                                                            ${currentPage === num
+                                                            ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
+                                                            : 'text-[#023048]  hover:bg-[#F3F6F9]'
+                                                        }`}
+                                                >
+                                                    {num}
+                                                </button>
+                                            ))}
 
+                                            {/* Next */}
                                             <button
-                                                className="px-4 py-2 bg-gray-300 rounded"
-                                                onClick={() => fetchLoanHistory(page + 1)}
+                                                className="px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                disabled={currentPage >= totalPages}
+                                                onClick={() => fetchLoanHistory(currentPage + 1)}
                                             >
-                                                Next
+                                                Selanjutnya →
                                             </button>
                                         </div>
 

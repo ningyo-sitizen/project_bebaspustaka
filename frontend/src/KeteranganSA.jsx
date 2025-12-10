@@ -122,7 +122,6 @@ export default function KeteranganSA() {
 
     return (
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
-            <h1>{nim}</h1>
             <div className="flex">
                 {/* Sidebar */}
                 <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} lg:translate-x-0 lg:static`}>
@@ -184,13 +183,24 @@ export default function KeteranganSA() {
 
                     {/* Breadcrumb & Mahasiswa */}
                     <div className="flex-1 overflow-y-auto p-8">
-                        <div className="flex flex-col md:flex-row w-full mb-4">
-                            <p className="font-semibold text-xl mb-4 px-2 text-[#667790]"> &gt; </p>
-                            <p className="font-semibold text-xl mb-2 px-2 text-[#667790] hover:underline cursor-pointer"
-                                onClick={() => goto('/approvalSA')}>Konfirmasi Data</p>
-                            <p className="font-semibold text-xl mb-2 px-2 ">&gt;</p>
-                            <p className="font-semibold text-xl mb-2 px-2 hover:underline cursor-pointer ">Keterangan Data <span>{nim}</span></p>
+                        <div className="w-full flex items-center justify-between mb-4">
+                            <div>
+                                <p className="font-semibold text-xl mb-2">Keterangan Mahasiswa</p>
+                            </div>
+
+                            <div className="flex items-center flex-wrap gap-2 mb-4 text-sm font-medium">
+                                <p className="text-[#667790]">&gt;</p>
+                                <p className="px-1 text-[#667790] hover:underline cursor-pointer"
+                                    onClick={() => goto('/approvalSA')} >
+                                    Konfirmasi Data
+                                </p>
+                                <p className="">&gt;</p>
+                                <p className=" px-1 hover:underline cursor-pointer">
+                                    Keterangan Data <span className="font-bold">{nim}</span>
+                                </p>
+                            </div>
                         </div>
+
 
                         <div className="w-full mx-auto rounded-lg shadow-sm mb-4">
                             {dataMahasiswa?.map((mhs) => {
@@ -204,8 +214,8 @@ export default function KeteranganSA() {
                                                 <div className="w-20 h-20 rounded-full flex items-center justify-center border border-gray-300 mb-3">
                                                     <IconUser size={40} className="text-gray-500" />
                                                 </div>
-                                                <p className="font-medium text-lg">{mhs.nama}</p>
-                                                <p className="font-medium text-gray-500 text-sm">{mhs.nim}</p>
+                                                <p className="font-semibold text-base">{mhs.nama}</p>
+                                                {/* <p className="font-medium text-gray-500 text-sm">{mhs.nim}</p> */}
                                             </div>
 
                                             <div className="bg-white w-full p-6 flex flex-col rounded-xl border border-[#EDEDED]">

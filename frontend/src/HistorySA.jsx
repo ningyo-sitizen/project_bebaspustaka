@@ -26,11 +26,11 @@ const formatDisplayTimestamp = (isoString) => {
     if (!isoString) return '';
     try {
         const date = new Date(isoString);
-        const datePart = date.toLocaleDateString('id-ID', { 
-            weekday: 'long', 
-            year: 'numeric', 
-            month: 'long', 
-            day: 'numeric' 
+        const datePart = date.toLocaleDateString('id-ID', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
         });
         const timePart = date.toLocaleTimeString('id-ID', {
             hour: '2-digit',
@@ -39,7 +39,7 @@ const formatDisplayTimestamp = (isoString) => {
             timeZone: 'Asia/Jakarta'
         }).replace(/\./g, ':');
 
-        return `${datePart} | ${timePart} WIB`; 
+        return `${datePart} | ${timePart} WIB`;
     } catch (e) {
         console.error("Error parsing date:", e);
         return isoString;
@@ -71,12 +71,12 @@ const parseDateISO = (isoString) => {
 };
 
 const handleLogout = () => {
-  // Hapus local storage
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
+    // Hapus local storage
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
 
-  // Redirect ke halaman login
-  navigate("/login");
+    // Redirect ke halaman login
+    navigate("/login");
 };
 
 // KOMPONEN: Modal Filter Tanggal
@@ -340,38 +340,38 @@ const History = () => {
 
     const navigate = useNavigate();
 
-        useEffect(() => {
-            const fetchProfile = async () => {
-                const user = JSON.parse(localStorage.getItem('user'))
-                const user_id = user.user_id;
-                const token = localStorage.getItem('token')
-                try {
-                    // Ganti URL sesuai endpoint backend Anda
-                    const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
-                        headers: {
-                            "Content-Type": "application/json",
-                            "Authorization": `Bearer ${token}`
-                        }
-                    });
-    
-                    setProfileData(response.data);
-    
-    
-                } catch (error) {
-                    console.error("Gagal mengambil data profil:", error);
-                    // Tampilkan pesan default jika gagal
-                    setProfileData({
-                        name: "Gagal memuat",
-                        username: "N/A",
-                        role: "N/A",
-                    });
-                    // Tambahkan alert jika perlu
-                    // alert("Gagal terhubung ke server untuk memuat data profil.");
-                }
+    useEffect(() => {
+        const fetchProfile = async () => {
+            const user = JSON.parse(localStorage.getItem('user'))
+            const user_id = user.user_id;
+            const token = localStorage.getItem('token')
+            try {
+                // Ganti URL sesuai endpoint backend Anda
+                const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    }
+                });
+
+                setProfileData(response.data);
+
+
+            } catch (error) {
+                console.error("Gagal mengambil data profil:", error);
+                // Tampilkan pesan default jika gagal
+                setProfileData({
+                    name: "Gagal memuat",
+                    username: "N/A",
+                    role: "N/A",
+                });
+                // Tambahkan alert jika perlu
+                // alert("Gagal terhubung ke server untuk memuat data profil.");
             }
-            fetchProfile();
-    
-        }, []);
+        }
+        fetchProfile();
+
+    }, []);
 
     useEffect(() => {
         const t = setTimeout(() => setDebouncedSearch(searchTerm.trim()), 300);
@@ -436,14 +436,14 @@ const History = () => {
                 };
 
                 if (isMounted) {
-const transformedData = rows.map((item, idx) => ({
-    id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
-    name: item.user || item.name || '-',
-    role: item.role ? item.role.toLowerCase() : 'sistem',  // backend role
-    timestamp: item.time || item.timestamp || new Date().toISOString(),
-    activity: item.user_action || item.activity || '',
-    photo: item.photo || null
-}));
+                    const transformedData = rows.map((item, idx) => ({
+                        id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
+                        name: item.user || item.name || '-',
+                        role: item.role ? item.role.toLowerCase() : 'sistem',  // backend role
+                        timestamp: item.time || item.timestamp || new Date().toISOString(),
+                        activity: item.user_action || item.activity || '',
+                        photo: item.photo || null
+                    }));
 
                     setHistoryList(transformedData);
                     setPagination(prev => ({ ...prev, ...paginationFromServer }));
@@ -461,9 +461,9 @@ const transformedData = rows.map((item, idx) => ({
         fetchLogs();
 
         return () => { isMounted = false; };
-    }, [currentPage, debouncedSearch, selectedSort, dateFilter]); 
+    }, [currentPage, debouncedSearch, selectedSort, dateFilter]);
 
-    
+
     const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
     const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
 
@@ -479,7 +479,7 @@ const transformedData = rows.map((item, idx) => ({
 
     const handleApplyDateFilter = (start, end) => {
         setDateFilter({ start, end });
-        setCurrentPage(1); 
+        setCurrentPage(1);
     };
 
     const filteredData = historyList.filter(item => {
@@ -562,7 +562,7 @@ const transformedData = rows.map((item, idx) => ({
                         </p>
                         <IconChevronDown size={18} className="text-gray-600" />
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                            <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
+                            <IconUser size={24} className="text-gray-500" />
                         </div>
                     </div>
                     {isDropdownOpen && (
@@ -681,17 +681,16 @@ const transformedData = rows.map((item, idx) => ({
                                     <div className="flex-1 -mt-1">
                                         <div className="flex items-center gap-2 mb-2">
                                             <p className="font-semibold text-base text-[#023048]">{item.name}</p>
-<span
-    className={`text-xs px-2 py-0.5 rounded-md font-medium ${
-        item.role === 'super admin'
-            ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
-        : item.role === 'Admin'
-            ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
-        : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
-    }`}
->
-    {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
-</span>
+                                            <span
+                                                className={`text-xs px-2 py-0.5 rounded-md font-medium ${item.role === 'super admin'
+                                                        ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
+                                                        : item.role === 'Admin'
+                                                            ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+                                                            : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
+                                                    }`}
+                                            >
+                                                {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                                            </span>
 
                                         </div>
 

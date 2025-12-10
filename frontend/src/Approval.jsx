@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "./AppLayout";
-import authCheck from "./authCheck";
+import authCheckSA from "./authCheckSA";
 import { DayPicker } from "react-day-picker";
 import 'react-day-picker/dist/style.css';
 import {
@@ -21,12 +21,13 @@ import "./App.css";
 
 import axios from "axios";
 
-function Approval() {
-    authCheck();
+function ApprovalSA() {
+    authCheckSA();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    
 
 
     const [loading, setLoading] = useState(false);
@@ -45,7 +46,6 @@ function Approval() {
                 params: { search, page: currentPage, limit: rowsPerPage }
             });
 
-            // DI SINI FIX NYA
             const result = res.data?.data || [];
 
             const formatted = result.map(d => ({
@@ -107,6 +107,12 @@ function Approval() {
 
         setCheckedItems(newChecked);
     };
+
+    const SetujuiSemuaBepus = () => {
+        (!setAlertBebasPustakaAll)
+        console.log("Setuju semua bepustaka clicked");
+    };
+
     const handleSingleCheck = (id) => {
         setCheckedItems(prev => {
             const updated = { ...prev, [id]: !prev[id] };
@@ -300,7 +306,6 @@ function Approval() {
                                 <IconBell size={20} />
                                 Konfirmasi Data
                             </a>
-
                         </nav>
                     </div>
                 </aside>
@@ -347,7 +352,7 @@ function Approval() {
                                 </div>
                                 <div className="p-2 space-y-1">
                                     <button
-                                        onClick={() => goto("/profile")}
+                                        onClick={() => navigate("/profile")}
                                         className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                     >
                                         <IconUser size={18} />
@@ -369,8 +374,8 @@ function Approval() {
                         {/* TABLE APPROVAL */}
                         <div className="ml-0 flex-1 p-4 md:p-8 overflow-x-auto">
 
-                            <p className="font-semibold text-2xl text-black mb-8 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
-                            <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium">
+                            <p className="font-semibold text-2xl text-black mb-4 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
+                            <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     width="18"
                                     height="18"
@@ -628,7 +633,7 @@ function Approval() {
                                 <div className="overflow-x-auto w-full">
                                     <table className="min-w-full border-collapse mt-7">
                                         <thead>
-                                            <tr className="bg-gray-50 border-b-2 border-black">
+                                            <tr className="bg-gray-50">
                                                 <th className="text-left p-4 font-normal text-gray-600 bg-[#667790]">
                                                     <label className="flex items-center cursor-pointer">
                                                         <input
@@ -662,20 +667,21 @@ function Approval() {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">&#8203;</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Nama</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">NIM</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Status</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Tindakan</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Keterangan</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
+                                                <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Tindakan</th>
+                                                <th className=" p-4 font-normal text-white bg-[#667790]">Keterangan</th>
                                             </tr>
                                         </thead>
 
                                         {/* isianya dari db */}
                                         <tbody>
                                             {data.map((item, index) => ( //ssesuain sama db
-                                                <tr key={item.id} className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}>
+                                                <tr key={item.id ?? index}
+                                                    className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
+                                                >
                                                     <td className="p-4">
                                                         <label className="flex items-center cursor-pointer">
                                                             <input
@@ -684,10 +690,12 @@ function Approval() {
                                                                 onChange={() => handleSingleCheck(item.id)}
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
                                                             />
-                                                            <div className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
-                                                                ? 'bg-[#A8B5CB] border-white'
-                                                                : 'bg-white border-[#A8B5CB]'
-                                                                }`}
+                                                            <div
+                                                                key={item.id ?? index}
+                                                                className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
+                                                                    ? 'bg-[#A8B5CB] border-white'
+                                                                    : 'bg-white border-[#A8B5CB]'
+                                                                    }`}
                                                             >
 
                                                                 <svg
@@ -708,32 +716,25 @@ function Approval() {
                                                             </div>
                                                         </label>
                                                     </td>
-                                                    <td className="px-4">
-                                                        <div
-                                                            className="relative bg-[url('https://cdn.designfast.io/image/2025-11-21/b89ae749-b5b2-40e4-967d-18be9ef8aed8.png')] bg-cover bg-no-repeat bg-center w-12 h-12">
-                                                        </div>
-                                                    </td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name}</td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim}</td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate text-sm">{item.name}</td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate text-sm">{item.nim}</td>
 
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.pengembalian === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
+                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.pengembalian === 1 ? "text-[#4ABC4C] text-sm" : "text-[#FF1515]"}`}>
                                                         {item.pengembalian === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan"}
                                                     </td>
 
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
+                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status === 1 ? "text-[#4ABC4C]" : "text-[#FF1515] text-sm"}`}>
                                                         {item.status === 1 ? "Bebas Pustaka" : "Tidak Bebas Pustaka"}
                                                     </td>
                                                     <td className="p-4 text-[#4ABC4C] whitespace-nowrap overflow-x-auto">
-                                                        {/* kolom tergantung status bebas pustaka di db. uncomment aja yg dibawah*/}
-
 
                                                         {item.statusbebaspustakanya === 0 ? (
                                                             <>
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
-                                                                    className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] font-semibold
-                                                            active:scale-90 transition-transform duration-100"
+                                                                    className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] text-sm font-mwdium
+                                                                               active:scale-90 transition-transform duration-100 hover:bg-[#A8B5CB] hover:text-white hover:border-white"
                                                                 >
                                                                     Setujui
                                                                 </button>
@@ -745,8 +746,10 @@ function Approval() {
 
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
                                                         <button
-                                                            className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded"
-                                                            onClick={() => goto('/Keterangn')}
+                                                            className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
+                                                                      transition-all active:scale-90 hover:text-[#445266]"
+
+                                                            onClick={() => goto(`/Keterangan/${item.nim}`)}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg"
                                                                 width="24"
@@ -784,7 +787,7 @@ function Approval() {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 border text-[#757575] rounded disabled:opacity-40"
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                 >
                                     ← Sebelumnya
                                 </button>
@@ -807,7 +810,7 @@ function Approval() {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
-                                    className="px-3 py-1 border text-[#757575] rounded disabled:opacity-40"
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                 >
                                     Selanjutnya →
                                 </button>
@@ -821,7 +824,7 @@ function Approval() {
                                 <div className="relative w-80 h-80 overflow-hidden">
 
                                     <div className="absolute bg-[url('https://cdn.designfast.io/image/2025-11-22/cf3fe802-a5e6-4d12-89e9-3cdec8f83aed.png')] 
-                                    bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
+                            bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
                                     </div>
 
                                     <p className='absolute ml-2 left-[270px] top-24 font-semibold text-xl cursor-pointer z-50' onClick={() => setAlertBebasPustaka(false)}> X </p>
@@ -869,7 +872,7 @@ function Approval() {
                                             type="button"
                                             onClick={SetujuiSemuaBepus}
                                             className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-semibold
-                                    active:scale-90 transition-transform duration-100"
+                                                    active:scale-90 transition-transform duration-100"
                                         >
                                             Setujui
                                         </button>
@@ -889,4 +892,4 @@ function Approval() {
     );
 }
 
-export default Approval;
+export default ApprovalSA;

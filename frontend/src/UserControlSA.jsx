@@ -20,6 +20,7 @@ import {
     IconEye,
     IconEyeOff,
     IconCheck,
+    IconAdOff,
 } from "@tabler/icons-react";
 
 // Counter ID untuk simulasi penambahan user baru
@@ -200,7 +201,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                             "Content-Type": "application/json",
                             "Authorization": `Bearer ${token}`
                         },
-                        body: JSON.stringify({ user_name: actor,role, user_action, action_status, time })
+                        body: JSON.stringify({ user_name: actor, role, user_action, action_status, time })
                     });
 
                 } catch (logError) {
@@ -258,41 +259,40 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                 <form onSubmit={handleSubmit} className="p-6 space-y-4">
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Nama*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Nama  <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             name="name"
                             value={formData.name}
                             onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-[#023048] focus:border-[#023048]"
                             placeholder="Nama"
                             required
                         />
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Peran*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Peran  <span className="text-red-500">*</span></label>
                         <select
                             name="role"
                             value={formData.role}
                             onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-[#023048] focus:border-[#023048]"
                             required
                         >
                             <option value="admin">admin</option>
                             <option value="super admin">super admin</option>
-                            <option value="Dosen">Dosen</option>
                         </select>
                     </div>
 
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">Username*</label>
+                        <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Username  <span className="text-red-500">*</span></label>
                         <input
                             type="text"
                             name="username"
                             value={formData.username}
                             onChange={handleChange}
-                            className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048]"
+                            className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-[#023048] focus:border-[#023048]"
                             placeholder="Username"
                             required
                         />
@@ -301,14 +301,14 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                     {/* Password Fields */}
                     <div className="flex space-x-4">
                         <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Password Baru*</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Password Baru  <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <input
                                     type={showPassword ? "text" : "password"}
                                     name="password"
                                     value={formData.password}
                                     onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
+                                    className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-[#023048] focus:border-[#023048] pr-10"
                                     placeholder="********"
                                     required
                                 />
@@ -324,14 +324,14 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
                         </div>
 
                         <div className="flex-1">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Konfirmasi Password*</label>
+                            <label className="block text-sm font-medium text-gray-700 mb-1 text-left">Konfirmasi Password  <span className="text-red-500">*</span></label>
                             <div className="relative">
                                 <input
                                     type={showConfirmPassword ? "text" : "password"}
                                     name="confirmPassword"
                                     value={formData.confirmPassword}
                                     onChange={handleChange}
-                                    className="w-full p-2 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] pr-10"
+                                    className="w-full p-2 border border-gray-300 rounded-lg text-sm focus:ring-[#023048] focus:border-[#023048] pr-10"
                                     placeholder="********"
                                     required
                                 />
@@ -378,7 +378,7 @@ export default function UserControl() {
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
     const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
     const [userToDelete, setUserToDelete] = useState(null);
-    const [viewMode, setViewMode] = useState('grid');
+    const [viewMode, setViewMode] = useState('list');
 
     // Data Dummy
     const [users, setUsers] = useState([]);
@@ -484,7 +484,7 @@ export default function UserControl() {
             const user_name = userk.username || userk.name;
             const user_action = `user berhasil menghapus akun user ${userToDelete.username}`;
             const action_status = "berhasil";
-            
+
             const now = new Date();
             const pad = (n) => n.toString().padStart(2, "0");
             const datePart = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
@@ -497,7 +497,7 @@ export default function UserControl() {
                     "Content-Type": "application/json",
                     "Authorization": `Bearer ${token}`
                 },
-                body: JSON.stringify({ user_name,role, user_action, action_status, time })
+                body: JSON.stringify({ user_name, role, user_action, action_status, time })
             });
 
             // 3️⃣ Update list user di frontend tanpa reload
@@ -612,7 +612,7 @@ export default function UserControl() {
                             Hai, {profileData.name.split(" ")[0]}
                         </p>
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                            <img src={profileData.photo} alt="Profile" className="w-full h-full object-cover" />
+                            <IconUser size={24} className="text-gray-500" />
                         </div>
                     </div>
                     {isDropdownOpen && (
@@ -659,9 +659,25 @@ export default function UserControl() {
                         </div>
 
                         <div className="flex-shrink-0 flex items-center mt-2 sm:mt-0">
+
+                            <div className="relative group">
+
+                                {/* Tombol yang di-klik */}
+                                <button
+                                    className="w-10 h-10 bg-[#023048] border rounded-lg flex text-white items-center justify-center active:scale-90 transition-transform duration-100 hover:bg-[#023048]/90"
+                                    onClick={openAddModal}
+                                >
+                                    <IconPlus size={24} />
+                                </button>
+                                <span className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                >
+                                    Tambah Pengguna Baru
+                                </span>
+                            </div>
                             <button
                                 onClick={() => setViewMode('grid')}
-                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ${viewMode === 'grid'
+                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'grid'
                                     ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
                                     : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
                                     } transition duration-150`}
@@ -669,11 +685,10 @@ export default function UserControl() {
                             >
                                 <IconLayoutGrid size={20} />
                             </button>
-                            {/* Tombol List */}
                             <button
                                 onClick={() => setViewMode('list')}
-                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 ${viewMode === 'list'
-                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'list'
+                                    ? 'bg-[#023048] text-white border-[#023048]'
                                     : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
                                     } transition duration-150`}
                                 aria-label="Tampilan List"
@@ -684,59 +699,52 @@ export default function UserControl() {
                     </div>
 
                     {/* USER CARD GRID/LIST */}
-                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+                    <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3' : 'grid-cols-1'}`}>
                         {users.map(user => (
-                            <div key={user.user_id} className="relative bg-white rounded-md shadow-sm border border-gray-200 p-4 flex items-center justify-between min-h-[120px]">
+                            <div
+                                key={user.user_id}
+                                className="relative bg-white w-full rounded-lg border border-[#EDEDED] py-4 px-2 flex items-center justify-between min-h-[120px]"
+                            >
 
-                                {/* Garis biru di kiri */}
-                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#667790] rounded-l-md"></div>
+                                {/* 1. Garis Penanda Kiri (Visual Accent) */}
+                                <div className="absolute left-0 inset-y-0 w-2 bg-[#667790] rounded-l-lg"></div>
 
-                                {/* Kontainer Utama Konten */}
-                                <div className="flex items-start w-full pl-2">
+                                {/* 2. Konten Utama Card: Kiri (Info) & Kanan (Aksi) */}
+                                <div className="flex items-center w-full pl-4">
 
-                                    {/* Kiri: Icon dan Teks Detail */}
-                                    <div className="flex items-start flex-grow">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0 mr-3">
-                                            <IconUser size={20} className="text-gray-500" />
-                                        </div>
-                                        <div>
-                                            {/* Username */}
-                                            <p className="font-semibold text-base text-[#023048] leading-tight mb-1">
+                                    {/* KIRI: Info Pengguna (Avatar, Username, Detail) */}
+                                    <div className="flex flex-col flex-grow">
+
+                                        {/* A. Avatar & Username */}
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-3xl bg-gray-200 flex items-center justify-center">
+                                                {/* Pastikan IconUser sudah di-import */}
+                                                <IconUser size={20} className="text-gray-500" />
+                                            </div>
+                                            <p className="font-semibold text-base text-[#023048]  text-left">
                                                 {user.username}
                                             </p>
-                                            {/* Nama Panjang */}
-                                            <p className="text-sm text-gray-700 leading-snug">
-                                                {user.name}
-                                            </p>
-                                            {/* Role */}
-                                            <p className="text-xs text-[#667790] font-medium leading-snug mt-0.5">
-                                                Role : {user.role}
+                                        </div>
+
+                                        {/* B. Detail Nama & Role */}
+                                        <div className="mt-2  text-left">
+                                            <p className="text-sm font-medium text-gray-800">{user.name}</p>
+                                            <p className="text-xs text-[#667790] font-medium mt-1">
+                                                Role: <span className="font-semibold">{user.role}</span>
                                             </p>
                                         </div>
                                     </div>
 
-                                    {/* Kanan: Tombol Hapus */}
+                                    {/* KANAN: Tombol Aksi (Delete) */}
                                     <button
                                         onClick={() => openDeleteModal(user)}
-                                        className="w-10 h-10 text-white bg-red-600 rounded-lg hover:bg-red-700 transition duration-150 flex-shrink-0 flex items-center justify-center ml-4 relative z-20"
-                                        aria-label={`Hapus user ${user.username}`}
-                                    >
+                                        className="flex items-center justify-center w-10 h-10 bg-[#BE3A42] text-white rounded-full hover:bg-red-600 transition duration-150 shrink-0 mr-4">
+
                                         <IconTrash size={20} />
                                     </button>
                                 </div>
                             </div>
                         ))}
-                    </div>
-
-                    {/* TOMBOL TAMBAH AKUN BARU */}
-                    <div className="mt-8 flex justify-end">
-                        <button
-                            onClick={openAddModal}
-                            className="flex items-center gap-2 px-6 py-3 bg-[#023048] text-white rounded-lg hover:bg-[#023048]/90 transition duration-150 font-normal"
-                        >
-                            <IconPlus size={20} />
-                            Tambah Account Baru
-                        </button>
                     </div>
 
                 </div>
