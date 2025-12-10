@@ -225,7 +225,7 @@ export default function DashboardSA() {
                 <div className="flex-1 flex flex-col min-h-screen">
 
                     {/* NAVBAR */}
-                    <header className="w-full bg-white border-b px-8 flex justify-between lg:justify-end relative z-20">
+                    <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
                             onClick={toggleSidebar}

@@ -6,9 +6,9 @@ import {
     IconPhone,
     IconMail,
     IconBrandInstagram,
-    IconBrandX,
+    IconWorld,
     IconBrandYoutube,
-    IconGlobe,
+    
     // Ikon-ikon Navbar/Sidebar (tidak digunakan)
     IconChevronDown,
     IconUserCircle,
@@ -51,7 +51,7 @@ const AppLayout = () => {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-7 h-7 border border-gray-400 rounded-full flex items-center justify-center transition-colors hover:border-blue-500">
-                                <IconGlobe className="w-4 h-4 text-gray-700" stroke={1.5} />
+                                <IconWorld className="w-4 h-4 text-gray-700" stroke={1.5} />
                             </a>
                             <a href="https://youtu.be/FknJL57ljUg?si=H8lC3rp0qqdmtSp0"
                                 target="_blank"

@@ -88,138 +88,143 @@ function Login() {
   };
 
   return (
-    <main className="bg-black w-full max-w-6xl min-h-screen font-jakarta">
-      <div className="bg-[url('https://cdn.designfast.io/image/2025-10-18/d3e331c2-2f93-43e5-a22f-8c39337d6546.png')] bg-cover bg-center min-h-screen w-full flex flex-col lg:flex-row">
+    <main className="bg-white w-full min-h-screen font-jakarta mx-auto">
+      <div className="relative flex flex-col lg:flex-row min-h-screen overflow-hidden">
 
-        {/* Kiriiiiiiiii*/}
-        <div className="flex-1 flex flex-col justify-center items-center lg:items-start text-justify lg:text-center px-6 lg:px-16 py-10">
+        {/* LEFT CONTENT */}
+        <section className="flex-1 flex flex-col justify-center items-center lg:items-start text-center">
+          <div className="hidden lg:block absolute inset-0 overflow-visible pointer-events-none">
 
-          <div className="flex justify-center w-full lg:max-w-lg mb-6 lg:mb-8">
+            <div className="absolute top-1/2 -translate-x-[40%] -translate-y-1/2 w-[72vw] h-[73vw] rounded-full bg-[#EDF1F3]">
+            </div>
 
-            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-18/84339f05-ea02-4915-b50a-d8b112bc50c4.png')] 
-                    bg-cover bg-no-repeat bg-center 
-                    w-36 h-36">
+            <div className="absolute top-1/2 -translate-x-[40%] -translate-y-1/2 w-[75vw] h-[73vw] rounded-full border-4 border-[#EDF1F3]">
             </div>
           </div>
 
-          <div className="w-full max-w-lg lg:max-w-lg lg:mx-0">
+          {/* Logo besar kiri */}
+          <div className="flex flex-col items-center justify-center mb-8 ml-16 py-2 z-10">
 
-            <h1 className="text-2xl lg:text-3xl text-[#023048] font-semibold">SELAMAT DATANG</h1>
-            <h2 className="text-lg lg:text-xl font-medium mt-4 text-[#023048]">Di Website Sistem Bebas Pustaka PNJ</h2>
-            <p className="text-base lg:text-base font-thin mt-7 text-[#023048]">
-              Cek status Bebas Pustaka Anda dengan cepat dan mudah.
-              Proses pengajuan hingga verifikasi kini dalam genggaman Anda.
-            </p>
+            <div className="w-[350px] h-[300px] bg-[length:400px_200px] bg-[url('https://cdn.designfast.io/image/2025-12-09/8d95b9bd-3314-46ce-8e32-6f8c410dd604.png')] bg-contain bg-no-repeat bg-center"></div>
 
+            {/* Text */}
+            <div className="max-w-lg space-y-4 z-10 gap-4 py-3 mx-10">
+              <h1 className="text-2xl lg:text-3xl font-semibold text-[#023048]">
+                SELAMAT DATANG
+              </h1>
+              <h2 className="text-lg lg:text-xl font-medium text-[#023048]">
+                Di Website Sistem Bebas Pustaka PNJ
+              </h2>
+            </div>
           </div>
-        </div>
 
+        </section>
 
-        {/* Kanannnnnnnn */}
-        <div className="w-full flex-1 flex justify-center lg:justify-end items-center bg-white min-h-screen">
+        {/* RIGHT CONTENT - LOGIN FORM */}
+        <section className="flex-1 flex justify-start lg:justify-start items-center bg-white min-h-screen ml-40 z-10">
 
-          <form
-            onSubmit={handleLogin}
-            className="flex flex-col"
-          >
-            <div className="flex flex-col items-center space-y-7 w-full max-w-md py-10">
-              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-19/9f6cb104-d72a-4896-9da2-cb9a9213df42.png')] bg-cover bg-no-repeat bg-center w-24 h-24" />
+          <form onSubmit={handleLogin}
+            className="w-full max-w-sm lg:max-w-md space-y-8 bg-white">
 
-              <div className="text-center">
-                <h2 className="text-xl font-semibold text-[#023048]">LOGIN ADMIN</h2>
-                <p className="text-base font-normal text-[#9A9A9A] mt-2">
-                  Silakan login untuk mengakses akun Anda!
-                </p>
-              </div>
+            {/* Logo kecil */}
+            <div className="flex justify-center">
+              <div
+                className="w-24 h-24 bg-[url('https://cdn.designfast.io/image/2025-10-19/9f6cb104-d72a-4896-9da2-cb9a9213df42.png')] 
+              bg-cover bg-center"
+              ></div>
+            </div>
 
-              {/* Username */}
-              <div className="flex items-center border border-gray-300 rounded-lg p-2 w-full focus-within:ring-2 focus-within:ring-[#023048]">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="text-gray-400 mr-2"
-                  width="20"
-                  height="20"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
-                  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-                </svg>
+            {/* Title */}
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-[#023048]">LOGIN ADMIN</h2>
+              <p className="text-sm text-[#9A9A9A] mt-1">
+                Silakan login untuk mengakses akun Anda!
+              </p>
+            </div>
 
-                <input
-                  type="text"
-                  placeholder="Username"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="outline-none w-full"
-
-                />
-              </div>
-
-              {/* Password */}
-              <div className="flex items-center border border-gray-300 rounded-lg p-2 w-full focus-within:ring-2 focus-within:ring-[#023048]">
-                <svg xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-gray-400 mr-2"
-                >
-                  <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                  <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
-                  <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
-                  <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
-                </svg>
-
-                <input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="outline-none w-full"
-
-                />
-              </div>
-
-              {/* Remember */}
-              <div className="flex justify-between items-center w-full text-sm text-[#023048] mt-3">
-                <label className="flex items-center space-x-2">
-                  <input type="checkbox" className="accent-[#023048]" />
-                  <span>Remember me</span>
-                </label>
-                <a href="#" className="hover:underline hover:text-[#034d66]">
-                  Forgot Password?
-                </a>
-              </div>
-
-
-              <button
-                type="submit"
-                className="bg-[#023048] text-white w-full h-12 rounded-lg hover:bg-[#034d66] transition duration-200 font-semibold"
+            {/* Username */}
+            <div className="flex items-center border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-[#023048]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="27"
+                height="27"
+                className="text-gray-400 mr-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
               >
-                LOGIN
-              </button>
-
-              <div className={`relative w-full text-left text-[#FF1515] ${failedLogin ? "" : "hidden"}`}>
-                {failedLogin}
-              </div>
+                <path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0" />
+                <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Username"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full outline-none"
+              />
             </div>
 
+            {/* Password */}
+            <div className="flex items-center border border-gray-300 rounded-lg p-3 focus-within:ring-2 focus-within:ring-[#023048]">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="27"
+                height="27"
+                className="text-gray-400 mr-2"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M5 13a2 2 0 0 1 2 -2h10a2 2 0 0 1 2 2v6a2 2 0 0 1 -2 2h-10a2 2 0 0 1 -2 -2v-6z" />
+                <path d="M11 16a1 1 0 1 0 2 0a1 1 0 0 0 -2 0" />
+                <path d="M8 11v-4a4 4 0 1 1 8 0v4" />
+              </svg>
+              <input
+                type="password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full outline-none"
+              />
+            </div>
+
+            {/* Remember + Forgot */}
+            <div className="flex items-center justify-between text-sm text-[#023048]">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" className="accent-[#023048]" />
+                <span>Remember me</span>
+              </label>
+              {/* <a href="#" className="hover:text-[#034d66] hover:underline">
+                Forgot Password?
+              </a> */}
+            </div>
+
+            {/* Button */}
+            <button
+              type="submit"
+              className="w-full h-12 bg-[#023048] text-white rounded-lg font-semibold hover:bg-[#034d66] transition"
+            >
+              LOGIN
+            </button>
+
+            {/* Error */}
+            {failedLogin && (
+
+              <p className="text-[#FF1515] text-sm">{failedLogin}</p>
+            )}
           </form>
-        </div>
+
+        </section>
 
       </div>
     </main>
-
   );
+
 }
 
 export default Login;

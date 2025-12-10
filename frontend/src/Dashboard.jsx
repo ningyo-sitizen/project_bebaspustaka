@@ -49,7 +49,7 @@ ChartJS.register(
     Legend
 );
 
-export default function DashboardSA() {
+export default function Dashboard() {
     authCheck();
     //data dummy
     const [data, setData] = useState([

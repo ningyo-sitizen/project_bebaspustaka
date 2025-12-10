@@ -27,6 +27,7 @@ function ApprovalSA() {
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
+    
 
 
     const [loading, setLoading] = useState(false);
@@ -476,8 +477,8 @@ const handleEndInput = (e) => {
                         {/* TABLE APPROVAL */}
                         <div className="ml-0 flex-1 p-4 md:p-8 overflow-x-auto">
 
-                            <p className="font-semibold text-2xl text-black mb-8 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
-                            <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium">
+                            <p className="font-semibold text-2xl text-black mb-4 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
+                            <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     width="18"
                                     height="18"
@@ -758,7 +759,7 @@ const handleEndInput = (e) => {
                                 <div className="overflow-x-auto w-full">
                                     <table className="min-w-full border-collapse mt-7">
                                         <thead>
-                                            <tr className="bg-gray-50 border-b-2 border-black">
+                                            <tr className="bg-gray-50">
                                                 <th className="text-left p-4 font-normal text-gray-600 bg-[#667790]">
                                                     <label className="flex items-center cursor-pointer">
                                                         <input
@@ -792,18 +793,18 @@ const handleEndInput = (e) => {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">&#8203;</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Nama</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">NIM</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Status</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Tindakan</th>
-                                                <th className="text-left p-4 font-normal text-white bg-[#667790]">Keterangan</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
+                                                <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Tindakan</th>
+                                                <th className=" p-4 font-normal text-white bg-[#667790]">Keterangan</th>
                                             </tr>
                                         </thead>
 
                                         {/* isianya dari db */}
                                         <tbody>
+
                                             {data.map((item, index) => (
                                                 <tr key={item.id ?? index}
                                                     className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
@@ -845,6 +846,7 @@ const handleEndInput = (e) => {
                                                     <td className={`p-4 whitespace-nowrap overflow-x-auto ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "text-[#4ABC4C]" : "text-[#FF1515]"
                                                         }`}>
                                                         {(item.status_peminjaman === 1 && item.status_denda === 1) ? "Memenuhi Syarat" : "Belum Memenuhi Syarat"}
+
                                                     </td>
 
                                                     {/* Tindakan - Approval SA */}
@@ -865,7 +867,9 @@ const handleEndInput = (e) => {
                                                     {/* Keterangan */}
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
                                                         <button
-                                                            className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded"
+                                                            className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
+                                                                      transition-all active:scale-90 hover:text-[#445266]"
+
                                                             onClick={() => goto(`/KeteranganSA/${item.nim}`)}
                                                         >
                                                             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -893,7 +897,7 @@ const handleEndInput = (e) => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                     disabled={currentPage === 1}
-                                    className="px-3 py-1 border text-[#757575] rounded disabled:opacity-40"
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                 >
                                     ← Sebelumnya
                                 </button>
@@ -916,7 +920,7 @@ const handleEndInput = (e) => {
                                 <button
                                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                     disabled={currentPage === totalPages}
-                                    className="px-3 py-1 border text-[#757575] rounded disabled:opacity-40"
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                 >
                                     Selanjutnya →
                                 </button>
