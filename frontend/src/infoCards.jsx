@@ -41,7 +41,6 @@ function InfoCards() {
         lastUpdated: new Date().toISOString()
       };
 
-      // Simpan ke localStorage
       localStorage.setItem('dashboardInfoData', JSON.stringify(newData));
       setInfoData(newData);
       setIsLoading(false);
@@ -68,12 +67,10 @@ function InfoCards() {
         fetchInfoData();
       }
     } else {
-      // Tidak ada cache, fetch data
       fetchInfoData();
     }
   }, [fetchInfoData]);
 
-  // Auto-refresh setiap 5 menit
   useEffect(() => {
     const interval = setInterval(() => {
       fetchInfoData();
@@ -157,14 +154,14 @@ function InfoCards() {
           {infoData.todayVisitors?.toLocaleString() || '0'}
         </p>
         <p className="text-xs text-gray-500 text-left">
-          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
+          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada hari ini
         </p>
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-black font-semibold">Data Peminjaman Buku</h3>
+          <h3 className="text-black font-semibold">Data jumlah pengunjung perpustakaan minggu ini</h3>
           <div className="bg-purple-50 p-3 rounded-lg">
             <Calendar className="w-6 h-6 text-purple-600" />
           </div>
@@ -188,7 +185,7 @@ function InfoCards() {
       {/* Card 3: Buku yang Dipinjam */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-black font-semibold text-left">Data Mahasiswa Bebas Pustaka</h3>
+          <h3 className="text-black font-semibold text-left">jumlah buku yang belum dikembalikan</h3>
           <div className="bg-orange-50 p-3 rounded-lg">
             <BookOpen className="w-6 h-6 text-orange-600" />
           </div>
@@ -197,7 +194,7 @@ function InfoCards() {
           {infoData.borrowedBooks?.toLocaleString() || '0'}
         </p>
         <p className="text-xs text-gray-500 text-left">
-          Jumlah mahasiswa bebas pustaka mengalami peningkatan sebesar 0,1% pada minggu ini
+          
         </p>
       </div>
 

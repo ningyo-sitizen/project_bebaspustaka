@@ -440,15 +440,13 @@ const autoBuildChartDataRight = (apiResponse) => {
         const baseColors = [
             '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
             '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
-            '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085',
-            '#C0392B', '#2980B9', '#27AE60', '#F39C12', '#8E44AD'
+            '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
         ];
         return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
     };
 
     const sortedYears = [...years].sort((a, b) => a - b);
 
-    // Mode: Default Year
     if (mode === "default_year") {
         const chartData = sortedYears.map(year => {
             const yearData = data[year];
@@ -471,7 +469,6 @@ const autoBuildChartDataRight = (apiResponse) => {
         };
     }
 
-    // Mode: Per Lembaga
     if (mode === "per_lembaga") {
         const lembagaSet = new Set();
         sortedYears.forEach(year => {
@@ -485,7 +482,7 @@ const autoBuildChartDataRight = (apiResponse) => {
         const lembagaList = Array.from(lembagaSet);
         const colors = generateColors(lembagaList.length);
 
-        console.log("🏢 Lembaga found:", lembagaList.length, "items");
+        console.log("🏢 Lembaga found:", lembagaList);
 
         return {
             labels: sortedYears.map(y => String(y)),
@@ -504,7 +501,6 @@ const autoBuildChartDataRight = (apiResponse) => {
         };
     }
 
-    // Mode: Per Program Studi
     if (mode === "per_program") {
         const programSet = new Set();
         sortedYears.forEach(year => {
@@ -516,20 +512,28 @@ const autoBuildChartDataRight = (apiResponse) => {
         });
 
         const programList = Array.from(programSet);
-        const colors = generateColors(programList.length);
+        
+        console.log("🎓 Total Programs found:", programList.length);
+        console.log("🎓 Programs:", programList);
+        
+        // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
+        const MAX_PROGRAMS = 30; // Adjust sesuai kebutuhan
+        const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
+        
+        if (programList.length > MAX_PROGRAMS) {
+            console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+        }
 
-        console.log("🎓 Programs found:", programList.length, "items");
-        console.log("🎓 Program list:", programList);
+        const colors = generateColors(limitedPrograms.length);
 
         return {
             labels: sortedYears.map(y => String(y)),
-            datasets: programList.map((prog, idx) => ({
+            datasets: limitedPrograms.map((prog, idx) => ({
                 label: prog,
                 data: sortedYears.map(year => {
                     if (!data[year]) return 0;
                     const found = data[year].find(item => item.program === prog);
-                    const value = found ? (found.total || found.total_pinjam || 0) : 0;
-                    return value;
+                    return found ? (found.total || found.total_pinjam || 0) : 0;
                 }),
                 backgroundColor: colors[idx],
                 borderColor: colors[idx],
@@ -569,18 +573,27 @@ const transformPagedDataForChart = (pagedData) => {
 
     if (!pagedData) {
         console.warn("⚠️ Invalid pagedData structure");
-        return { mode: "default_year", years: [], data: {} };
+        return {
+            mode: "default_year",
+            years: [],
+            data: {}
+        };
     }
 
-    // KRITIS: Gunakan allData untuk chart, bukan data
+    // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
     const dataSource = pagedData.allData || pagedData.data;
 
     if (!Array.isArray(dataSource) || dataSource.length === 0) {
         console.warn("⚠️ No data to transform");
-        return { mode: "default_year", years: [], data: {} };
+        return {
+            mode: "default_year",
+            years: [],
+            data: {}
+        };
     }
 
-    console.log("📊 Using data source with length:", dataSource.length);
+    console.log("📊 Data source length:", dataSource.length);
+    console.log("📊 First 3 rows:", dataSource.slice(0, 3));
 
     const grouped = {};
     const years = new Set();
@@ -593,9 +606,7 @@ const transformPagedDataForChart = (pagedData) => {
             grouped[year] = [];
         }
 
-        // Deteksi mode berdasarkan field yang ada
         if (row.program) {
-            // Mode: per program studi
             grouped[year].push({
                 program: row.program,
                 lembaga: row.lembaga,
@@ -603,14 +614,12 @@ const transformPagedDataForChart = (pagedData) => {
                 total_pinjam: row.total_pinjam
             });
         } else if (row.lembaga) {
-            // Mode: per lembaga
             grouped[year].push({
                 lembaga: row.lembaga,
                 total: row.total_pinjam,
                 total_pinjam: row.total_pinjam
             });
         } else {
-            // Mode: per tahun
             grouped[year].push({
                 total: row.total_pinjam,
                 total_pinjam: row.total_pinjam
@@ -618,11 +627,12 @@ const transformPagedDataForChart = (pagedData) => {
         }
     });
 
-    // Tentukan mode
     let mode = "default_year";
-    if (dataSource[0]?.program) {
+    const firstRow = dataSource[0];
+    
+    if (firstRow.program) {
         mode = "per_program";
-    } else if (dataSource[0]?.lembaga) {
+    } else if (firstRow.lembaga) {
         mode = "per_lembaga";
     }
 
@@ -632,14 +642,13 @@ const transformPagedDataForChart = (pagedData) => {
         data: grouped
     };
 
-    console.log("✅ Transform complete:");
-    console.log("   Mode:", mode);
-    console.log("   Years:", result.years);
-    console.log("   Total items:", dataSource.length);
+    console.log("✅ Transform output mode:", mode);
+    console.log("✅ Years:", result.years);
+    console.log("✅ Data keys:", Object.keys(result.data));
     
-    // Debug per tahun
-    result.years.forEach(year => {
-        console.log(`   Year ${year}: ${result.data[year]?.length || 0} items`);
+    // Debug: tampilkan berapa banyak item per tahun
+    Object.keys(result.data).forEach(year => {
+        console.log(`📅 Year ${year}: ${result.data[year].length} items`);
     });
 
     return result;
