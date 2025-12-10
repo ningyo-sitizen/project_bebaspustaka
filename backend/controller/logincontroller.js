@@ -7,7 +7,6 @@ require('dotenv').config({ path: __dirname + '/../.env' });
 
 
 
-// ✅ TANPA user_id (auto increment dari database)
 exports.register = async (req, res) => {
     const { name, username, password, role } = req.body;
     
