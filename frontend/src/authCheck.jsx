@@ -43,7 +43,7 @@ export default function authCheck() {
       });
     
           if (user_role === "super admin") {
-      showNotif("error", "anda melanggar aturan role-based view mohon login ulang");
+         showNotif("error", "anda melanggar aturan role-based view mohon login ulang");
         localStorage.removeItem("token");
         localStorage.removeItem("user");
         navigate("/login")

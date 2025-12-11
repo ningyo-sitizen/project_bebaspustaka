@@ -125,18 +125,18 @@ function InfoCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-
-      <div className="bg-white p-6 rounded shadow hover:shadow-lg transition-shadow">
-        <div className="flex mb-4 items-center">
-
-          <div className="bg-[#EDF1F3] p-2 rounded-2xl">
-
+      {/* Card 1: Kunjungan Hari Ini */}
+      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-black font-semibold">Data Kunjungan Mahasiswa</h3>
+          <div className="bg-[#EDF1F3] p-1 rounded-lg">
+            <div className="bg-[#bg-[#667790]]">
             <svg xmlns="http://www.w3.org/2000/svg"
               width="28"
               height="28"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="#1270B0"
+              stroke="currentColor"
               strokeWidth="1"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -147,9 +147,8 @@ function InfoCards() {
               <path d="M11.192 17.966c-3.242 -.28 -5.972 -2.269 -8.192 -5.966c2.4 -4 5.4 -6 9 -6c3.326 0 6.14 1.707 8.442 5.122" />
               <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z" />
             </svg>
-
+            </div>
           </div>
-          <h3 className="text-black font-semibold ml-3">Data Kunjungan Mahasiswa</h3>
         </div>
 
         <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
@@ -162,7 +161,6 @@ function InfoCards() {
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
-
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
         <div className="flex mb-4 items-center">
           <div className="bg-[#D9CFED] p-2 rounded-2xl">
@@ -245,18 +243,14 @@ function InfoCards() {
         </p>
       </div>
 
-      {/* {weeklyIndicator && ( <div className={flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg}> <span className={weeklyIndicator.color}> {weeklyIndicator.icon} </span> <span className={text-sm font-medium ${weeklyIndicator.color}}> {weeklyIndicator.text} </span> </div> )} */}
 
-      {/* Info Update Terakhir
       {infoData.lastUpdated && (
         <div className="col-span-1 md:col-span-3 text-right">
           <p className="text-xs text-gray-400">
             Terakhir diperbarui: {new Date(infoData.lastUpdated).toLocaleString('id-ID')}
           </p>
         </div>
-
-        {infoData.borrowedBooks?.toLocaleString() || '0'}
-      )} */}
+      )}
     </div>
   );
 }

@@ -67,7 +67,13 @@ exports.getProgramStudi = async (req, res) => {
 
 exports.getSummaryReport = async (req, res) => {
   try {
+    console.log("==========================================");
+    console.log("📥 Incoming Request: getSummaryReport");
+    console.log("==========================================");
+
     const { tahun, lembaga, program, page: pageParam, limit: limitParam } = req.query;
+
+    console.log("🔍 RAW QUERY PARAM:", req.query);
 
     const page = parseInt(pageParam) || 1;
     const limit = parseInt(limitParam) || 7;
@@ -77,8 +83,17 @@ exports.getSummaryReport = async (req, res) => {
     const lembagaList = lembaga ? lembaga.split(",").map(l => l.trim()) : [];
     const programList = program ? program.split(",").map(p => p.trim()) : [];
 
-    console.log("🔍 Filter params:", { tahunList, lembagaList, programList });
+    console.log("🔍 PARSED LISTS:", {
+      tahunList,
+      lembagaList,
+      programList
+    });
 
+    // PROGRAM LIST UNTUK FILTER SQL (tanpa nilai kosong)
+    const programFilterList = programList.filter(p => p !== "");
+    console.log("🎯 programFilterList (tanpa kosong):", programFilterList);
+
+    // TETAP ANGGAP USER MEMILIH PROGRAM (walaupun kosong)
     const hasProgram = programList.length > 0;
     const hasLembaga = lembagaList.length > 0;
     const hasTahun = tahunList.length > 0;
@@ -87,21 +102,27 @@ exports.getSummaryReport = async (req, res) => {
     let groupBy = '';
     const params = [];
 
+    // ========== MODE ==========
     if (hasProgram) {
+      console.log("📌 MODE: Per Program");
       sql = `
-        SELECT tahun, lembaga, programs_studi AS program, total_pinjam
+        SELECT tahun, lembaga, TRIM(programs_studi) AS program, total_pinjam
         FROM summary_loan_jurusan
         WHERE 1=1
       `;
-      groupBy = ` GROUP BY tahun, lembaga, programs_studi`;
+      groupBy = ` GROUP BY tahun, lembaga, TRIM(programs_studi)`;
+
     } else if (hasLembaga) {
+      console.log("📌 MODE: Per Lembaga");
       sql = `
         SELECT tahun, lembaga, SUM(total_pinjam) AS total_pinjam
         FROM summary_loan_jurusan
         WHERE 1=1
       `;
       groupBy = ` GROUP BY tahun, lembaga`;
+
     } else {
+      console.log("📌 MODE: Per Tahun");
       sql = `
         SELECT tahun, SUM(total_pinjam) AS total_pinjam
         FROM summary_loan_jurusan
@@ -110,47 +131,60 @@ exports.getSummaryReport = async (req, res) => {
       groupBy = ` GROUP BY tahun`;
     }
 
+    // ========== FILTER ==========
     if (hasTahun) {
       const placeholders = tahunList.map(() => "?").join(",");
       sql += ` AND tahun IN (${placeholders})`;
       params.push(...tahunList);
+      console.log("📌 Filter Tahun:", tahunList);
     }
 
     if (hasLembaga) {
       const placeholders = lembagaList.map(() => "?").join(",");
       sql += ` AND lembaga IN (${placeholders})`;
       params.push(...lembagaList);
+      console.log("📌 Filter Lembaga:", lembagaList);
     }
 
+    // FILTER PROGRAM TANPA MEMBUANG KOSONG
     if (hasProgram) {
-      const placeholders = programList.map(() => "?").join(",");
-      sql += ` AND programs_studi IN (${placeholders})`;
-      params.push(...programList);
+      if (programFilterList.length > 0) {
+        const placeholders = programFilterList.map(() => "?").join(",");
+        sql += ` AND TRIM(programs_studi) IN (${placeholders})`;
+        params.push(...programFilterList);
+
+        console.log("📌 Filter Program (tanpa kosong):", programFilterList);
+      } else {
+        console.log("⚠️ Semua program kosong → SKIP FILTER PROGRAM tetapi tetap MODE per-program");
+      }
     }
 
     sql += groupBy;
     sql += ` ORDER BY tahun ASC, lembaga ASC`;
-    
-    if (hasProgram) {
-      sql += `, programs_studi ASC`;
-    }
 
-    console.log("📊 SQL Query:", sql);
-    console.log("📊 Params:", params);
+    if (hasProgram) sql += `, program ASC`;
 
-    // PERBAIKAN: Ambil SEMUA data untuk chart
+    console.log("==========================================");
+    console.log("📊 FINAL SQL:\n", sql);
+    console.log("📊 FINAL PARAMS:", params);
+    console.log("==========================================");
+
+    // ========== EXECUTE QUERY ==========
     const [allRows] = await bebaspustaka.query(sql, params);
 
-    console.log("📦 All Rows Count:", allRows.length);
-    console.log("📦 Sample Data:", allRows.slice(0, 5));
+    console.log("📦 SQL RESULT COUNT:", allRows.length);
+    console.log("📦 SQL RESULT SAMPLE:", allRows.slice(0, 5));
+
+    allRows.forEach((row, i) => {
+      console.log(`📘 row[${i}] => tahun=${row.tahun}, lembaga=${row.lembaga}, program="${row.program}"`);
+    });
 
     const totalRows = allRows.length;
     const totalPages = Math.ceil(totalRows / limit);
-    
-    // Paginate hanya untuk table, bukan untuk chart
+
     const paginatedRows = allRows.slice(offset, offset + limit);
 
-    console.log("📄 Paginated:", {
+    console.log("📄 PAGINATION:", {
       totalRows,
       totalPages,
       currentPage: page,
@@ -163,8 +197,8 @@ exports.getSummaryReport = async (req, res) => {
       limit,
       totalRows,
       totalPages,
-      data: paginatedRows,      // Untuk table
-      allData: allRows           // PENTING: Untuk chart (semua data)
+      data: paginatedRows,
+      allData: allRows
     });
 
   } catch (err) {
@@ -176,6 +210,7 @@ exports.getSummaryReport = async (req, res) => {
     });
   }
 };
+
 
 exports.getLoanHistory = async (req, res) => {
   try {
