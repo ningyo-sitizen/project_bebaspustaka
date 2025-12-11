@@ -620,15 +620,13 @@ export default function UserControl() {
                             <div className="flex items-center gap-3 p-4 border-b">
                                 <IconUser size={24} className="text-gray-500" />
                                 <div>
-                                    <p className="font-semibold text-sm text-[#023048]">
-                                        {profileData.name}
-                                    </p>
-                                    <p className="text-xs text-gray-500">{profileData.role}</p>
+                                    <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                                    <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                 </div>
                             </div>
                             <div className="p-2 space-y-1">
                                 <button
-                                    onClick={() => navigate("/profile")}
+                                    onClick={() => navigate("/profileSA")}
                                     className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                 >
                                     <IconUser size={18} />

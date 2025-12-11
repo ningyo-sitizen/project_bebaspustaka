@@ -250,185 +250,273 @@ export default function DashboardSA() {
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">
-                                            {profileData.name}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{profileData.role}</p>
+                                        <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                                        <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">
-                                    <button
-                                        onClick={() => navigate("/profile")}
-                                        className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                                    >
-                                        <IconUser size={18} />
-                                        Profile
+                                    <button onClick={() => goto("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
+                                        <IconUser size={18} /> Profile
                                     </button>
-                                    <a
-                                        href="/logout"
-                                        className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                    >
-                                        <IconLogout size={18} />
-                                        Keluar
+                                    <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                        <IconLogout size={18} /> Keluar
                                     </a>
                                 </div>
                             </div>
                         )}
                     </header>
 
-                    <div className="flex-1 overflow-y-auto p-8">
-                        <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
-                            <div className="flex flex-col md:flex-row w-full">
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-8">
+                            <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
+                                <div className="flex flex-col md:flex-row w-full">
 
-                                <div className="md:w-1/1 p-10 text-white flex flex-col justify-start text-left">
-                                    <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
-                                    <p className="font-normal text-lg mb-2">Di Dashboard admin Bebas Pustaka</p>
-                                    <p className="font-light text-sm">
-                                        Tempat Admin memantau dan mengelola data  serta status bebas pustaka dengan lebih mudah dan terarah.
-                                    </p>
+                                    <div className="md:w-1/1 p-10 text-white flex flex-col justify-start text-left">
+                                        <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
+                                        <p className="font-normal text-lg mb-2">Di Dashboard admin Bebas Pustaka</p>
+                                        <p className="font-light text-sm">
+                                            Tempat Admin memantau dan mengelola data  serta status bebas pustaka dengan lebih mudah dan terarah.
+                                        </p>
+                                    </div>
+
+                                    <div className="md:w-1/2 w-1/3 flex items-center justify-end">
+                                        <img
+                                            src="https://cdn.designfast.io/image/2025-12-03/c0fb8085-f25e-4ce8-8687-24ace6ba9f2e.png"
+                                            alt="icon"
+                                            className="w-52 h-52  object-none"
+                                        />
+                                    </div>
+
                                 </div>
-
-                                <div className="md:w-1/2 w-1/3 flex items-center justify-end">
-                                    <img
-                                        src="https://cdn.designfast.io/image/2025-12-03/c0fb8085-f25e-4ce8-8687-24ace6ba9f2e.png"
-                                        alt="icon"
-                                        className="w-52 h-52  object-none"
-                                    />
-                                </div>
-
                             </div>
-                        </div>
 
-                        <p className="font-semibold text-xl text-left text-black mb-8 overflow-x-hidden">
-                            Silakan cek data yang ingin anda lihat di sini!
-                        </p>
+                            <p className="font-semibold text-xl text-left text-black mb-8 overflow-x-hidden">
+                                Silakan cek data yang ingin anda lihat di sini!
+                            </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
-                            {/* ini chart */}
-                            <div className="flex flex-col h-full">
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                                    <h3 className="font-semibold text-base mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
-                                    <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                        onClick={() => goto('/analyticSA')}>
-                                        Lihat data &gt;
-                                    </p>
-                                </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8">
+                                {/* ini chart */}
+                                <div className="flex flex-col h-full">
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                                        <h3 className="font-semibold text-base mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
+                                        <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
+                                            onClick={() => goto('/analyticSA')}>
+                                            Lihat data &gt;
+                                        </p>
+                                    </div>
 
-                                <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
-                                    {chartData.lineChart && (
-                                        <div className="w-full min-w-[500px]" style={{ height: '300px', maxWidth: '100%' }}>
-                                            <Line
-                                                data={chartData.lineChart}
-                                                options={{
-                                                    responsive: true,
-                                                    maintainAspectRatio: false,
-                                                    plugins: {
-                                                        legend: {
-                                                            position: 'top',
-                                                            labels: {
-                                                                font: { family: '"Plus Jakarta Sans", sans-serif' },
+                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
+                                        {chartData.lineChart && (
+                                            <div className="w-full min-w-[500px]" style={{ height: '300px', maxWidth: '100%' }}>
+                                                <Line
+                                                    data={chartData.lineChart}
+                                                    options={{
+                                                        responsive: true,
+                                                        maintainAspectRatio: false,
+                                                        plugins: {
+                                                            legend: {
+                                                                position: 'top',
+                                                                labels: {
+                                                                    font: { family: '"Plus Jakarta Sans", sans-serif' },
+                                                                },
+                                                            },
+                                                            title: {
+                                                                display: true,
+                                                                text: [
+                                                                    'Data kunjungan mahasiswa ke perpustakaan',
+                                                                    'mencatat jumlah dan frekuensi kehadiran mereka.'
+                                                                ],
+                                                                color: '#616161',
+                                                                font: { family: '"Plus Jakarta Sans", sans-serif', size: 12, weight: '300' },
+                                                                padding: { top: 10, bottom: 20 },
+                                                                align: 'center',
                                                             },
                                                         },
-                                                        title: {
-                                                            display: true,
-                                                            text: [
-                                                                'Data kunjungan mahasiswa ke perpustakaan',
-                                                                'mencatat jumlah dan frekuensi kehadiran mereka.'
-                                                            ],
-                                                            color: '#616161',
-                                                            font: { family: '"Plus Jakarta Sans", sans-serif', size: 12, weight: '300' },
-                                                            padding: { top: 10, bottom: 20 },
-                                                            align: 'center',
+                                                        scales: {
+                                                            x: { grid: { display: false } },
+                                                            y: {
+                                                                beginAtZero: true,       // biar garis nggak datar
+                                                                grid: { color: '#f3f4f6' },
+                                                            },
                                                         },
-                                                    },
-                                                    scales: {
-                                                        x: { grid: { display: false } },
-                                                        y: {
-                                                            beginAtZero: true,       // biar garis nggak datar
-                                                            grid: { color: '#f3f4f6' },
-                                                        },
-                                                    },
-                                                }}
-                                            />
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                {/* tabel kanan */}
+                                <div className="flex flex-col h-full">
+
+                                    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
+                                        <h3 className="font-semibold text-base mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
+                                        <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
+                                            onClick={() => goto('/approvalSA')}
+                                        >
+                                            Lihat data &gt;
+                                        </p>
+                                    </div>
+
+                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
+
+                                        <div className='text-[#616161] text-xs font-light text-center mb-3'>
+                                            <p>Data bebas pustaka mencatat status pengajuan</p>
+                                            <p>yang telah di-approve oleh admin.</p>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                            {/* tabel kanan */}
-                            <div className="flex flex-col h-full">
 
-                                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-                                    <h3 className="font-semibold text-base mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
-                                    <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                        onClick={() => goto('/approvalSA')}
-                                    >
-                                        Lihat data &gt;
-                                    </p>
-                                </div>
-
-                                <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
-
-                                    <div className='text-[#616161] text-xs font-light text-center mb-3'>
-                                        <p>Data bebas pustaka mencatat status pengajuan</p>
-                                        <p>yang telah di-approve oleh admin.</p>
-                                    </div>
-
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full border-collapse ">
-                                            <thead>
-                                                <tr className="bg-[#667790] border-b-5 border-gray-300 ">
-                                                    <th className="rounded-tl-lg text-left px-2 py-2 font-thin text-center text-xs text-white">No</th>
-                                                    <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nama</th>
-                                                    <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nim</th>
-                                                    <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Jurusan</th>
-                                                    <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Status</th>
-                                                    <th className="rounded-tr-lg text-left px-2 py-2 font-thin text-center text-xs text-white">Tindakan</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {data.map((item, index) => (
-                                                    <tr
-                                                        key={item.id}
-                                                        className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50"
-                                                    >
-                                                        <td className="p-1">{index + 1}</td>
-                                                        <td className="p-3 text-left whitespace-nowrap">{item.name}</td>
-                                                        <td className="p-1">{item.nim}</td>
-                                                        <td className="p-1">{item.jurusan}</td>
-                                                        <td className="p-1">
-                                                            <span
-                                                                className={`px-2 py-1 rounded-full text-xs ${item.statusbebaspustakanya === 0
-                                                                    ? "bg-yellow-100 text-yellow-800"
-                                                                    : "bg-green-100 text-green-800"
-                                                                    }`}
-                                                            >
-                                                                {item.statusbebaspustakanya === 0 ? "Pending" : "Disetujui"}
-                                                            </span>
-                                                        </td>
-                                                        <td className="p-1">
-                                                            <button
-                                                                className={`px-4 py-2 rounded-lg text-sm transition-colors ${item.statusbebaspustakanya === 0
-                                                                    ? "bg-blue-600 text-white hover:bg-blue-700"
-                                                                    : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                                                                    }`}
-                                                                disabled={item.statusbebaspustakanya !== 0}
-                                                            >
-                                                                {item.statusbebaspustakanya === 0 ? "Setuju" : "Selesai"}
-                                                            </button>
-                                                        </td>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full border-collapse ">
+                                                <thead>
+                                                    <tr className="bg-[#667790] border-b-5 border-gray-300 ">
+                                                        <th className="rounded-tl-lg text-left px-2 py-2 font-thin text-center text-xs text-white">No</th>
+                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nama</th>
+                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nim</th>
+                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Jurusan</th>
+                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Status</th>
+                                                        <th className="rounded-tr-lg text-left px-2 py-2 font-thin text-center text-xs text-white">Tindakan</th>
                                                     </tr>
-                                                ))}
-                                            </tbody>
+                                                </thead>
+                                                <tbody>
+                                                    {data.map((item, index) => (
+                                                        <tr
+                                                            key={item.id}
+                                                            className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50"
+                                                        >
+                                                            <td className="p-1">{index + 1}</td>
+                                                            <td className="p-3 text-left whitespace-nowrap">{item.name}</td>
+                                                            <td className="p-1">{item.nim}</td>
+                                                            <td className="p-1">{item.jurusan}</td>
+                                                            <td className="p-1">
+                                                                <span
+                                                                    className={`px-2 py-1 rounded-full text-xs ${item.statusbebaspustakanya === 0
+                                                                        ? "bg-yellow-100 text-yellow-800"
+                                                                        : "bg-green-100 text-green-800"
+                                                                        }`}
+                                                                >
+                                                                    {item.statusbebaspustakanya === 0 ? "Pending" : "Disetujui"}
+                                                                </span>
+                                                            </td>
+                                                            <td className="p-1">
+                                                                <button
+                                                                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${item.statusbebaspustakanya === 0
+                                                                        ? "bg-blue-600 text-white hover:bg-blue-700"
+                                                                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
+                                                                        }`}
+                                                                    disabled={item.statusbebaspustakanya !== 0}
+                                                                >
+                                                                    {item.statusbebaspustakanya === 0 ? "Setuju" : "Selesai"}
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
 
-                                        </table>
+                                            </table>
+                                        </div>
+
                                     </div>
-
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        {/* //tutor bepus */}
 
+                        <div className='bg-white w-full min-h-screen flex justify-center p-4 mx-none mt-9'>
+                            <div className='text-center mx-auto w-full max-w-5xl'>
+
+                                <p className="text-xl font-semibold mt-5">
+                                    Konfirmasi data <span className='text-[#667790]'>bebas pustaka?</span> berikut alur pengajuannya!
+                                </p>
+
+                                <p className="text-sm font-base mt-5 px-5 text-[#616161] max-w-3xl mx-auto">
+                                    Segera lakukan approval data bebas pustaka mahasiswa sebelum deadline berakhir. Jika tidak disetujui tepat waktu,
+                                    mahasiswa tidak akan bisa mendapatkan status Bebas dan proses mereka akan tertunda.
+                                </p>
+                                <div className='flex flex-col lg:flex-row justify-center items-start mt-14 gap-10 bg-white'>
+
+                                    {/* FOTO OVERLAP KIRI */}
+                                    <div className='relative w-[320px] h-[220px] flex justify-center'>
+
+                                        {/* Foto belakang */}
+                                        <div
+                                            className="absolute w-[235px] h-[140px] bg-cover bg-center rounded-xl shadow-md"
+                                            style={{
+                                                backgroundImage:
+                                                    "url('https://cdn.designfast.io/image/2025-12-11/2700e1a5-1ae3-4de3-b630-e51228368ff6.png')",
+                                                top: "10px",
+                                                left: "50%",
+                                                transform: "translateX(-30%)",
+                                            }}
+                                        ></div>
+
+                                        {/* Foto depan */}
+                                        <div
+                                            className="absolute w-[235px] h-[140px] bg-cover bg-center rounded-xl shadow-lg"
+                                            style={{
+                                                backgroundImage:
+                                                    "url('https://cdn.designfast.io/image/2025-12-11/b498b2f5-e51e-438f-ad9b-0557f0ea3760.png')",
+                                                bottom: "-5px",
+                                                left: "50%",
+                                                transform: "translateX(-70%)",
+                                            }}
+                                        ></div>
+
+                                    </div>
+
+                                    {/* STEP KANAN */}
+                                    <div className='relative flex flex-col gap-10 pl-10'>
+
+                                        {/* garis timeline */}
+                                        <div className="absolute left-[65px] top-0 h-full w-px bg-gray-300"></div>
+
+                                        {/* STEP ITEM */}
+                                        {[
+                                            {
+                                                no: "1",
+                                                title: "Tahap 1 : Tahap Buka Dashboard Approval",
+                                                desc: "Login ke sistem dan akses menu dashboard approval untuk melihat daftar pengajuan bebas pustaka mahasiswa.",
+                                            },
+                                            {
+                                                no: "2",
+                                                title: "Tahap 2 : Tahap Cari data mahasiswa",
+                                                desc: "Temukan data mahasiswa yang akan disetujui, lalu klik tombol “Approve”.",
+                                            },
+                                            {
+                                                no: "3",
+                                                title: "Tahap 3 : Tahap Konfirmasi Data",
+                                                desc: "Pastikan data sesuai, lalu klik tombol “Approve” untuk menyelesaikan proses.",
+                                            },
+                                        ].map((step, i) => (
+                                            <div key={i} className="flex items-start relative">
+
+                                                {/* BULATAN NOMOR */}
+                                                <div className="w-12 h-12 rounded-full flex items-center justify-center border-2 border-[#023048] z-10">
+                                                    <div className="w-10 h-10 rounded-full flex items-center justify-center border-4 border-[#023048] bg-white font-semibold">
+                                                        {step.no}
+                                                    </div>
+                                                </div>
+
+                                                {/* TEXT */}
+                                                <div className='flex flex-col text-left ml-5 max-w-sm'>
+                                                    <p className="text-base font-semibold">{step.title}</p>
+                                                    <p className="text-xs text-gray-700 mt-1">{step.desc}</p>
+                                                </div>
+
+                                            </div>
+                                        ))}
+
+                                    </div>
+
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+
+                    </div>
                 </div>
+
             </div>
 
             <div className="sticky w-full z-50">

@@ -15,6 +15,7 @@ import {
     Legend
 } from 'chart.js';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
 import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
@@ -47,10 +48,9 @@ export default function Dashboard() {
     authCheckSA()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [toggleSidebar, setToggleSidebar] = useState(false);
-
-
 
     //setup chart
     const [chartDataR, setChartDataR] = useState({
@@ -112,9 +112,12 @@ export default function Dashboard() {
     const [activeChartL, setActiveChartL] = useState("Line");
     const [draftChartTypeL, setDraftChartTypeL] = useState(activeChartL);
 
+    const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
     const [years, setYears] = useState([]);
-    const [selectedYears, setSelectedYears] = useState([]);
-    const [selectedType, setSelectedType] = useState("");
+    const [selectedYears, setSelectedYears] = useState(statefilterKiri.years || []);
+    const [actYears, setActYears] = useState(statefilterKiri.years || []);
+    const [selectedType, setSelectedType] = useState(statefilterKiri.type || "monthly");
+    const [actType, setActType] = useState(statefilterKiri.type || "monthly");
     const [tempYears, setTempYears] = useState([]);
     const [tempType, setTempType] = useState("");
 
@@ -154,9 +157,8 @@ export default function Dashboard() {
 
     const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
 
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
+    const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
 
     const [profileData, setProfileData] = useState({
         name: "Loading...",
@@ -386,11 +388,18 @@ export default function Dashboard() {
         setTempYears(selectedYears);
         setTempType(selectedType);
         setIsLoadingLeft(true);
+        setActYears(selectedYears);
+        setActType(selectedType);
 
-
+        const setupfilter = {
+            years: selectedYears,
+            type: selectedType
+        };
+        localStorage.setItem("filters_left", JSON.stringify(setupfilter));
         if (fetchController.current) {
             fetchController.current.abort();
         }
+
 
         fetchController.current = new AbortController();
         const { signal } = fetchController.current;
@@ -409,7 +418,6 @@ export default function Dashboard() {
 
             requestAnimationFrame(() => {
                 const chart = autoBuildChartData(responseData, selectedType, draftChartTypeL);
-
                 setChartDataL({
                     lineChart: chart,
                     barChart: chart,
@@ -419,7 +427,7 @@ export default function Dashboard() {
                 setTableData(responseData);
                 setIsLoadingLeft(false);
             });
-            fetchTableDataLeft(isFilterChanged ? 1 : tablePageLeft);
+            fetchTableDataLeft(1);
 
         } catch (err) {
             if (err.name === "AbortError") {
@@ -434,130 +442,130 @@ export default function Dashboard() {
 
 
 
-const autoBuildChartDataRight = (apiResponse) => {
-    console.log("📊 Chart Builder Input:", apiResponse);
+    const autoBuildChartDataRight = (apiResponse) => {
+        console.log("📊 Chart Builder Input:", apiResponse);
 
-    if (!apiResponse || !apiResponse.data) {
-        console.warn("⚠️ Invalid apiResponse");
-        return { labels: [], datasets: [] };
-    }
-
-    const { mode, data, years = [] } = apiResponse;
-
-    if (!years || years.length === 0) {
-        console.warn("⚠️ No years available");
-        return { labels: [], datasets: [] };
-    }
-
-    const generateColors = (count) => {
-        const baseColors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-            '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
-            '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
-        ];
-        return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
-    };
-
-    const sortedYears = [...years].sort((a, b) => a - b);
-
-    if (mode === "default_year") {
-        const chartData = sortedYears.map(year => {
-            const yearData = data[year];
-            if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
-                return 0;
-            }
-            return yearData[0].total || yearData[0].total_pinjam || 0;
-        });
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: [{
-                label: "Total Peminjaman",
-                data: chartData,
-                backgroundColor: generateColors(sortedYears.length),
-                borderColor: generateColors(sortedYears.length),
-                borderWidth: 2,
-                tension: 0.3
-            }]
-        };
-    }
-
-    if (mode === "per_lembaga") {
-        const lembagaSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => {
-                    if (item.lembaga) lembagaSet.add(item.lembaga);
-                });
-            }
-        });
-
-        const lembagaList = Array.from(lembagaSet);
-        const colors = generateColors(lembagaList.length);
-
-        console.log("🏢 Lembaga found:", lembagaList);
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: lembagaList.map((lem, idx) => ({
-                label: lem,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.lembaga === lem);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
-        };
-    }
-
-    if (mode === "per_program") {
-        const programSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => {
-                    if (item.program) programSet.add(item.program);
-                });
-            }
-        });
-
-        const programList = Array.from(programSet);
-        
-        console.log("🎓 Total Programs found:", programList.length);
-        console.log("🎓 Programs:", programList);
-        
-        // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
-        const MAX_PROGRAMS = 30; // Adjust sesuai kebutuhan
-        const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
-        
-        if (programList.length > MAX_PROGRAMS) {
-            console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+        if (!apiResponse || !apiResponse.data) {
+            console.warn("⚠️ Invalid apiResponse");
+            return { labels: [], datasets: [] };
         }
 
-        const colors = generateColors(limitedPrograms.length);
+        const { mode, data, years = [] } = apiResponse;
 
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: limitedPrograms.map((prog, idx) => ({
-                label: prog,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.program === prog);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
+        if (!years || years.length === 0) {
+            console.warn("⚠️ No years available");
+            return { labels: [], datasets: [] };
+        }
+
+        const generateColors = (count) => {
+            const baseColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
+                '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
+            ];
+            return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
         };
-    }
 
-    return { labels: [], datasets: [] };
-};
+        const sortedYears = [...years].sort((a, b) => a - b);
+
+        if (mode === "default_year") {
+            const chartData = sortedYears.map(year => {
+                const yearData = data[year];
+                if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
+                    return 0;
+                }
+                return yearData[0].total || yearData[0].total_pinjam || 0;
+            });
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: [{
+                    label: "Total Peminjaman",
+                    data: chartData,
+                    backgroundColor: generateColors(sortedYears.length),
+                    borderColor: generateColors(sortedYears.length),
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            };
+        }
+
+        if (mode === "per_lembaga") {
+            const lembagaSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => {
+                        if (item.lembaga) lembagaSet.add(item.lembaga);
+                    });
+                }
+            });
+
+            const lembagaList = Array.from(lembagaSet);
+            const colors = generateColors(lembagaList.length);
+
+            console.log("🏢 Lembaga found:", lembagaList);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: lembagaList.map((lem, idx) => ({
+                    label: lem,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.lembaga === lem);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
+        if (mode === "per_program") {
+            const programSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => {
+                        if (item.program) programSet.add(item.program);
+                    });
+                }
+            });
+
+            const programList = Array.from(programSet);
+
+            console.log("🎓 Total Programs found:", programList.length);
+            console.log("🎓 Programs:", programList);
+
+            // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
+            const MAX_PROGRAMS = 30; // Adjust sesuai kebutuhan
+            const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
+
+            if (programList.length > MAX_PROGRAMS) {
+                console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+            }
+
+            const colors = generateColors(limitedPrograms.length);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: limitedPrograms.map((prog, idx) => ({
+                    label: prog,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.program === prog);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
+        return { labels: [], datasets: [] };
+    };
     const handleApplyFiltersRight = async () => {
         const setupfilter = {
             angkatan: selectedAngkatan,
@@ -581,91 +589,91 @@ const autoBuildChartDataRight = (apiResponse) => {
         closeModalR(true);
     };
 
-const transformPagedDataForChart = (pagedData) => {
-    console.log("🔄 Transform input:", pagedData);
+    const transformPagedDataForChart = (pagedData) => {
+        console.log("🔄 Transform input:", pagedData);
 
-    if (!pagedData) {
-        console.warn("⚠️ Invalid pagedData structure");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
-
-    // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
-    const dataSource = pagedData.allData || pagedData.data;
-
-    if (!Array.isArray(dataSource) || dataSource.length === 0) {
-        console.warn("⚠️ No data to transform");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
-
-    console.log("📊 Data source length:", dataSource.length);
-    console.log("📊 First 3 rows:", dataSource.slice(0, 3));
-
-    const grouped = {};
-    const years = new Set();
-
-    dataSource.forEach(row => {
-        const year = row.tahun;
-        years.add(year);
-
-        if (!grouped[year]) {
-            grouped[year] = [];
+        if (!pagedData) {
+            console.warn("⚠️ Invalid pagedData structure");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
         }
 
-        if (row.program) {
-            grouped[year].push({
-                program: row.program,
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else if (row.lembaga) {
-            grouped[year].push({
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else {
-            grouped[year].push({
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
+        // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
+        const dataSource = pagedData.allData || pagedData.data;
+
+        if (!Array.isArray(dataSource) || dataSource.length === 0) {
+            console.warn("⚠️ No data to transform");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
         }
-    });
 
-    let mode = "default_year";
-    const firstRow = dataSource[0];
-    
-    if (firstRow.program) {
-        mode = "per_program";
-    } else if (firstRow.lembaga) {
-        mode = "per_lembaga";
-    }
+        console.log("📊 Data source length:", dataSource.length);
+        console.log("📊 First 3 rows:", dataSource.slice(0, 3));
 
-    const result = {
-        mode,
-        years: Array.from(years).sort((a, b) => a - b),
-        data: grouped
+        const grouped = {};
+        const years = new Set();
+
+        dataSource.forEach(row => {
+            const year = row.tahun;
+            years.add(year);
+
+            if (!grouped[year]) {
+                grouped[year] = [];
+            }
+
+            if (row.program) {
+                grouped[year].push({
+                    program: row.program,
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else if (row.lembaga) {
+                grouped[year].push({
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else {
+                grouped[year].push({
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            }
+        });
+
+        let mode = "default_year";
+        const firstRow = dataSource[0];
+
+        if (firstRow.program) {
+            mode = "per_program";
+        } else if (firstRow.lembaga) {
+            mode = "per_lembaga";
+        }
+
+        const result = {
+            mode,
+            years: Array.from(years).sort((a, b) => a - b),
+            data: grouped
+        };
+
+        console.log("✅ Transform output mode:", mode);
+        console.log("✅ Years:", result.years);
+        console.log("✅ Data keys:", Object.keys(result.data));
+
+        // Debug: tampilkan berapa banyak item per tahun
+        Object.keys(result.data).forEach(year => {
+            console.log(`📅 Year ${year}: ${result.data[year].length} items`);
+        });
+
+        return result;
     };
-
-    console.log("✅ Transform output mode:", mode);
-    console.log("✅ Years:", result.years);
-    console.log("✅ Data keys:", Object.keys(result.data));
-    
-    // Debug: tampilkan berapa banyak item per tahun
-    Object.keys(result.data).forEach(year => {
-        console.log(`📅 Year ${year}: ${result.data[year].length} items`);
-    });
-
-    return result;
-};
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;
@@ -901,9 +909,6 @@ const transformPagedDataForChart = (pagedData) => {
         );
     }
 
-
-
-
     const renderChartL = () => {
         if (!chartDataL.lineChart || !chartDataL.pieChart || !chartDataL.barChart) {
             return <p>Loading chart...</p>;
@@ -1130,12 +1135,14 @@ const transformPagedDataForChart = (pagedData) => {
         };
         fetchProfile();
         fetchYears();
-        fetchChartDataLeft();
         fetchAngkatan();
         fetchLoanHistory(1);
         fetchLembaga();
 
     }, []);
+    useEffect(() => {
+        handleApplyFiltersLeft();
+    }, [handleApplyFiltersLeft]);
 
     useEffect(() => {
         fetchChartDataRight();
@@ -1458,12 +1465,12 @@ const transformPagedDataForChart = (pagedData) => {
                         </button>
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
-                            onClick={toggleDropdown}
+                            onClick={toggleProfileDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
                             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
+                                Hai, {profileData.name}
                             </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
@@ -1473,31 +1480,22 @@ const transformPagedDataForChart = (pagedData) => {
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">
-                                            {profileData.name}
-                                        </p>
+                                        <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
                                         <p className="text-xs text-gray-500">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">
-                                    <button
-                                        onClick={() => navigate("/profile")}
-                                        className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                                    >
-                                        <IconUser size={18} />
-                                        Profile
+                                    <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
+                                        <IconUser size={18} /> Profile
                                     </button>
-                                    <a
-                                        href="/logout"
-                                        className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                    >
-                                        <IconLogout size={18} />
-                                        Keluar
+                                    <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                        <IconLogout size={18} /> Keluar
                                     </a>
                                 </div>
                             </div>
                         )}
                     </header>
+
                     <div className="flex-1 overflow-y-auto p-8">
                         <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
 
@@ -1876,7 +1874,10 @@ const transformPagedDataForChart = (pagedData) => {
                                 </div>
                             </div>
 
-                            <div>
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                            <div className='mt-5'>
                                 <div className="relative mb-4">
                                     <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
                                 </div>
@@ -1904,7 +1905,7 @@ const transformPagedDataForChart = (pagedData) => {
                                 </div>
                             </div>
 
-                            <div >
+                            <div className='mt-16'>
                                 <div className="mb-4 h-[32px]">
                                     <div className="bg-white rounded-xl">
                                         <div className="relative">
@@ -1921,9 +1922,7 @@ const transformPagedDataForChart = (pagedData) => {
                                     </div>
                                 </div>
                             </div>
-
                         </div>
-
                         <div className='grid grid-cols-1 gap-8 '>
                             <div className="relative inline-flex justify-between items-center mt-20">
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
@@ -1935,15 +1934,15 @@ const transformPagedDataForChart = (pagedData) => {
                                     <div className="overflow-x-auto">
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="bg-[#667790]">
-                                                    <th className="text-left p-4 font-normal text-white text-sm">No</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">loan id</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Member ID</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">item code</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal Pinjam</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Deadline</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal di kembalikan</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Status Buku</th>
+                                                <tr className="bg-[#667790] whitespace-nowrap">
+                                                    <th className="p-4 font-normal text-white text-sm">No</th>
+                                                    <th className="p-4 font-normal text-white text-sm">ID Peminjaman</th>
+                                                    <th className="p-4 font-normal text-white text-sm">ID Member</th>
+                                                    <th className="p-4 font-normal text-white text-sm">Kode Item</th>
+                                                    <th className="p-4 font-normal text-white text-sm">Tanggal Pinjam</th>
+                                                    <th className="p-4 font-normal text-white text-sm">Deadline</th>
+                                                    <th className="p-4 font-normal text-white text-sm">Tanggal di kembalikan</th>
+                                                    <th className="p-4 font-normal text-white text-sm">Status Buku</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

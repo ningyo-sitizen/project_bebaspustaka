@@ -181,7 +181,7 @@ export default function Profile () {
                   <p className="font-semibold text-sm text-[#023048]">
                     {profileData.name}
                   </p>
-                  <p className="text-xs text-gray-500">{profileData.role}</p>
+                  <p className="text-xs text-gray-500 ">{profileData.role}</p>
                 </div>
               </div>
 
@@ -207,7 +207,7 @@ export default function Profile () {
 
         {/* MAIN PROFILE CONTENT */}
         <div className="p-4 sm:p-8"> 
-          <h1 className="text-xl sm:text-2xl font-semibold mb-6 text-[#023048]">Profile</h1>
+          <h1 className="text-xl sm:text-2xl font-semibold mb-6 text-[#023048] text-left">Profile</h1>
 
           <div className="bg-white rounded-xl shadow-sm p-4 sm:p-6 border">
 
@@ -218,10 +218,10 @@ export default function Profile () {
               </div>
 
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-[#023048]">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#023048] text-left">
                   {profileData.name} {/* ⭐️ Data Dinamis */}
                 </h2>
-                <p className="text-sm text-gray-500">{profileData.role}</p> {/* ⭐️ Data Dinamis */}
+                <p className="text-sm text-gray-500 text-left">{profileData.role}</p> {/* ⭐️ Data Dinamis */}
               </div>
             </div>
 
@@ -242,23 +242,23 @@ export default function Profile () {
 
             {/* CONTENT */}
             <div className="mt-6">
-              <h3 className="text-base sm:text-lg font-semibold mb-4 text-[#023048]">
+              <h3 className="text-base sm:text-lg font-semibold mb-4 text-[#023048] text-left">
                 Profile Utama
               </h3>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 text-sm"> 
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-8 text-sm text-left"> 
                 <div>
-                  <p className="font-medium">Nama :</p>
+                  <p className="font-medium text-left">Nama :</p>
                   <p className="text-gray-700 mt-1">{profileData.name}</p> {/* ⭐️ Data Dinamis */}
                 </div>
 
                 <div>
-                  <p className="font-medium">Peran :</p>
+                  <p className="font-medium text-left">Peran :</p>
                   <p className="text-gray-700 mt-1">{profileData.role}</p> {/* ⭐️ Data Dinamis */}
                 </div>
 
                 <div>
-                  <p className="font-medium">Username :</p>
+                  <p className="font-medium text-left">Username :</p>
                   <p className="text-gray-700 mt-1">{profileData.username}</p> {/* ⭐️ Data Dinamis */}
                 </div>
               </div>

@@ -132,26 +132,28 @@ function InfoCards() {
           <div className="bg-[#EDF1F3] p-2 rounded-2xl">
 
             <svg xmlns="http://www.w3.org/2000/svg"
-              width="30"
-              height="30"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#1270B0"
               strokeWidth="1"
               strokeLinecap="round"
               strokeLinejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-eye-search">
+              class="icon icon-tabler icons-tabler-outline icon-tabler-eye-edit"
+            >
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
               <path d="M10 12a2 2 0 1 0 4 0a2 2 0 0 0 -4 0" />
-              <path d="M12 18c-.328 0 -.652 -.017 -.97 -.05c-3.172 -.332 -5.85 -2.315 -8.03 -5.95c2.4 -4 5.4 -6 9 -6c3.465 0 6.374 1.853 8.727 5.558" />
-              <path d="M18 18m-3 0a3 3 0 1 0 6 0a3 3 0 1 0 -6 0" />
-              <path d="M20.2 20.2l1.8 1.8" />
+              <path d="M11.192 17.966c-3.242 -.28 -5.972 -2.269 -8.192 -5.966c2.4 -4 5.4 -6 9 -6c3.326 0 6.14 1.707 8.442 5.122" />
+              <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z" />
             </svg>
 
           </div>
           <h3 className="text-black font-semibold ml-3">Data Kunjungan Mahasiswa</h3>
         </div>
-        <p className="text-3xl font-bold text-gray-900 mb-2">
+
+        <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
+        <p className="text-3xl font-bold text-gray-900 mb-2 text-left">
           {infoData.todayVisitors?.toLocaleString() || '0'}
         </p>
         <p className="text-xs text-gray-500 text-left">
@@ -162,21 +164,38 @@ function InfoCards() {
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
 
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-black font-semibold">Data jumlah pengunjung perpustakaan minggu ini</h3>
-          <div className="bg-purple-50 p-3 rounded-lg">
-            <Calendar className="w-6 h-6 text-purple-600" />
+        <div className="flex mb-4 items-center">
+          <div className="bg-[#D9CFED] p-2 rounded-2xl">
+            <svg xmlns="http://www.w3.org/2000/svg"
+              width="28"
+              height="28"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="#8C63DA"
+              strokeWidth="1"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              class="icon icon-tabler icons-tabler-outline icon-tabler-users"
+            >
+              <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
+              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+              <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
+            </svg>
           </div>
+          <h3 className="text-black font-semibold ml-3">Data Kunjungan Mahasiswa</h3>
 
-          <h3 className="text-black font-semibold ml-3">Data Peminjaman Buku</h3>
         </div>
 
         <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
 
-        <p className="text-xl font-bold text-gray-900 text-left mb-1">
-          {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'} Buku
+        <p className="text-3xl font-bold text-gray-900 text-left mb-1">
+          {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'}
         </p>
-
+        <p className="text-xs text-gray-500 text-left">
+          Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
+        </p>
 
         {weeklyIndicator && (
           <div className={`flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg`}>
@@ -192,55 +211,41 @@ function InfoCards() {
 
       {/* Card 3: Buku yang Dipinjam */}
       <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-black font-semibold text-left">jumlah buku yang belum dikembalikan</h3>
-          <div className="bg-orange-50 p-3 rounded-lg">
-            <BookOpen className="w-6 h-6 text-orange-600" />
-          </div>
-        </div>
-        <p className="text-3xl font-bold text-gray-900 mb-2">
-          {infoData.borrowedBooks?.toLocaleString() || '0'}
-        </p>
-        <p className="text-xs text-gray-500 text-left">
-        </p>
-      </div>
-
-      {/* {weeklyIndicator && ( <div className={flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg}> <span className={weeklyIndicator.color}> {weeklyIndicator.icon} </span> <span className={text-sm font-medium ${weeklyIndicator.color}}> {weeklyIndicator.text} </span> </div> )} */}
-
-      <div className="bg-white p-6 rounded shadow hover:shadow-lg transition-shadow">
-        <div className="flex mb-4 items-center">
-
-          <div className="bg-[#FFD198] p-2 rounded-2xl">
+        <div className="flex mb-4">
+          <div className="bg-orange-50 p-2 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg"
-              width="29"
-              height="29"
+              width="28"
+              height="28"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#D07A12"
               strokeWidth="1"
-              strokeLinecap
+              strokeLinecap="round"
               strokeLinejoin="round"
-              class="icon icon-tabler icons-tabler-outline icon-tabler-users"
-            >
+              class="icon icon-tabler icons-tabler-outline icon-tabler-book">
               <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-              <path d="M9 7m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0" />
-              <path d="M3 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
-              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-              <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
-            </svg>
+              <path d="M3 19a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+              <path d="M3 6a9 9 0 0 1 9 0a9 9 0 0 1 9 0" />
+              <path d="M3 6l0 13" />
+              <path d="M12 6l0 13" />
+              <path d="M21 6l0 13" />
+              </svg>
           </div>
+          <h3 className="text-black font-semibold text-left mt-3 ml-4">Buku Dipinjam</h3>
 
-          <h3 className="text-black font-semibold ml-3 text-sm">Data Mahasiswa Bebas Pustaka</h3>
+          
         </div>
-        <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
-        <p className="text-xl font-bold text-gray-900 text-left mb-1">
-          {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'} Orang
-        </p>
-        <p className="text-xs text-gray-500 mt-2 text-left">
-          Data ini merupakan jumlah buku yang dipinjam sejauh ini.
-        </p>
 
+        <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
+        <p className="text-3xl font-bold text-gray-900 mb-2 text-left">
+          {infoData.borrowedBooks?.toLocaleString() || '0'}
+        </p>
+        <p className="text-xs text-gray-500 text-left">
+          Data ini menunjukkan buku yang belum dikembalikan
+        </p>
       </div>
+
+      {/* {weeklyIndicator && ( <div className={flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg}> <span className={weeklyIndicator.color}> {weeklyIndicator.icon} </span> <span className={text-sm font-medium ${weeklyIndicator.color}}> {weeklyIndicator.text} </span> </div> )} */}
 
       {/* Info Update Terakhir
       {infoData.lastUpdated && (
