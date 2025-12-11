@@ -89,11 +89,9 @@ exports.getSummaryReport = async (req, res) => {
       programList
     });
 
-    // PROGRAM LIST UNTUK FILTER SQL (tanpa nilai kosong)
     const programFilterList = programList.filter(p => p !== "");
     console.log("🎯 programFilterList (tanpa kosong):", programFilterList);
 
-    // TETAP ANGGAP USER MEMILIH PROGRAM (walaupun kosong)
     const hasProgram = programList.length > 0;
     const hasLembaga = lembagaList.length > 0;
     const hasTahun = tahunList.length > 0;
@@ -102,7 +100,6 @@ exports.getSummaryReport = async (req, res) => {
     let groupBy = '';
     const params = [];
 
-    // ========== MODE ==========
     if (hasProgram) {
       console.log("📌 MODE: Per Program");
       sql = `
@@ -131,7 +128,6 @@ exports.getSummaryReport = async (req, res) => {
       groupBy = ` GROUP BY tahun`;
     }
 
-    // ========== FILTER ==========
     if (hasTahun) {
       const placeholders = tahunList.map(() => "?").join(",");
       sql += ` AND tahun IN (${placeholders})`;
@@ -146,7 +142,6 @@ exports.getSummaryReport = async (req, res) => {
       console.log("📌 Filter Lembaga:", lembagaList);
     }
 
-    // FILTER PROGRAM TANPA MEMBUANG KOSONG
     if (hasProgram) {
       if (programFilterList.length > 0) {
         const placeholders = programFilterList.map(() => "?").join(",");
@@ -169,7 +164,6 @@ exports.getSummaryReport = async (req, res) => {
     console.log("📊 FINAL PARAMS:", params);
     console.log("==========================================");
 
-    // ========== EXECUTE QUERY ==========
     const [allRows] = await bebaspustaka.query(sql, params);
 
     console.log("📦 SQL RESULT COUNT:", allRows.length);

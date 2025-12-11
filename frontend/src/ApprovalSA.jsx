@@ -23,11 +23,22 @@ import axios from "axios";
 
 function ApprovalSA() {
     authCheckSA();
+    const [statusRange, setStatusRange] = useState("on_range");
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    
+
+    const [approveProgress, setApproveProgress] = useState(0);
+    const [isApproving, setIsApproving] = useState(false);
+
+    function chunkArray(array, size) {
+        const result = [];
+        for (let i = 0; i < array.length; i += size) {
+            result.push(array.slice(i, i + size));
+        }
+        return result;
+    }
 
 
     const [loading, setLoading] = useState(false);
@@ -41,6 +52,20 @@ function ApprovalSA() {
     const [sortBy, setSortBy] = useState('priority');
     const [sortOrder, setSortOrder] = useState('asc');
     const [rowsInput, setRowsInput] = useState(10);
+
+    const fetchAllData = async () => {
+        try {
+            const token = localStorage.getItem("token");
+            const res = await axios.get("http://localhost:8080/api/bebaspustaka/getmahasiswaITAll", {
+                headers: { Authorization: `Bearer ${token}` },
+                params: { search, sortBy, sortOrder }
+            });
+            return res.data?.data || [];
+        } catch (err) {
+            console.error("fetchAllData error:", err);
+            return [];
+        }
+    };
 
 
     const fetchData = useCallback(async () => {
@@ -124,19 +149,71 @@ function ApprovalSA() {
             ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold`
             : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
+    const approveAllRequest = async () => {
+        try {
+            const token = localStorage.getItem("token");
 
-    //ceklis
-    const cekAll = () => {
+            const allData = await fetchAllData();
+            const selectedMahasiswa = allData.filter(item => checkedItems[item.id]);
+
+            if (selectedMahasiswa.length === 0) {
+                alert("Tidak ada data yang dicentang.");
+                return;
+            }
+
+            // Mulai Progress
+            setIsApproving(true);
+            setApproveProgress(0);
+
+            const chunks = chunkArray(selectedMahasiswa, 100);
+
+            for (let i = 0; i < chunks.length; i++) {
+                await axios.post(
+                    "http://localhost:8080/api/bebaspustaka/approveAll",
+                    { mahasiswa: chunks[i] },
+                    { headers: { Authorization: `Bearer ${token}` } }
+                );
+
+                const progressValue = Math.round(((i + 1) / chunks.length) * 100);
+                setApproveProgress(progressValue);
+            }
+
+            alert("Berhasil Approve Semua!");
+            fetchData();
+
+        } catch (err) {
+            alert("Gagal approve all: " + err.response?.data?.message);
+        } finally {
+            setIsApproving(false);
+        }
+    };
+
+
+
+    const cekAll = async () => {
         const newValue = !approvedAll;
         setApprovedAll(newValue);
 
+        const allData = await fetchAllData();
+
         const newChecked = {};
-        data.forEach(item => {
-            newChecked[item.id] = newValue;
+
+        allData.forEach(item => {
+            const peminjaman = item.STATUS_peminjaman ?? item.status_peminjaman;
+            const denda = item.STATUS_denda ?? item.status_denda;
+            const statusBepus = item.STATUS_bebas_pustaka ?? item.status_bepus;
+
+            // ❗ hanya centang yang memenuhi syarat
+            if (peminjaman === 1 && denda === 1 && statusBepus === "pending") {
+                newChecked[item.id] = newValue;
+            }
         });
 
         setCheckedItems(newChecked);
     };
+
+
+
 
     const SetujuiSemuaBepus = () => {
         (!setAlertBebasPustakaAll)
@@ -214,6 +291,32 @@ function ApprovalSA() {
         setUrutkanBy(false); // Tutup dropdown setelah memilih
     };
 
+    const approveSingle = async (item) => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const res = await axios.post(
+                "http://localhost:8080/api/bebaspustaka/approve",
+                {
+                    nim: item.nim,
+                    nama_mahasiswa: item.name,
+                    institusi: item.institusi,
+                    program_studi: item.program_studi,
+                    status_peminjaman: item.status_peminjaman,
+                    status_denda: item.status_denda
+                },
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
+
+            alert("Berhasil di-approve!");
+            fetchData(); // refresh table
+
+        } catch (err) {
+            alert("Gagal approve: " + err.response?.data?.message);
+        }
+    };
+
+
     //pick date
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
@@ -242,29 +345,29 @@ function ApprovalSA() {
             setRangeText("");
         }
     };
-const handleStartInput = (e) => {
-    const value = e.target.value;
-    setStartDate(value);
-    setRange((prev) => ({ ...prev, from: value ? new Date(value) : undefined }));
+    const handleStartInput = (e) => {
+        const value = e.target.value;
+        setStartDate(value);
+        setRange((prev) => ({ ...prev, from: value ? new Date(value) : undefined }));
 
-    if (value && endDate) {
-        setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
-    } else {
-        setRangeText("");
-    }
-};
+        if (value && endDate) {
+            setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
+        } else {
+            setRangeText("");
+        }
+    };
 
-const handleEndInput = (e) => {
-    const value = e.target.value;
-    setEndDate(value);
-    setRange((prev) => ({ ...prev, to: value ? new Date(value) : undefined }));
+    const handleEndInput = (e) => {
+        const value = e.target.value;
+        setEndDate(value);
+        setRange((prev) => ({ ...prev, to: value ? new Date(value) : undefined }));
 
-    if (startDate && value) {
-        setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
-    } else {
-        setRangeText("");
-    }
-};
+        if (startDate && value) {
+            setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
+        } else {
+            setRangeText("");
+        }
+    };
     const date_change = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -317,22 +420,21 @@ const handleEndInput = (e) => {
 
     useEffect(() => {
         const fetchdate = async () => {
-            try {
-                const token = localStorage.getItem('token')
-                const response = await axios.get(`http://localhost:8080/api/bebaspustaka/kompenDate`, {
-                    headers: {
-                        "Content-Type": "application/json",
-                        "Authorization": `Bearer ${token}`
-                    }
-                });
-                if (response.data.start_date && response.data.end_date) {
-                    setStartDate(response.data.start_date);
-                    setEndDate(response.data.end_date);
+            const token = localStorage.getItem('token')
+            const response = await axios.get(`http://localhost:8080/api/bebaspustaka/kompenDate`, {
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`
                 }
-            } catch (error) {
-                console.error("Gagal mengambil data :", error);
+            });
+
+            setStatusRange(response.data.status);
+
+            if (response.data.start_date && response.data.end_date) {
+                setStartDate(response.data.start_date);
+                setEndDate(response.data.end_date);
             }
-        }
+        };
         fetchdate();
         const fetchProfile = async () => {
             const user = JSON.parse(localStorage.getItem('user'))
@@ -529,11 +631,14 @@ const handleEndInput = (e) => {
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
                                         <button
-                                            onClick={() => setShowFilter(!showFilter)}
-                                            className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
-                                  ${showFilter
-                                                    ? 'bg-[#667790] text-white border-[#667790]'
-                                                    : 'bg-transparent text-[#667790] border-[#667790]'
+                                            onClick={() => statusRange === "out_of_range" && setShowFilter(!showFilter)}
+                                            disabled={statusRange === "on_range"}
+                                            className={`flex relative items-center gap-2 px-3 py-1 rounded border transition
+                                            ${statusRange === "on_range"
+                                                    ? 'bg-gray-300 text-gray-400 border-gray-300 cursor-not-allowed'
+                                                    : showFilter
+                                                        ? 'bg-[#667790] text-white border-[#667790]'
+                                                        : 'bg-transparent text-[#667790] border-[#667790] cursor-pointer'
                                                 }`}
                                         >
                                             <svg
@@ -553,6 +658,7 @@ const handleEndInput = (e) => {
                                             </svg>
                                             Date
                                         </button>
+
                                         {showFilter && (
                                             <div className="absolute top-12 right-0 bg-white p-3 rounded-md shadow-lg z-50 w-[90vw] max-w-[260px]">
                                                 <p className="text-sm font-semibold text-gray-700 mb-3">Filter</p>
@@ -620,9 +726,7 @@ const handleEndInput = (e) => {
 
 
                                     <button
-                                        onClick={() => {
-                                            if (approvedAll) setAlertBebasPustakaAll(true);
-                                        }}
+                                        onClick={approveAllRequest}
                                         disabled={!approvedAll}
                                         className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
                                   ${alertBebasPustakaAll
@@ -647,6 +751,20 @@ const handleEndInput = (e) => {
                                         </svg>
                                         Approve All
                                     </button>
+                                    {isApproving && (
+                                        <div className="mt-3 w-full max-w-xs">
+                                            <p className="text-sm font-semibold text-[#667790] mb-1">
+                                                Memproses... {approveProgress}%
+                                            </p>
+
+                                            <div className="w-full bg-gray-300 h-3 rounded-full overflow-hidden">
+                                                <div
+                                                    className="bg-[#023048] h-3 transition-all duration-300"
+                                                    style={{ width: `${approveProgress}%` }}
+                                                ></div>
+                                            </div>
+                                        </div>
+                                    )}
                                     <div className="relative">
                                         <button
                                             onClick={() => setUrutkanBy(!urutkanBy)}
@@ -795,6 +913,8 @@ const handleEndInput = (e) => {
                                                 </th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">institusi</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">program studi</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Status denda</th>
                                                 <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
@@ -815,9 +935,19 @@ const handleEndInput = (e) => {
                                                             <input
                                                                 type="checkbox"
                                                                 checked={checkedItems[item.id] || false}
-                                                                onChange={() => handleSingleCheck(item.id)}
+                                                                onChange={() => {
+                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                        handleSingleCheck(item.id);
+                                                                    }
+                                                                }}
+                                                                disabled={!(
+                                                                    item.status_peminjaman === 1 &&
+                                                                    item.status_denda === 1 &&
+                                                                    item.status_bepus === "pending"
+                                                                )}
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
                                                             />
+
                                                             <div
                                                                 className={`w-4 h-4 border rounded flex items-center justify-center ${checkedItems[item.id]
                                                                     ? 'bg-[#A8B5CB] border-white'
@@ -834,6 +964,8 @@ const handleEndInput = (e) => {
                                                     </td>
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name || 'N/A'}</td>
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim || 'N/A'}</td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.institusi || 'N/A'}</td>
+                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.program_studi || 'N/A'}</td>
 
                                                     {/* Status Peminjaman */}
                                                     <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status_peminjaman === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
@@ -854,15 +986,26 @@ const handleEndInput = (e) => {
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
                                                         {item.status_bepus === "pending" ? (
                                                             <button
+
                                                                 type="button"
-                                                                onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
-                                                                className="cursor-pointer px-5 py-1 border-2 border-[#A8B5CB] rounded-md bg-[#EDF1F3] text-[#A8B5CB] font-semibold active:scale-90 transition-transform duration-100"
+                                                                onClick={() => {
+                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                        approveSingle(item)
+                                                                    }
+                                                                }}
+                                                                disabled={!(item.status_peminjaman === 1 && item.status_denda === 1)}
+                                                                className={`px-5 py-1 rounded-md border font-semibold transition 
+                                                                  ${item.status_peminjaman === 1 && item.status_denda === 1
+                                                                        ? "cursor-pointer bg-[#EDF1F3] border-[#A8B5CB] text-[#A8B5CB] active:scale-90"
+                                                                        : "cursor-not-allowed bg-gray-200 border-gray-300 text-gray-400"
+                                                                    }`}
                                                             >
-                                                                Setujui
+                                                                approve
                                                             </button>
                                                         ) : (
-                                                            <p className="text-[#4ABC4C] font-semibold">Sudah Disetujui</p>
+                                                            <p className="text-[#4ABC4C] font-semibold">Sudah di approve</p>
                                                         )}
+
                                                     </td>
 
                                                     {/* Keterangan */}
