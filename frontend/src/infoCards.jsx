@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
+import { IconCaretUpFilled } from '@tabler/icons-react';
 
 function InfoCards() {
   const [infoData, setInfoData] = useState({
@@ -85,17 +86,17 @@ function InfoCards() {
 
     if (difference > 0) {
       return {
-        icon: <ArrowUp className="w-5 h-5" />,
+        icon: <IconCaretUpFilled className="w-7 h-5" />,
         color: "text-green-600",
         bgColor: "bg-green-50",
-        text: `+${difference} dari minggu lalu`
+        text: `+${difference} dari minggu yang lalu`
       };
     } else if (difference < 0) {
       return {
         icon: <ArrowDown className="w-5 h-5" />,
         color: "text-red-600",
         bgColor: "bg-red-50",
-        text: `${difference} dari minggu lalu`
+        text: `${difference} dari minggu yang lalu`
       };
     } else {
       return {
@@ -126,17 +127,16 @@ function InfoCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {/* Card 1: Kunjungan Hari Ini */}
-      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-black font-semibold">Data Kunjungan Mahasiswa</h3>
-          <div className="bg-[#EDF1F3] p-1 rounded-lg">
-            <div className="bg-[#bg-[#667790]]">
+      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
+        <div className="flex mb-4">
+          <div className="bg-[#EDF1F3] p-1 rounded-xl">
+
             <svg xmlns="http://www.w3.org/2000/svg"
               width="28"
               height="28"
               viewBox="0 0 24 24"
               fill="none"
-              stroke="currentColor"
+              stroke="#1270B0"
               strokeWidth="1"
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -147,8 +147,10 @@ function InfoCards() {
               <path d="M11.192 17.966c-3.242 -.28 -5.972 -2.269 -8.192 -5.966c2.4 -4 5.4 -6 9 -6c3.326 0 6.14 1.707 8.442 5.122" />
               <path d="M18.42 15.61a2.1 2.1 0 0 1 2.97 2.97l-3.39 3.42h-3v-3l3.42 -3.39z" />
             </svg>
-            </div>
+
           </div>
+          <h3 className="text-black font-semibold ml-3 mt-2">Data Kunjungan Mahasiswa</h3>
+
         </div>
 
         <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
@@ -161,12 +163,12 @@ function InfoCards() {
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
-      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
-        <div className="flex mb-4 items-center">
-          <div className="bg-[#D9CFED] p-2 rounded-2xl">
+      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
+        <div className="flex mb-4">
+          <div className="bg-[#D9CFED] p-1 rounded-xl">
             <svg xmlns="http://www.w3.org/2000/svg"
-              width="28"
-              height="28"
+              width="27"
+              height="27"
               viewBox="0 0 24 24"
               fill="none"
               stroke="#8C63DA"
@@ -182,33 +184,36 @@ function InfoCards() {
               <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
             </svg>
           </div>
-          <h3 className="text-black font-semibold ml-3">Data Kunjungan Mahasiswa</h3>
+          <h3 className="text-black font-semibold ml-3 mt-2">Data Kunjungan Mahasiswa</h3>
 
         </div>
 
         <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>
+        <div className="flex">
+          <p className="text-3xl font-bold text-gray-900 text-left mb-1">
+            {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'}
 
-        <p className="text-3xl font-bold text-gray-900 text-left mb-1">
-          {infoData.weeklyComparison?.thisWeek?.toLocaleString() || '0'}
-        </p>
+          </p>
+          <div> {weeklyIndicator && (
+            <div className='flex mt-2 ml-2'>
+              <span className={weeklyIndicator.color}>
+                {weeklyIndicator.icon}
+              </span>
+              <span className={`text-xs font-regular ${weeklyIndicator.color}`}>
+                {weeklyIndicator.text}
+              </span>
+            </div>
+          )}</div>
+        </div>
         <p className="text-xs text-gray-500 text-left">
           Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
         </p>
 
-        {weeklyIndicator && (
-          <div className={`flex items-center gap-2 ${weeklyIndicator.bgColor} px-3 py-1.5 rounded-lg`}>
-            <span className={weeklyIndicator.color}>
-              {weeklyIndicator.icon}
-            </span>
-            <span className={`text-sm font-medium ${weeklyIndicator.color}`}>
-              {weeklyIndicator.text}
-            </span>
-          </div>
-        )}
+
       </div>
 
       {/* Card 3: Buku yang Dipinjam */}
-      <div className="bg-white p-6 rounded-xl shadow hover:shadow-lg transition-shadow">
+      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
         <div className="flex mb-4">
           <div className="bg-orange-50 p-2 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -227,11 +232,11 @@ function InfoCards() {
               <path d="M3 6l0 13" />
               <path d="M12 6l0 13" />
               <path d="M21 6l0 13" />
-              </svg>
+            </svg>
           </div>
           <h3 className="text-black font-semibold text-left mt-3 ml-4">Buku Dipinjam</h3>
 
-          
+
         </div>
 
         <div className="w-full h-[1px] bg-[#EDEDED] mb-3"></div>

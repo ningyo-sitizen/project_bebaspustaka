@@ -420,37 +420,35 @@ export default function DashboardSA() {
                         </div>
                         {/* //tutor bepus */}
 
-                        <div className='bg-white w-full min-h-screen flex justify-center p-4 mx-none mt-9'>
+                        <div className='bg-white w-full max-h-screen flex justify-center p-9 pb-16 mx-none mt-9'>
                             <div className='text-center mx-auto w-full max-w-5xl'>
 
-                                <p className="text-xl font-semibold mt-5">
+                                <p className="text-2xl font-semibold mt-5">
                                     Konfirmasi data <span className='text-[#667790]'>bebas pustaka?</span> berikut alur pengajuannya!
                                 </p>
 
-                                <p className="text-sm font-base mt-5 px-5 text-[#616161] max-w-3xl mx-auto">
+                                <p className="text-sm font-base mt-4 px-5 text-[#616161] max-w-3xl mx-auto">
                                     Segera lakukan approval data bebas pustaka mahasiswa sebelum deadline berakhir. Jika tidak disetujui tepat waktu,
                                     mahasiswa tidak akan bisa mendapatkan status Bebas dan proses mereka akan tertunda.
                                 </p>
                                 <div className='flex flex-col lg:flex-row justify-center items-start mt-14 gap-10 bg-white'>
 
                                     {/* FOTO OVERLAP KIRI */}
-                                    <div className='relative w-[320px] h-[220px] flex justify-center'>
-
-                                        {/* Foto belakang */}
+                                    <div className='relative w-[330px] h-[220px] flex justify-center'>
                                         <div
-                                            className="absolute w-[235px] h-[140px] bg-cover bg-center rounded-xl shadow-md"
+                                            className="absolute w-[370px] h-[250px] bg-cover bg-center rounded-xl shadow-md"
                                             style={{
                                                 backgroundImage:
                                                     "url('https://cdn.designfast.io/image/2025-12-11/2700e1a5-1ae3-4de3-b630-e51228368ff6.png')",
-                                                top: "10px",
-                                                left: "50%",
-                                                transform: "translateX(-30%)",
+                                                top: "2px",
+                                                left: "40%",
+                                                transform: "translateX(-42%)",
                                             }}
                                         ></div>
 
                                         {/* Foto depan */}
-                                        <div
-                                            className="absolute w-[235px] h-[140px] bg-cover bg-center rounded-xl shadow-lg"
+                                        {/* <div
+                                            className="absolute w-[335px] h-[240px] bg-cover bg-center rounded-xl shadow-lg"
                                             style={{
                                                 backgroundImage:
                                                     "url('https://cdn.designfast.io/image/2025-12-11/b498b2f5-e51e-438f-ad9b-0557f0ea3760.png')",
@@ -458,7 +456,7 @@ export default function DashboardSA() {
                                                 left: "50%",
                                                 transform: "translateX(-70%)",
                                             }}
-                                        ></div>
+                                        ></div> */}
 
                                     </div>
 

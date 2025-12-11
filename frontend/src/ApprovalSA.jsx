@@ -27,7 +27,7 @@ function ApprovalSA() {
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
     const [rowsPerPage, setRowsPerPage] = useState(10);
-    
+
 
 
     const [loading, setLoading] = useState(false);
@@ -242,29 +242,29 @@ function ApprovalSA() {
             setRangeText("");
         }
     };
-const handleStartInput = (e) => {
-    const value = e.target.value;
-    setStartDate(value);
-    setRange((prev) => ({ ...prev, from: value ? new Date(value) : undefined }));
+    const handleStartInput = (e) => {
+        const value = e.target.value;
+        setStartDate(value);
+        setRange((prev) => ({ ...prev, from: value ? new Date(value) : undefined }));
 
-    if (value && endDate) {
-        setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
-    } else {
-        setRangeText("");
-    }
-};
+        if (value && endDate) {
+            setRangeText(`${formatDate(value)} - ${formatDate(endDate)}`);
+        } else {
+            setRangeText("");
+        }
+    };
 
-const handleEndInput = (e) => {
-    const value = e.target.value;
-    setEndDate(value);
-    setRange((prev) => ({ ...prev, to: value ? new Date(value) : undefined }));
+    const handleEndInput = (e) => {
+        const value = e.target.value;
+        setEndDate(value);
+        setRange((prev) => ({ ...prev, to: value ? new Date(value) : undefined }));
 
-    if (startDate && value) {
-        setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
-    } else {
-        setRangeText("");
-    }
-};
+        if (startDate && value) {
+            setRangeText(`${formatDate(startDate)} - ${formatDate(value)}`);
+        } else {
+            setRangeText("");
+        }
+    };
     const date_change = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -477,7 +477,7 @@ const handleEndInput = (e) => {
                         {/* TABLE APPROVAL */}
                         <div className="ml-0 flex-1 p-4 md:p-8 overflow-x-auto">
 
-                            <p className="font-semibold text-2xl text-black mb-4 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
+                            <p className="font-semibold text-2xl text-black mb-2 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
                             <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     width="18"
@@ -496,8 +496,8 @@ const handleEndInput = (e) => {
                                     <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                                 </svg>
                                 <div className="flex">
-                                    <p className="text-lg ml-1">{total} &nbsp;</p>
-                                    <p className="text-lg m-0">permohonan bebas pustaka</p>
+                                    <p className="text-base ml-1">{total} &nbsp;</p>
+                                    <p className="text-base mb-6">permohonan bebas pustaka</p>
                                 </div>
                             </div>
 
@@ -531,9 +531,9 @@ const handleEndInput = (e) => {
                                         <button
                                             onClick={() => setShowFilter(!showFilter)}
                                             className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
-                                  ${showFilter
+                                                 ${showFilter
                                                     ? 'bg-[#667790] text-white border-[#667790]'
-                                                    : 'bg-transparent text-[#667790] border-[#667790]'
+                                                    : 'bg-transparent text-[#616161] border-[#616161]'
                                                 }`}
                                         >
                                             <svg
@@ -627,7 +627,7 @@ const handleEndInput = (e) => {
                                         className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
                                   ${alertBebasPustakaAll
                                                 ? 'bg-[#667790] text-white border-[#667790]'
-                                                : 'bg-transparent text-[#667790] border-[#667790]'
+                                                : 'bg-transparent text-[#616161] border-[#616161]'
                                             }`}
                                     >
                                         <svg xmlns="http://www.w3.org/2000/svg"
@@ -653,7 +653,7 @@ const handleEndInput = (e) => {
                                             className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
                                   ${urutkanBy
                                                     ? 'bg-[#667790] text-white border-[#667790]'
-                                                    : 'bg-transparent text-[#667790] border-[#667790]'
+                                                    : 'bg-transparent text-[#616161] border-[#616161]'
                                                 }`}
                                         >
                                             <svg xmlns="http://www.w3.org/2000/svg"
@@ -759,14 +759,14 @@ const handleEndInput = (e) => {
                                 <div className="overflow-x-auto w-full">
                                     <table className="min-w-full border-collapse mt-7">
                                         <thead>
-                                            <tr className="bg-gray-50">
-                                                <th className="text-left p-4 font-normal text-gray-600 bg-[#667790]">
+                                            <tr className="bg-[#D8DFEC]">
+                                                <th className="text-left p-4 font-normal text-gray-600 bg-[#D8DFEC]">
                                                     <label className="flex items-center cursor-pointer">
                                                         <input
                                                             type="checkbox"
                                                             checked={approvedAll}
                                                             onChange={cekAll}
-                                                            className="absolute opacity-0 w-4 h-4"
+                                                            className="absolute opacity-0 w-4 h-4 "
                                                         />
 
                                                         <div className={`w-4 h-4 border rounded flex items-center justify-center ${approvedAll
@@ -793,14 +793,14 @@ const handleEndInput = (e) => {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]"></th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Status denda</th>
-                                                <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Tindakan</th>
-                                                <th className=" p-4 font-normal text-white bg-[#667790]">Keterangan</th>
+                                                <th className="p-4 font-normal  text-sm bg-[#D8DFEC] text-sm"></th>
+                                                <th className="p-4 font-normal  bg-[#D8DFEC] text-sm">Nama</th>
+                                                <th className="p-4 font-normal  bg-[#D8DFEC] text-sm">NIM</th>
+                                                <th className="p-4 font-normal  bg-[#D8DFEC] text-sm">Status Peminjaman</th>
+                                                <th className="p-4 font-normal  bg-[#D8DFEC] text-sm">Status denda</th>
+                                                <th className=" p-4 font-normal bg-[#D8DFEC] text-sm">Status</th>
+                                                <th className="p-4 font-normal  bg-[#D8DFEC] text-sm">Tindakan</th>
+                                                <th className=" p-4 font-normal bg-[#D8DFEC] text-sm">Keterangan</th>
                                             </tr>
                                         </thead>
 
