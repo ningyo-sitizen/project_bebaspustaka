@@ -1,565 +1,650 @@
-const { opac, bebaspustaka } = require('../config');
-const PDFDocument = require('pdfkit');
-const ExcelJS = require('exceljs');
+    const { opac, bebaspustaka } = require('../config');
 
-// ====================== GET DATA ======================
-exports.listTI = async (req, res) => {
-  try {
-      const page = parseInt(req.query.page) || 1;
-      const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
-      const isSelectAll = req.query.selectAll === 'true';
+    let GENERATING = false;
 
-      const limit = !isSelectAll && req.query.all !== 'true'
-          ? (parseInt(req.query.limit) || 10)
-          : null;
-      const offset = limit ? (page - 1) * limit : null;
+    function formatDateToMySQL(date) {
+        const pad = n => n.toString().padStart(2, '0');
+        return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} `
+            + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    }
 
-      let query = `
-          SELECT DISTINCT
-              m.member_id AS nim,
-              m.member_name AS nama,
-              IFNULL(l.is_return, 1) AS pengembalian
-          FROM member m
-          LEFT JOIN loan l ON l.member_id = m.member_id
-          WHERE 
-              m.inst_name IN ('Teknik Informatika dan Komputer', 'Teknik Informatika')
-              AND m.register_date IS NOT NULL
-              AND YEAR(m.register_date) BETWEEN 2019 AND 2025
-              AND (LOWER(m.member_name) LIKE ? OR LOWER(m.member_id) LIKE ?)
-          ORDER BY m.register_date ASC
-      `;
+    async function updateStatusesJoin() {
+        console.log("[STATUS] Updating STATUS_peminjaman & STATUS_denda...");
 
-      const params = [search, search];
+        const sql = `
+            UPDATE bebas_pustaka bp
+            LEFT JOIN (
+                SELECT member_id 
+                FROM opac.loan 
+                WHERE is_return = 0 AND return_date IS NULL
+                GROUP BY member_id
+            ) loan ON loan.member_id = bp.nim
+            LEFT JOIN (
+                SELECT member_id
+                FROM opac.fines
+                WHERE debet != credit
+                GROUP BY member_id
+            ) fin ON fin.member_id = bp.nim
+            SET 
+                bp.STATUS_peminjaman = CASE WHEN loan.member_id IS NULL THEN 1 ELSE 0 END,
+                bp.STATUS_denda = CASE WHEN fin.member_id IS NULL THEN 1 ELSE 0 END
+        `;
+        await bebaspustaka.query(sql);
 
-      if (limit) {
-          query += ` LIMIT ? OFFSET ?`;
-          params.push(limit, offset);
-      }
+        console.log("[STATUS DONE]");
+    }
 
-      const [rows] = await opac.query(query, params);
-
-      let data = rows.map(m => ({
-          id: m.nim,
-          name: m.nama,
-          nim: m.nim,
-          pengembalian: m.pengembalian,
-          status_peminjaman:
-              m.pengembalian === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan",
-          status_bepus: m.pengembalian === 1 ? "Pending" : "Tidak Bebas Pustaka",
-          status: 0,
-          statusbebaspustakanya: 0,
-          keterangan:
-              m.pengembalian === 1
-                  ? "Menunggu persetujuan"
-                  : "Beli buku baru atau bayar Rp150.000",
-          approved_at: null
-      }));
-
-    // ==================================================================
-    // ============= CEK PINJAMAN & DENDA — UPDATE STATUS ===============
-    // ==================================================================
-    for (let d of data) {
-
-        // === CEK PINJAMAN ===
-        const [loan] = await opac.query(`
-            SELECT is_return
-            FROM loan
-            WHERE member_id = ?
-        `, [d.member_id]);
-
-        const masihPinjam = loan.some(l => l.is_return === 0);
-
-        // === CEK DENDA — tabel fines di DB opac ===
-        const [fineRows] = await opac.query(`
-            SELECT COALESCE(SUM(debet - credit), 0) AS total_denda
-            FROM fines
-            WHERE member_id = ?
-        `, [d.member_id]);
-
-        const totalDenda = fineRows[0]?.total_denda || 0;
-
-        // === DEFAULT STATUS ===
-        d.status_peminjaman = "Sudah Dikembalikan";
-        d.pengembalian = 1;
-        d.status_bepus = "Bebas Pustaka";
-        d.keterangan = "-";
-
-        // === JIKA TIDAK PERNAH PINJAM ===
-        if (loan.length === 0) {
-            d.status_peminjaman = "Tidak Ada Peminjaman";
+    async function generateBebasPustakaData() {
+        if (GENERATING) {
+            console.log("[SKIP] Generate sudah berjalan!");
+            return { inserted: 0, refreshed: false, message: "Skipped duplicate trigger" };
         }
+        GENERATING = true;
 
-        // === LOGIKA STATUS (PINJAMAN ATAU DENDA) ===
-        if (masihPinjam || totalDenda > 0) {
-            d.pengembalian = 0;
-            d.status_peminjaman = masihPinjam ? "Belum Dikembalikan" : "Sudah Dikembalikan";
-            d.status_bepus = "Tidak Bebas Pustaka";
+        try {
+            const year = new Date().getFullYear();
+            const sixYearsAgo = year - 6;
+            const today = new Date();
 
-            if (masihPinjam) {
-                d.keterangan = "Masih memiliki pinjaman buku";
-            } else {
-                d.keterangan = `Memiliki denda Rp${totalDenda.toLocaleString()}`;
+            console.log("[START] generateBebasPustakaData()");
+
+            const [statusRows] = await bebaspustaka.query(`SELECT STATUS_bebas_pustaka, end_date FROM bebas_pustaka_time_range LIMIT 1`);
+
+
+            if (statusRows.length === 0) {
+                console.log("[FIRST RUN] Belum ada time_range → insert pertama ke bebas_pustaka");
+
+                const sqlInsert = `
+                    INSERT INTO bebas_pustaka (NIM, nama_mahasiswa, institusi, program_studi)
+                    SELECT DISTINCT member_id, member_name, inst_name, program_studi
+                    FROM opac.member
+                    WHERE inst_name IN ('Teknik Informatika dan Komputer', 'Teknik Informatika')
+                    AND register_date IS NOT NULL
+                    AND YEAR(register_date) BETWEEN ? AND ?
+                    ORDER BY register_date ASC
+                `;
+
+                console.log("[INSERT] Mulai insert data mahasiswa...");
+                const [insertResult] = await bebaspustaka.query(sqlInsert, [sixYearsAgo, year]);
+                console.log("[INSERT DONE] Rows inserted:", insertResult.affectedRows);
+
+                await updateStatusesJoin();
+
+                // insert visitor_count
+                const [borowing] = await bebaspustaka.query(`
+                    SELECT DISTINCT NIM, nama_mahasiswa, institusi, program_studi
+                    FROM bebas_pustaka
+                    WHERE STATUS_peminjaman = 0 OR STATUS_denda = 0
+                `);
+
+                const mysqlDate = formatDateToMySQL(new Date());
+                console.log("[VISITOR_INSERT] Mulai insert visitor_count...");
+
+                for (const mhs of borowing) {
+                    console.log("[VISITOR] Insert:", mhs.NIM);
+                    await opac.query(
+                        `INSERT INTO visitor_count (member_id, member_name, institution, program_studi, checkin_date)
+                        VALUES (?, ?, ?, ?, ?)`,
+                        [mhs.NIM, mhs.nama_mahasiswa, mhs.institusi, mhs.program_studi, mysqlDate]
+                    );
+                }
+
+                console.log("[VISITOR INSERT DONE] Total:", borowing.length);
+
+                return {
+                    inserted: insertResult.affectedRows,
+                    refreshed: false,
+                    message: "Insert pertama berhasil + visitor_count terisi"
+                };
             }
+
+            // =============================
+            // SUDAH ADA TIME RANGE
+            // =============================
+
+            const lastEnd = statusRows[0].end_date ? new Date(statusRows[0].end_date) : null;
+            const expire = new Date(lastEnd);
+            expire.setMonth(expire.getMonth() + 3);
+
+            // ==================================================
+            // > 3 BULAN → FULL REFRESH (TRUNCATE + INSERT ULANG)
+            // ==================================================
+            if (today > expire) {
+                console.log("[REFRESH >3 BULAN] Lakukan full refresh!");
+
+                const [memberList] = await opac.query(`
+                    SELECT DISTINCT member_id, member_name, inst_name, program_studi
+                    FROM member
+                    WHERE inst_name IN ('Teknik Informatika dan Komputer', 'Teknik Informatika')
+                    AND register_date IS NOT NULL
+                    AND YEAR(register_date) BETWEEN ? AND ?
+                `, [sixYearsAgo, year]);
+
+                console.log("[TRUNCATE] Truncate bebas_pustaka...");
+                await bebaspustaka.query(`TRUNCATE TABLE bebas_pustaka`);
+                await bebaspustaka.query(`ALTER TABLE bebas_pustaka AUTO_INCREMENT = 1`);
+
+                console.log("[REFRESH INSERT] Insert ulang mahasiswa...");
+
+                if (memberList.length > 0) {
+                    const insertSql = `
+                        INSERT INTO bebas_pustaka (NIM, nama_mahasiswa, institusi, program_studi)
+                        VALUES (?, ?, ?, ?)
+                    `;
+                    for (const m of memberList) {
+                        console.log("[REFRESH] Insert:", m.member_id);
+                        await bebaspustaka.query(insertSql, [
+                            m.member_id, m.member_name, m.inst_name, m.program_studi
+                        ]);
+                    }
+                }
+
+                console.log("[REFRESH DONE] Total:", memberList.length);
+
+                await updateStatusesJoin();
+
+                const [borowing] = await bebaspustaka.query(`
+                    SELECT DISTINCT NIM, nama_mahasiswa, institusi, program_studi
+                    FROM bebas_pustaka
+                    WHERE STATUS_peminjaman = 0 OR STATUS_denda = 0
+                `);
+
+                console.log("[VISITOR REFRESH] Insert visitor_count setelah refresh...");
+                const mysqlDate = formatDateToMySQL(new Date());
+
+                for (const m of borowing) {
+                    console.log("[VISITOR REFRESH] Insert:", m.NIM);
+                    await opac.query(
+                        `INSERT INTO visitor_count (member_id, member_name, institution, program_studi, checkin_date)
+                        VALUES (?, ?, ?, ?, ?)`,
+                        [m.NIM, m.nama_mahasiswa, m.institusi, m.program_studi, mysqlDate]
+                    );
+                }
+
+                console.log("[VISITOR REFRESH DONE] Total:", borowing.length);
+
+                return {
+                    inserted: memberList.length,
+                    refreshed: true,
+                    message: "Data berhasil di-refresh (lebih dari 3 bulan)"
+                };
+            }
+
+            console.log("[NO REFRESH] Kurang dari 3 bulan → tidak generate");
+            return { inserted: 0, refreshed: false, message: "Tidak memenuhi kondisi insert/refresh" };
+
+        } finally {
+            GENERATING = false;
+            console.log("[END] generateBebasPustakaData selesai.");
         }
-
-        d.total_denda = totalDenda;
     }
 
 
-      // ==================================================================
-      // ============= AUTO INSERT PENDING KE TABEL BEPUS ================
-      // ==================================================================
-      const pendingInserts = data
-          .filter(d => d.status_bepus === "Pending")
-          .map(d => [d.nim, d.name, "Pending", new Date()]);
+    // ================================================================
+    // GET DATE
+    // ================================================================
+    exports.getDate = async (req, res) => {
+        try {
+            const [rows] = await bebaspustaka.query(`
+                SELECT STATUS_bebas_pustaka, start_date, end_date
+                FROM bebas_pustaka_time_range LIMIT 1
+            `);
 
-      if (pendingInserts.length > 0) {
-          const placeholders = pendingInserts.map(() => "(?, ?, ?, ?)").join(",");
-          await bebaspustaka.query(
-              `
-              INSERT INTO bebas_pustaka (nim, nama_mahasiswa, status_pustaka_kompen, tanggal_approve)
-              VALUES ${placeholders}
-              ON DUPLICATE KEY UPDATE 
-                  status_pustaka_kompen = VALUES(status_pustaka_kompen)
-              `,
-              pendingInserts.flat()
-          );
-      }
+            if (rows.length === 0) {
+                return res.json({ status: "empty", start_date: null, end_date: null });
+            }
 
-      // ==================================================================
-      // ======================= MERGE STATUS BEPUS =======================
-      // ==================================================================
-      const [bepus] = await bebaspustaka.query(
-          `
-          SELECT nim, status_pustaka_kompen, tanggal_approve
-          FROM bebas_pustaka
-          WHERE nim IN (${data.map(() => "?").join(",")})
-          `,
-          data.map(d => d.nim)
-      );
+            const data = rows[0];
 
-      const statusMap = Object.fromEntries(
-          bepus.map(s => [s.nim, s])
-      );
+            const fmt = d => (d ? new Date(d).toISOString().split("T")[0] : null);
 
-      data = data.map(d => {
-          const s = statusMap[d.nim];
-          if (!s) return d;
+            const today = new Date();
+            const endDate = new Date(data.end_date);
 
-          return {
-              ...d,
-              status_bepus: s.status_pustaka_kompen,
-              statusbebaspustakanya:
-                  s.status_pustaka_kompen === "Disetujui" ? 1 : 0,
-              status:
-                  s.status_pustaka_kompen === "Disetujui" ? 1 : 0,
-              approved_at: s.tanggal_approve
-          };
-      });
+            if (today > endDate && data.STATUS_bebas_pustaka === "on_range") {
+                console.log("[DATE] Status berubah → out_of_range");
+                await bebaspustaka.query(`
+                    UPDATE bebas_pustaka_time_range SET STATUS_bebas_pustaka = 'out_of_range'
+                `);
+                data.STATUS_bebas_pustaka = "out_of_range";
+            }
 
-      // ==================================================================
-      // ===================== PAGINATION COUNT & RESPONSE =================
-      // ==================================================================
-      // Guard: jika data kosong, hindari query WHERE IN ()
-      if (data.length === 0) {
-        const [totalData] = await opac.query(
-            `
-            SELECT COUNT(DISTINCT m.member_id) AS total
-            FROM member m
-            WHERE 
-                m.inst_name IN ('Teknik Informatika dan Komputer', 'Teknik Informatika')
-                AND m.register_date IS NOT NULL
-                AND YEAR(m.register_date) BETWEEN 2019 AND 2025
-                AND (LOWER(m.member_name) LIKE ? OR LOWER(m.member_id) LIKE ?)
-            `,
-            [search, search]
-        );
+            return res.json({
+                status: data.STATUS_bebas_pustaka,
+                start_date: fmt(data.start_date),
+                end_date: fmt(data.end_date)
+            });
 
-        return res.json({
-            success: true,
-            selectAll: isSelectAll,
-            total: totalData[0].total,
-            page: limit ? page : "all",
-            limit: limit || "all",
-            data: []
-        });
-    }
-
-    const [totalData] = await opac.query(
-        `
-        SELECT COUNT(DISTINCT m.member_id) AS total
-        FROM member m
-        WHERE 
-            m.inst_name IN ('Teknik Informatika dan Komputer', 'Teknik Informatika')
-            AND m.register_date IS NOT NULL
-            AND YEAR(m.register_date) BETWEEN 2019 AND 2025
-            AND (LOWER(m.member_name) LIKE ? OR LOWER(m.member_id) LIKE ?)
-        `,
-        [search, search]
-    );
-
-    res.json({
-        success: true,
-        selectAll: isSelectAll,
-        total: totalData[0].total,
-        page: limit ? page : "all",
-        limit: limit || "all",
-        data
-    });
-
-} catch (err) {
-    console.error("❌ Error listTI:", err);
-    res.status(500).json({ success: false, error: err.message });
-}
-};
+        } catch (err) {
+            return res.status(500).json({ message: "Error getDate", error: err.message });
+        }
+    };
 
 
-// ====================== FILTER DATE (SET / GET) ======================
-exports.setFilterDate = async (req, res) => {
-try {
-    const { startDate, endDate } = req.body;
-    if (!startDate || !endDate)
-        return res.status(400).json({ success: false, message: "Tanggal wajib diisi" });
+    exports.setDateRangeAndGenerate = async (req, res) => {
+        try {
+            const { start_date, end_date } = req.body;
 
-    // set lock duration (misal 24 jam)
-    const lockTime = new Date();
-    lockTime.setHours(lockTime.getHours() + 24);
+            if (!start_date || !end_date)
+                return res.status(400).json({ success: false, message: "start_date & end_date wajib diisi!" });
 
-    // bersihkan dan simpan
-    await bebaspustaka.query(`DELETE FROM bepus_filter_date`);
-    await bebaspustaka.query(
-        `INSERT INTO bepus_filter_date (start_date, end_date, locked_until) VALUES (?, ?, ?)`,
-        [startDate, endDate, lockTime]
-    );
+            const [rows] = await bebaspustaka.query(`
+                SELECT STATUS_bebas_pustaka, start_date, end_date
+                FROM bebas_pustaka_time_range LIMIT 1
+            `);
 
-    res.json({ success: true, message: "Tanggal berhasil disimpan & dikunci 24 jam" });
+            // FIRST TIME RANGE INSERTED
+            if (rows.length === 0) {
+                console.log("[TIME_RANGE] Insert pertama time_range");
 
-} catch (err) {
-    console.error("❌ setFilterDate Error:", err);
-    res.status(500).json({ success: false, message: "Gagal menyimpan tanggal" });
-}
-};
+                const result = await generateBebasPustakaData();
 
-exports.getFilterDate = async (req, res) => {
-try {
-    const [rows] = await bebaspustaka.query(`SELECT * FROM bepus_filter_date LIMIT 1`);
-    if (!rows.length) return res.json({ success: true, filter_active: false });
+                console.log("[TIME_RANGE INSERT] Insert time_range...");
+                await bebaspustaka.query(`
+                    INSERT INTO bebas_pustaka_time_range (STATUS_bebas_pustaka, start_date, end_date)
+                    VALUES ('on_range', ?, ?)
+                `, [start_date, end_date]);
 
-    const today = new Date();
-    const locked = today < new Date(rows[0].locked_until);
+                console.log("[TIME_RANGE INSERT DONE]");
 
-    res.json({
-        success: true,
-        filter_active: true,
-        locked,
-        start_date: rows[0].start_date,
-        end_date: rows[0].end_date,
-        locked_until: rows[0].locked_until
-    });
-
-} catch (err) {
-    console.error("❌ getFilterDate Error:", err);
-    res.status(500).json({ success: false, message: "Gagal mengambil tanggal" });
-}
-};
-
-
-// ====================== APPROVE SINGLE ======================
-exports.approve = async (req, res) => {
-try {
-    const { nim } = req.body;
-    if (!nim) return res.status(400).json({ success: false, message: "NIM wajib diisi" });
-
-    // pastikan tidak punya pinjaman/denda (opsional: cek lagi sebelum approve)
-    const [loan] = await opac.query(
-        `SELECT is_return, fine_value FROM loan WHERE member_id = ?`,
-        [nim]
-    );
-    const masihPinjam = loan.some(l => l.is_return === 0);
-    const totalDenda = loan.reduce((a, b) => a + (b.fine_value || 0), 0);
-    if (masihPinjam || totalDenda > 0) {
+                return res.json({
+                    success: true,
+                    message: "Tanggal disimpan + generate selesai",
+                    result
+                });
+                
+            }
+            
+    if (rows[0].STATUS_bebas_pustaka === "on_range") {
         return res.status(400).json({
             success: false,
-            message: masihPinjam ? "Mahasiswa masih memiliki pinjaman buku" : `Mahasiswa memiliki denda Rp${totalDenda.toLocaleString()}`
+            message: "Tanggal tidak dapat diedit karena status masih ON RANGE"
         });
     }
 
-    await bebaspustaka.query(
-        `UPDATE bebas_pustaka SET status_pustaka_kompen = 'Disetujui', tanggal_approve = NOW() WHERE nim = ?`,
-        [nim]
-    );
 
-    const [updated] = await bebaspustaka.query(
-        `SELECT nim, nama_mahasiswa, status_pustaka_kompen, DATE_FORMAT(tanggal_approve, '%Y-%m-%d %H:%i') AS tanggal_approve FROM bebas_pustaka WHERE nim = ?`,
-        [nim]
-    );
+            if (rows[0].STATUS_bebas_pustaka === "out_of_range") {
+                const lastEnd = new Date(rows[0].end_date);
+                const expire = new Date(lastEnd);
+                expire.setMonth(expire.getMonth() + 3);
 
-    if (!updated.length) return res.status(500).json({ success: false, message: "Gagal mengambil data terbaru" });
+                const today = new Date();
 
-    const row = updated[0];
-    return res.json({
-        success: true,
-        message: "✔ Status berubah menjadi Disetujui",
-        data: {
-            id: row.nim,
-            nim: row.nim,
-            name: row.nama_mahasiswa,
-            statusbebaspustakanya: 1,
-            status: 1,
-            status_bepus: row.status_pustaka_kompen,
-            approved_at: row.tanggal_approve
+                if (today > expire) {
+                    console.log("[OUT_OF_RANGE >3 BULAN] Full generate triggered");
+
+                    await bebaspustaka.query(`
+                        UPDATE bebas_pustaka_time_range
+                        SET STATUS_bebas_pustaka='on_range', start_date=?, end_date=?
+                    `, [start_date, end_date]);
+
+                    const result = await generateBebasPustakaData();
+
+                    return res.json({
+                        success: true,
+                        message: "Generate ulang berhasil (>3 bulan) dan tanggal disimpan",
+                        result
+                    });
+                }
+
+                console.log("[OUT_OF_RANGE <3 BULAN] Hanya update status + visitor_count");
+
+                await bebaspustaka.query(`
+                    UPDATE bebas_pustaka_time_range
+                    SET STATUS_bebas_pustaka='on_range', start_date=?, end_date=?
+                `, [start_date, end_date]);
+
+                await updateStatusesJoin();
+
+                const [borowing] = await bebaspustaka.query(`
+                    SELECT DISTINCT NIM, nama_mahasiswa, institusi, program_studi
+                    FROM bebas_pustaka
+                    WHERE STATUS_peminjaman = 0 OR STATUS_denda = 0
+                `);
+
+                console.log("[VISITOR <3 BULAN] Insert visitor_count...");
+
+                const mysqlDate = formatDateToMySQL(new Date());
+                for (const mhs of borowing) {
+                    console.log("[VISITOR INSERT <3 BULAN] Insert:", mhs.NIM);
+                    await opac.query(
+                        `INSERT INTO visitor_count (member_id, member_name, institution, program_studi, checkin_date)
+                        VALUES (?, ?, ?, ?, ?)`,
+                        [mhs.NIM, mhs.nama_mahasiswa, mhs.institusi, mhs.program_studi, mysqlDate]
+                    );
+                }
+
+                console.log("[VISITOR INSERT <3 BULAN DONE] Total:", borowing.length);
+
+                return res.json({
+                    success: true,
+                    message: `${borowing.length} mahasiswa masih status 0 → visitor_count diinsert.`,
+                    visitorsInserted: borowing.length
+                });
+            }
+
+            // fallback update
+            await bebaspustaka.query(`
+                UPDATE bebas_pustaka_time_range
+                SET start_date=?, end_date=?
+            `, [start_date, end_date]);
+
+            return res.json({
+                success: true,
+                message: "Tanggal diperbarui (tanpa generate karena kondisi tidak terpenuhi)"
+            });
+
+        } catch (err) {
+            console.error("setDateRangeAndGenerate error:", err);
+            return res.status(500).json({
+                success: false,
+                message: "Gagal set date range + generate",
+                error: err.message
+            });
         }
-    });
-
-} catch (err) {
-    console.error("❌ Error approve:", err);
-    res.status(500).json({ success: false, message: "❌ Error menyimpan data approve" });
-}
-};
+    };
 
 
-// ====================== APPROVE BULK ======================
-exports.approveBulk = async (req, res) => {
-try {
-    const { data } = req.body;
-    if (!data || !Array.isArray(data) || data.length === 0) {
-        return res.status(400).json({ success: false, message: "Data approve bulk tidak valid" });
+// ====================== GET MAHASISWA UNTUK APPROVAL ======================
+exports.getMahasiswaTI = async (req, res) => {
+  try {
+    // ========== PAGINATION & PARAMS ==========
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+    const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
+    
+    // ========== SORTING ==========
+    const sortBy = req.query.sortBy || 'priority';
+    const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
+    
+    // Tentukan ORDER BY berdasarkan sortBy
+    let orderClause = '';
+    switch (sortBy) {
+      case 'priority':
+        // Priority: Status Bermasalah dulu (peminjaman=0 OR denda=0)
+        orderClause = `
+          CASE 
+            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
+            ELSE 1 
+          END ASC, 
+          waktu_bebaspustaka DESC
+        `;
+        break;
+      case 'latest':
+        orderClause = `waktu_bebaspustaka DESC`;
+        break;
+      case 'oldest':
+        orderClause = `waktu_bebaspustaka ASC`;
+        break;
+      case 'name_asc':
+        orderClause = `nama_mahasiswa ASC`;
+        break;
+      case 'name_desc':
+        orderClause = `nama_mahasiswa DESC`;
+        break;
+      default:
+        orderClause = `waktu_bebaspustaka DESC`;
     }
 
-    const nims = data.map(d => d.nim);
+    // ========== QUERY AMBIL DATA ==========
+    const query = `
+      SELECT 
+        id,
+        nim,
+        nama_mahasiswa,
+        institusi,
+        program_studi,
+        STATUS_peminjaman,
+        STATUS_denda,
+        STATUS_bebas_pustaka,
+        DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+      ORDER BY ${orderClause}
+      LIMIT ? OFFSET ?
+    `;
 
-    // cek pinjaman/denda untuk semua nim sebelum approve bulk
-    const cekPromises = nims.map(nim => opac.query(`SELECT is_return, fine_value FROM loan WHERE member_id = ?`, [nim]));
-    const cekResults = await Promise.all(cekPromises);
+    const [rows] = await bebaspustaka.query(query, [search, search, limit, offset]);
 
-    const blocked = [];
-    cekResults.forEach((r, idx) => {
-        const loans = r[0];
-        const masihPinjam = loans.some(l => l.is_return === 0);
-        const totalDenda = loans.reduce((a, b) => a + (b.fine_value || 0), 0);
-        if (masihPinjam || totalDenda > 0) blocked.push({ nim: nims[idx], masihPinjam, totalDenda });
-    });
+    // ========== QUERY TOTAL COUNT ==========
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+    `;
 
-    if (blocked.length > 0) {
-        return res.status(400).json({
-            success: false,
-            message: "Beberapa mahasiswa tidak bisa diapprove karena masih pinjam / memiliki denda",
-            blocked
-        });
-    }
+    const [totalData] = await bebaspustaka.query(countQuery, [search, search]);
+    const total = totalData[0].total;
 
-    await bebaspustaka.query(
-        `UPDATE bebas_pustaka SET status_pustaka_kompen = 'Disetujui', tanggal_approve = NOW() WHERE nim IN (${nims.map(() => "?").join(",")})`,
-        nims
-    );
-
-    const [rows] = await bebaspustaka.query(
-        `SELECT nim, nama_mahasiswa, status_pustaka_kompen, DATE_FORMAT(tanggal_approve, '%Y-%m-%d %H:%i') AS tanggal_approve FROM bebas_pustaka WHERE nim IN (${nims.map(() => "?").join(",")})`,
-        nims
-    );
-
-    const updatedData = rows.map(r => ({
-        id: r.nim,
-        nim: r.nim,
-        name: r.nama_mahasiswa,
-        statusbebaspustakanya: 1,
-        status: 1,
-        status_bepus: r.status_pustaka_kompen,
-        approved_at: r.tanggal_approve
+    // ========== FORMAT DATA SESUAI FRONTEND ==========
+    const data = rows.map(r => ({
+      id: r.id,
+      nim: r.nim,
+      name: r.nama_mahasiswa,
+      nama_mahasiswa: r.nama_mahasiswa,
+      institusi: r.institusi,
+      program_studi: r.program_studi,
+      status_peminjaman: r.STATUS_peminjaman, // 1 = Sudah Dikembalikan, 0 = Belum
+      STATUS_peminjaman: r.STATUS_peminjaman,
+      status_denda: r.STATUS_denda, // 1 = Bebas Denda, 0 = Memiliki Denda
+      STATUS_denda: r.STATUS_denda,
+      status_bepus: r.STATUS_bebas_pustaka, // 'Pending', 'Disetujui', dll
+      STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
+      waktu_bebaspustaka: r.waktu_bebaspustaka
     }));
 
-    return res.json({
-        success: true,
-        message: `✔ Berhasil approve ${updatedData.length} mahasiswa`,
-        updated: updatedData
+    // ========== RESPONSE ==========
+    res.json({
+      success: true,
+      total: total,
+      page: page,
+      limit: limit,
+      totalPages: Math.ceil(total / limit),
+      data: data
     });
 
-} catch (err) {
-    console.error("❌ Error approveBulk:", err);
-    res.status(500).json({ success: false, message: "❌ Error approve bulk" });
-}
-};
-
-
-// ====================== CHECK VISITOR ======================
-exports.checkVisitor = async (req, res) => {
-  try {
-      const { nim } = req.params;
-      if (!nim) return res.status(400).json({ success: false, message: "NIM wajib diisi" });
-
-      const [member] = await opac.query(
-          `SELECT member_id, member_name, inst_name FROM member WHERE member_id = ?`,
-          [nim]
-      );
-
-      if (!member.length) return res.status(404).json({ success: false, message: "Mahasiswa tidak ditemukan" });
-
-      const { member_id, member_name, inst_name } = member[0];
-
-      const [visitor] = await opac.query(
-          `SELECT COUNT(*) AS total_visit FROM visitor_count WHERE member_id = ? AND member_name = ? AND institution = ?`,
-          [member_id, member_name, inst_name]
-      );
-
-      const status_visitor = visitor[0].total_visit > 0 ? "✔ Sudah Absen" : "❌ Belum Absen";
-
-      res.json({
-          success: true,
-          nim,
-          nama: member_name,
-          institution: inst_name,
-          total_kunjungan: visitor[0].total_visit,
-          status_visitor
-      });
-
   } catch (err) {
-      console.error("❌ Error checkVisitor:", err);
-      res.status(500).json({ success: false, message: "❌ Gagal mengecek status absensi" });
-  }
-};
-
-// ====================== DETAIL TI ======================
-exports.detailTI = async (req, res) => {
-  try {
-      const { nim } = req.params;
-      if (!nim) return res.status(400).json({ success: false, message: "NIM wajib diisi" });
-
-      const [rows] = await bebaspustaka.query(
-          `SELECT * FROM bebas_pustaka WHERE nim = ?`,
-          [nim]
-      );
-
-      if (!rows.length)
-          return res.status(404).json({ success: false, message: "Data tidak ditemukan" });
-
-      const data = rows[0];
-
-      // cek pinjaman di OPAC
-      const [loans] = await opac.query(
-          `SELECT title, is_return, fine_value, DATE_FORMAT(loan_date, '%Y-%m-%d') AS loan_date 
-           FROM loan 
-           WHERE member_id = ?`,
-          [nim]
-      );
-
-      const masihPinjam = loans.some(l => l.is_return === 0);
-      const totalDenda = loans.reduce((a, b) => a + (b.fine_value || 0), 0);
-
-      res.json({
-          success: true,
-          data: {
-              ...data,
-              pinjaman: loans,
-              masihPinjam,
-              totalDenda
-          }
-      });
-
-  } catch (err) {
-      console.error("❌ detailTI Error:", err);
-      res.status(500).json({ success: false, message: "Gagal mengambil detail" });
+    console.error("❌ Error getMahasiswaTI:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Gagal mengambil data mahasiswa",
+      error: err.message 
+    });
   }
 };
 
 
-// ====================== CANCEL BEPUS ======================
-exports.cancel = async (req, res) => {
+// ====================== GET MAHASISWA WITH "ALL" OPTION ======================
+exports.getMahasiswaTIWithAll = async (req, res) => {
   try {
-      const { nim } = req.body;
-      if (!nim) return res.status(400).json({ success: false, message: "NIM wajib diisi" });
+    // ========== PAGINATION & PARAMS ==========
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
+    const isSelectAll = req.query.selectAll === 'true';
+    const showAll = req.query.all === 'true';
+    
+    // Limit null jika selectAll atau all=true
+    const limit = !isSelectAll && !showAll ? (parseInt(req.query.limit) || 10) : null;
+    const offset = limit ? (page - 1) * limit : null;
 
-      await bebaspustaka.query(
-          `UPDATE bebas_pustaka SET status_pustaka_kompen = 'Pending', tanggal_approve = NULL WHERE nim = ?`,
-          [nim]
-      );
-
-      res.json({
-          success: true,
-          message: "✔ Status dikembalikan menjadi Pending",
-          nim
-      });
-
-  } catch (err) {
-      console.error("❌ cancel Error:", err);
-      res.status(500).json({ success: false, message: "Gagal membatalkan approval" });
-  }
-};
-
-
-// ====================== EXPORT PDF ======================
-exports.exportPDF = async (req, res) => {
-  try {
-      const { header, data } = req.body;
-
-      // Validasi
-      if (!data || !Array.isArray(data) || data.length === 0) {
-          return res.status(400).json({ success: false, message: "Data export kosong" });
-      }
-
-      const doc = new PDFDocument({ size: "A4", margin: 30 });
-      const filename = `BEPUS_${Date.now()}.pdf`;
-
-      // Set Header response
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.setHeader("Content-Type", "application/pdf");
-
-      doc.pipe(res);
-
-      // Judul
-      doc.fontSize(16).text("Laporan Bebas Pustaka", { align: "center" });
-      doc.moveDown();
-
-      // Header Table
-      doc.fontSize(10);
-      header.forEach(h => {
-          doc.text(h, { continued: true, width: 100 });
-      });
-      doc.moveDown();
-
-      // Isi Table
-      data.forEach(row => {
-          Object.values(row).forEach(col => {
-              doc.text(col ? col.toString() : "-", { continued: true, width: 100 });
-          });
-          doc.moveDown();
-      });
-
-      doc.end();
-
-  } catch (err) {
-      console.error("❌ exportPDF Error:", err);
-      res.status(500).json({ success: false, message: "Gagal export PDF" });
-  }
-};
-
-
-// ====================== EXPORT EXCEL ======================
-exports.exportExcel = async (req, res) => {
-    try {
-        const { header, data } = req.body;
-
-        if (!data || !Array.isArray(data) || data.length === 0) {
-            return res.status(400).json({ success: false, message: "Data export kosong" });
-        }
-
-        const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet("Laporan");
-
-        sheet.addRow(header);
-
-        data.forEach(row => {
-            sheet.addRow(Object.values(row));
-        });
-
-        const filename = `BEPUS_${Date.now()}.xlsx`;
-        res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-        res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-        await workbook.xlsx.write(res);
-        res.end();
-
-    } catch (err) {
-        console.error("❌ exportExcel Error:", err);
-        res.status(500).json({ success: false, message: "Gagal export Excel" });
+    // ========== SORTING ==========
+    const sortBy = req.query.sortBy || 'priority';
+    
+    let orderClause = '';
+    switch (sortBy) {
+      case 'priority':
+        orderClause = `
+          CASE 
+            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
+            ELSE 1 
+          END ASC, 
+          waktu_bebaspustaka DESC
+        `;
+        break;
+      case 'latest':
+        orderClause = `waktu_bebaspustaka DESC`;
+        break;
+      case 'oldest':
+        orderClause = `waktu_bebaspustaka ASC`;
+        break;
+      case 'name_asc':
+        orderClause = `nama_mahasiswa ASC`;
+        break;
+      case 'name_desc':
+        orderClause = `nama_mahasiswa DESC`;
+        break;
+      default:
+        orderClause = `waktu_bebaspustaka DESC`;
     }
+
+    // ========== QUERY AMBIL DATA ==========
+    let query = `
+      SELECT 
+        id,
+        nim,
+        nama_mahasiswa,
+        institusi,
+        program_studi,
+        STATUS_peminjaman,
+        STATUS_denda,
+        STATUS_bebas_pustaka,
+        DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+      ORDER BY ${orderClause}
+    `;
+
+    const params = [search, search];
+    
+    // Tambah LIMIT OFFSET jika ada pagination
+    if (limit) {
+      query += ` LIMIT ? OFFSET ?`;
+      params.push(limit, offset);
+    }
+
+    const [rows] = await bebaspustaka.query(query, params);
+
+    // ========== QUERY TOTAL COUNT ==========
+    const [totalData] = await bebaspustaka.query(`
+      SELECT COUNT(*) AS total
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+    `, [search, search]);
+
+    const total = totalData[0].total;
+
+    // ========== FORMAT DATA SESUAI FRONTEND ==========
+    const data = rows.map(r => ({
+      id: r.id,
+      nim: r.nim,
+      name: r.nama_mahasiswa,
+      nama_mahasiswa: r.nama_mahasiswa,
+      institusi: r.institusi,
+      program_studi: r.program_studi,
+      status_peminjaman: r.STATUS_peminjaman,
+      STATUS_peminjaman: r.STATUS_peminjaman,
+      status_denda: r.STATUS_denda,
+      STATUS_denda: r.STATUS_denda,
+      status_bepus: r.STATUS_bebas_pustaka,
+      STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
+      waktu_bebaspustaka: r.waktu_bebaspustaka
+    }));
+
+    // ========== RESPONSE ==========
+    res.json({
+      success: true,
+      total: total,
+      page: limit ? page : "all",
+      limit: limit || "all",
+      totalPages: limit ? Math.ceil(total / limit) : 1,
+      data: data
+    });
+
+  } catch (err) {
+    console.error("❌ Error getMahasiswaTIWithAll:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Gagal mengambil data mahasiswa",
+      error: err.message 
+    });
+  }
+};
+
+
+exports.getMahasiswaTIWithAll = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
+    const isSelectAll = req.query.selectAll === 'true';
+    const showAll = req.query.all === 'true';
+    
+    const limit = !isSelectAll && !showAll ? (parseInt(req.query.limit) || 10) : null;
+    const offset = limit ? (page - 1) * limit : null;
+
+    const sortBy = req.query.sortBy || 'register_date';
+    const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
+
+    let query = `
+      SELECT DISTINCT
+          nim,
+          nama_mahasiswa,
+          institusi,
+          program_studi,
+          STATUS_peminjaman,
+          STATUS_denda,
+          STATUS_bebas_pustaka,
+          waktu_bebaspustaka
+      FROM bebaspustaka.bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+      LIMIT ? OFFSET ?
+    `;
+
+    const params = [search, search];
+    
+    if (limit) {
+      query += ` LIMIT ? OFFSET ?`;
+      params.push(limit, offset);
+    }
+
+    const [rows] = await opac.query(query, params);
+
+    const [totalData] = await opac.query(`
+      SELECT COUNT(DISTINCT nim) AS total
+      FROM bebaspustaka.bebas_pustaka
+    `);
+
+    const total = totalData[0].total;
+
+    // Format data
+    const data = rows.map(r => ({
+      nim: r.nim,
+      nama: r.nama,
+      register_date: r.register_date,
+      inst_name: r.inst_name
+    }));
+
+    // Response
+    res.json({
+      success: true,
+      total: total,
+      page: limit ? page : "all",
+      limit: limit || "all",
+      totalPages: limit ? Math.ceil(total / limit) : 1,
+      data: data
+    });
+
+  } catch (err) {
+    console.error("❌ Error getMahasiswaTIWithAll:", err);
+    res.status(500).json({ 
+      success: false, 
+      message: "Gagal mengambil data mahasiswa",
+      error: err.message 
+    });
+  }
 };

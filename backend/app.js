@@ -36,7 +36,6 @@ app.use('/api/loan',require('./routes/loanRouts'));
 
 app.use('/api/landing',require('./routes/landing'));
 
-app.use('/api/approval', require('./routes/bepus'));
 
 app.use('/api/infoCard', require('./routes/infoCardRoutes'));
 

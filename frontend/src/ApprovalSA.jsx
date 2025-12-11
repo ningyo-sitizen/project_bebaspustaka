@@ -70,7 +70,7 @@ function ApprovalSA() {
                 nim: d.nim ? String(d.nim) : '',
                 status_peminjaman: d.STATUS_peminjaman || 0,
                 status_denda: d.STATUS_denda || 0,
-                status_bepus: d.STATUS_bebas_pustaka === 'approved' ? 1 : 0,
+                status_bepus: d.STATUS_bebas_pustaka,
                 institusi: d.institusi || '',
                 program_studi: d.program_studi || ''
             }));
@@ -793,9 +793,11 @@ const handleEndInput = (e) => {
                                                         </div>
                                                     </label>
                                                 </th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]"></th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
+                                                <th className="p-4 font-normal text-white bg-[#667790]">Status denda</th>
                                                 <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Tindakan</th>
                                                 <th className=" p-4 font-normal text-white bg-[#667790]">Keterangan</th>
@@ -842,6 +844,10 @@ const handleEndInput = (e) => {
                                                         {item.status_peminjaman === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan"}
                                                     </td>
 
+                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status_denda === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
+                                                        {item.status_denda === 1 ? "bebas denda" : "memiliki denda"}
+                                                    </td>
+
                                                     {/* Status - Kombinasi peminjaman & denda */}
                                                     <td className={`p-4 whitespace-nowrap overflow-x-auto ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "text-[#4ABC4C]" : "text-[#FF1515]"
                                                         }`}>
@@ -849,9 +855,8 @@ const handleEndInput = (e) => {
 
                                                     </td>
 
-                                                    {/* Tindakan - Approval SA */}
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto">
-                                                        {item.status_bepus === 0 ? (
+                                                        {item.status_bepus === "pending" ? (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => setAlertBebasPustaka(!alertBebasPustaka)}
