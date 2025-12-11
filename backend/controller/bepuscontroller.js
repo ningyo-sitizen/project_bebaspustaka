@@ -538,7 +538,7 @@ exports.getMahasiswaTIWithAll = async (req, res) => {
 
     const total = totalData[0].total;
 
-    // ========== FORMAT DATA SESUAI FRONTEND ==========
+  
     const data = rows.map(r => ({
       id: r.id,
       nim: r.nim,

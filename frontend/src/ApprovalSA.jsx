@@ -793,7 +793,6 @@ const handleEndInput = (e) => {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]"></th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
                                                 <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
@@ -832,9 +831,6 @@ const handleEndInput = (e) => {
                                                                 )}
                                                             </div>
                                                         </label>
-                                                    </td>
-                                                    <td className="px-4">
-                                                        <div className="relative bg-[url('https://cdn.designfast.io/image/2025-11-21/b89ae749-b5b2-40e4-967d-18be9ef8aed8.png')] bg-cover bg-no-repeat bg-center w-12 h-12"></div>
                                                     </td>
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name || 'N/A'}</td>
                                                     <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim || 'N/A'}</td>
