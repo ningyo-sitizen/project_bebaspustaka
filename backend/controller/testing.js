@@ -260,7 +260,17 @@ exports.setDateRangeAndGenerate = async (req, res) => {
                 message: "Tanggal disimpan + generate selesai",
                 result
             });
+            
         }
+        
+        // JIKA STATUS MASIH ON_RANGE → TIDAK BOLEH EDIT
+if (rows[0].STATUS_bebas_pustaka === "on_range") {
+    return res.status(400).json({
+        success: false,
+        message: "Tanggal tidak dapat diedit karena status masih ON RANGE"
+    });
+}
+
 
         // CHECK IF STATUS = out_of_range
         if (rows[0].STATUS_bebas_pustaka === "out_of_range") {

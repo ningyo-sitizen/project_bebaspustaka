@@ -170,6 +170,9 @@ exports.getDashboardDatVisitor = async (req, res) => {
         });
         return acc;
       }, {});
+
+      console.log(groupedData)
+
       
       return res.json({
         years: years,
@@ -199,7 +202,8 @@ exports.getDashboardDatVisitor = async (req, res) => {
       return acc;
     }, {});
     
-    
+          console.log("🟥 Raw chartRows length =", chartRows.length);
+  console.log("🟥 Raw sample =", chartRows.slice(0, 20));
     const [[{ total }]] = await bebaspustaka.query(countSql, [years]);
     
     res.json({

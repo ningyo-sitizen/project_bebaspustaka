@@ -86,10 +86,8 @@ async function syncWeekly() {
     const lastVisitorDate = await getLastVisitorDate();
     if (!lastVisitorDate) return updates;
 
-    const lastDate = new Date(lastVisitorDate);
-    const weekKey = `${lastDate.getFullYear()}-W${getISOWeek(lastDate)}`;
-
-    if (lastSummaryWeek === weekKey) return updates;
+    // Jika sudah update
+    if (lastSummaryWeek === lastVisitorDate) return updates;
 
     const [rows] = await opac.query(`
         SELECT 
@@ -99,11 +97,27 @@ async function syncWeekly() {
             STR_TO_DATE(CONCAT(YEAR(checkin_date), WEEK(checkin_date,1), ' Monday'), '%X%V %W') AS start_week,
             DATE_ADD(STR_TO_DATE(CONCAT(YEAR(checkin_date), WEEK(checkin_date,1), ' Monday'), '%X%V %W'), INTERVAL 6 DAY) AS end_week
         FROM visitor_count
-        WHERE DATE(checkin_date) BETWEEN ? AND ?
+        WHERE DATE(checkin_date) > ? AND DATE(checkin_date) <= ?
         GROUP BY year, week
     `, [lastSummaryWeek || "2000-01-01", lastVisitorDate]);
 
-    for (let w of rows) {
+    // =============================
+    // 🚫 FIX: Hilangkan Duplikasi
+    // =============================
+    const uniqueRows = [];
+    const seen = new Set();
+
+    for (const r of rows) {
+        const key = `${r.year}-${r.week}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            uniqueRows.push(r);
+        }
+    }
+
+    // =============================
+
+    for (let w of uniqueRows) {
         updates.push(`W${w.week}-${w.year}`);
 
         await bebaspustaka.query(`
@@ -112,10 +126,12 @@ async function syncWeekly() {
         `, [w.year, w.week, w.start_week, w.end_week, w.total_visitor]);
     }
 
-    await setStatus("weekly", weekKey);
+    await setStatus("weekly", lastVisitorDate);
 
     return updates;
 }
+
+
 
 
 // ===================== MONTHLY SYNC =====================
