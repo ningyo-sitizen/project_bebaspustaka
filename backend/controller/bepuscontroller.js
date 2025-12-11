@@ -295,6 +295,7 @@ exports.getMahasiswaTI_AllFull = async (req, res) => {
 
 exports.getAllMahasiswaTI = async (req, res) => {
   try {
+    await updateStatusesJoin();
     const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
 
     const sortBy = req.query.sortBy || 'priority';
@@ -631,6 +632,7 @@ exports.approve = async (req, res) => {
 // ====================== GET MAHASISWA UNTUK APPROVAL ======================
 exports.getMahasiswaTI = async (req, res) => {
   try {
+  await updateStatusesJoin();
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;

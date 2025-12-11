@@ -429,6 +429,7 @@ function ApprovalSA() {
             });
 
             setStatusRange(response.data.status);
+            console.log(response.data.status)
 
             if (response.data.start_date && response.data.end_date) {
                 setStartDate(response.data.start_date);
@@ -631,7 +632,11 @@ function ApprovalSA() {
                                 <div className="flex items-center gap-3">
                                     <div className="relative">
                                         <button
-                                            onClick={() => statusRange === "out_of_range" && setShowFilter(!showFilter)}
+                                            onClick={() =>
+                                                (statusRange === "out_of_range" || statusRange === "empty") &&
+                                                setShowFilter(!showFilter)
+                                            }
+
                                             disabled={statusRange === "on_range"}
                                             className={`flex relative items-center gap-2 px-3 py-1 rounded border transition
                                             ${statusRange === "on_range"
