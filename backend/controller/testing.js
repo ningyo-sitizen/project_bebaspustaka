@@ -72,7 +72,6 @@
 
                 await updateStatusesJoin();
 
-                // insert visitor_count
                 const [borowing] = await bebaspustaka.query(`
                     SELECT DISTINCT NIM, nama_mahasiswa, institusi, program_studi
                     FROM bebas_pustaka
