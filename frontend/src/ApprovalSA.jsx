@@ -152,7 +152,8 @@ function ApprovalSA() {
     const approveAllRequest = async () => {
         try {
             const token = localStorage.getItem("token");
-
+            const user = JSON.parse(localStorage.getItem('user'))
+            const username = user.username;
             const allData = await fetchAllData();
             const selectedMahasiswa = allData.filter(item => checkedItems[item.id]);
 
@@ -170,7 +171,7 @@ function ApprovalSA() {
             for (let i = 0; i < chunks.length; i++) {
                 await axios.post(
                     "http://localhost:8080/api/bebaspustaka/approveAll",
-                    { mahasiswa: chunks[i] },
+                    { mahasiswa: chunks[i],username},
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -294,6 +295,8 @@ function ApprovalSA() {
     const approveSingle = async (item) => {
         try {
             const token = localStorage.getItem("token");
+            const user = JSON.parse(localStorage.getItem('user'))
+            const username = user.username;
 
             const res = await axios.post(
                 "http://localhost:8080/api/bebaspustaka/approve",
@@ -303,7 +306,8 @@ function ApprovalSA() {
                     institusi: item.institusi,
                     program_studi: item.program_studi,
                     status_peminjaman: item.status_peminjaman,
-                    status_denda: item.status_denda
+                    status_denda: item.status_denda,
+                    username
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
             );

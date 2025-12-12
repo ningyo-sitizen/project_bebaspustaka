@@ -515,18 +515,19 @@ exports.approveAll = async (req, res) => {
     }
 
     const mysqlDate = formatDateToMySQL(new Date());
-
+    const petugas = req.body.username; 
     const sqlUpdate = `
       UPDATE bebas_pustaka
       SET STATUS_bebas_pustaka = 'approved',
-          waktu_bebaspustaka = ?
+          waktu_bebaspustaka = ?,
+          petugas_approve = ?
       WHERE nim = ?
     `;
 
     const sqlInsert = `
       INSERT INTO visitor_count
-      (member_id, member_name, institution, program_studi, checkin_date)
-      VALUES (?, ?, ?, ?, ?)
+      (member_id, member_name, institution, program_studi, checkin_date )
+      VALUES (?, ?, ?, ?,?)
     `;
 
     // proses semua nim
@@ -536,7 +537,7 @@ exports.approveAll = async (req, res) => {
   const nama = m.nama_mahasiswa ?? m.name ?? "";
   const institusi = m.institusi;
   const program_studi = m.program_studi;
-
+  const username = m.username;
   const status_peminjaman = m.STATUS_peminjaman ?? m.status_peminjaman;
   const status_denda = m.STATUS_denda ?? m.status_denda;
 
@@ -544,7 +545,8 @@ exports.approveAll = async (req, res) => {
     continue;
   }
 
-      await bebaspustaka.query(sqlUpdate, [mysqlDate, nim]);
+      await bebaspustaka.query(sqlUpdate, [mysqlDate,petugas,nim]);
+      console.log("nama petugas" + petugas)
       await opac.query(sqlInsert, [nim, nama, institusi, program_studi, mysqlDate]);
     }
 
@@ -570,7 +572,8 @@ exports.approve = async (req, res) => {
       institusi,
       program_studi,
       status_peminjaman,
-      status_denda
+      status_denda,
+      username
     } = req.body;
 
     if (!nim) {
@@ -594,6 +597,7 @@ exports.approve = async (req, res) => {
       SET 
         STATUS_bebas_pustaka = 'approved',
         waktu_bebaspustaka = ?
+        petugas_approve = ?
       WHERE nim = ?
     `;
     const sql_insert_visitor = 
@@ -602,7 +606,7 @@ exports.approve = async (req, res) => {
     values (?,?,?,?,?)
     `
 
-    const [updateResult] = await bebaspustaka.query(sql, [mysqlDate, nim]);
+    const [updateResult] = await bebaspustaka.query(sql, [mysqlDate,username,nim]);
     const [insertResult] = await opac.query(sql_insert_visitor, [nim,nama_mahasiswa,institusi,program_studi,mysqlDate]);
 
     if (updateResult.affectedRows === 0) {
