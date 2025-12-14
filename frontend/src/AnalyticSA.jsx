@@ -111,18 +111,26 @@ export default function Dashboard() {
     const [actJurusanL, setActJurusanL] = useState(false);
 
     const [activeChartR, setActiveChartR] = useState(localStorage.getItem("chart_type_right") || "Line");
-    const [activeChartL, setActiveChartL] = useState("Line");
-    const [draftChartTypeL, setDraftChartTypeL] = useState(activeChartL);
 
-    const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
+  
+
+    // const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
+    const [appliedFilters, setAppliedFilters] = useState(() => {
+        return JSON.parse(localStorage.getItem("filters_left"));
+    });
+      const [draftChartTypeL, setDraftChartTypeL] = useState(
+        appliedFilters?.chartType || "Line"
+    );
+
+    const [selectedYears, setSelectedYears] = useState(
+        appliedFilters?.years || []
+    );
+    const [selectedType, setSelectedType] = useState(
+        appliedFilters?.type || "monthly"
+    );
+
+
     const [years, setYears] = useState([]);
-    const [selectedYears, setSelectedYears] = useState(statefilterKiri.years || []);
-    const [actYears, setActYears] = useState(statefilterKiri.years || []);
-    const [selectedType, setSelectedType] = useState(statefilterKiri.type || "monthly");
-    const [actType, setActType] = useState(statefilterKiri.type || "monthly");
-    const [tempYears, setTempYears] = useState([]);
-    const [tempType, setTempType] = useState("");
-
     const [tablePageLeft, setTablePageLeft] = useState(1);
     const [tableLimitLeft] = useState(50);
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
@@ -157,7 +165,7 @@ export default function Dashboard() {
     const [limit] = useState(10);
 
 
-    const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
+    const maxReached = draftChartTypeL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
 
     const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
 
@@ -226,15 +234,29 @@ export default function Dashboard() {
         return query.toString();
     };
 
+    const handleApplyFiltersLeft = () => {
+        const filters = {
+            years: selectedYears,
+            type: selectedType,
+            chartType: draftChartTypeL,
+        };
+
+        localStorage.setItem("filters_left", JSON.stringify(filters));
+        setAppliedFilters(filters); // 🔥 trigger SEMUA
+    };
+
+
     const debounceTimer = useRef(null);
 
-    const debouncedApplyFiltersLeft = () => {
+    const debouncedApplyFiltersLeft = useCallback(() => {
         closeModal(false);
+
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
         debounceTimer.current = setTimeout(() => {
             handleApplyFiltersLeft();
-        }, 250); // delay 250ms, bisa diubah sesuai selera
-    };
+        }, 250);
+    }, [handleApplyFiltersLeft]);
 
     const debounceTimerRight = useRef(null);
 
@@ -248,26 +270,26 @@ export default function Dashboard() {
 
 
     //label buaat chart kiri
-    const autoBuildChartData = (data, selectedType) => {
+    const autoBuildChartData = (data, type) => {
         const monthLabels = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         ];
 
         let baseLabels = [];
-        if (selectedType === "monthly") baseLabels = monthLabels;
-        else if (selectedType === "yearly") baseLabels = data.years;
-        else if (selectedType === "weekly") {
+        if (type === "monthly") baseLabels = monthLabels;
+        else if (type === "yearly") baseLabels = data.years;
+        else if (type === "weekly") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
-        } else if (selectedType === "daily") {
+        } else if (type === "daily") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
         }
 
-        if (selectedType === "monthly") {
+        if (type === "monthly") {
             baseLabels = monthLabels.filter(m =>
                 Object.values(data.data)
                     .flat()
@@ -298,27 +320,27 @@ export default function Dashboard() {
     };
 
     const fetchTableDataLeft = useCallback(async (pageNum) => {
-        try {
-            const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
-            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
-            if (selectedType) query.append("period", selectedType);
-            query.append("page", pageNum);
-            query.append("limit", tableLimitLeft);
-            query.append("tableOnly", "true");
+        if (!appliedFilters) return;
 
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${buildQueryParams({ years: selectedYears, type: selectedType, page: pageNum, limit: tableLimitLeft, tableOnly: true })}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
+        const token = localStorage.getItem("token");
 
-            setTableDataLeft(data);
-            setTablePaginationLeft(data.pagination);
-            setTablePageLeft(pageNum);
-        } catch (err) {
-            console.error("Error fetching table data:", err);
-        }
-    }, [selectedYears, selectedType, tableLimitLeft]);
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+                page: pageNum,
+                limit: tableLimitLeft,
+                tableOnly: true
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = await res.json();
+        setTableDataLeft(data);
+        setTablePaginationLeft(data.pagination);
+        setTablePageLeft(pageNum);
+    }, [appliedFilters, tableLimitLeft]);
+
 
     const fetchTableDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -385,62 +407,6 @@ export default function Dashboard() {
 
     const fetchController = useRef(null);
 
-    const handleApplyFiltersLeft = useCallback(async () => {
-        setActiveChartL(draftChartTypeL);
-        setTempYears(selectedYears);
-        setTempType(selectedType);
-        setIsLoadingLeft(true);
-        setActYears(selectedYears);
-        setActType(selectedType);
-
-        const setupfilter = {
-            years: selectedYears,
-            type: selectedType
-        };
-        localStorage.setItem("filters_left", JSON.stringify(setupfilter));
-        if (fetchController.current) {
-            fetchController.current.abort();
-        }
-
-
-        fetchController.current = new AbortController();
-        const { signal } = fetchController.current;
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        try {
-            const token = localStorage.getItem("token");
-            const query = buildQueryParams({ years: selectedYears, type: selectedType });
-
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                signal
-            });
-            const responseData = await res.json();
-
-            requestAnimationFrame(() => {
-                const chart = autoBuildChartData(responseData, selectedType, draftChartTypeL);
-                setChartDataL({
-                    lineChart: chart,
-                    barChart: chart,
-                    pieChart: chart,
-                });
-
-                setTableData(responseData);
-                setIsLoadingLeft(false);
-            });
-            fetchTableDataLeft(1);
-
-        } catch (err) {
-            if (err.name === "AbortError") {
-                console.log("Previous fetch aborted due to new filter");
-            } else {
-                console.error("Error applying filters:", err);
-                setIsLoadingLeft(false);
-            }
-        }
-
-    }, [selectedYears, selectedType, draftChartTypeL, tempYears, tempType, tablePageLeft]);
 
 
 
@@ -915,7 +881,7 @@ export default function Dashboard() {
         if (!chartDataL.lineChart || !chartDataL.pieChart || !chartDataL.barChart) {
             return <p>Loading chart...</p>;
         }
-        switch (activeChartL) {
+        switch (appliedFilters.chartType) {
             case "Line":
                 return (
                     <Line
@@ -1103,6 +1069,7 @@ export default function Dashboard() {
                 );
         }
     };
+
     useEffect(() => {
         fetchChartDataRight();
     }, [actAngkatan, actLembaga, actProdi]);
@@ -1143,8 +1110,12 @@ export default function Dashboard() {
 
     }, []);
     useEffect(() => {
-        handleApplyFiltersLeft();
-    }, [handleApplyFiltersLeft]);
+        if (!appliedFilters) return;
+
+        fetchChartDataLeft();
+        fetchTableDataLeft(1);
+    }, [appliedFilters]);
+
 
     useEffect(() => {
         fetchChartDataRight();
@@ -1266,63 +1237,30 @@ export default function Dashboard() {
 
     const fetchChartDataLeft = useCallback(async () => {
         setIsLoadingLeft(true);
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const mockData = await res.json();
 
-            requestAnimationFrame(() => {
-                setChartDataL({
-                    lineChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan tahun 2025',
-                            data: mockData.data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1
-                        }]
-                    },
-                    pieChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: "Kunjungan",
-                            data: mockData.data,
-                            backgroundColor: ['#537FF1', '#8979FF', '#A8B5CB', '#667790']
-                        }]
-                    },
-                    barChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan',
-                            data: mockData.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)'
-                        }]
-                    }
-                });
+        const token = localStorage.getItem("token");
 
-                const tableDataFormat = {
-                    years: [2025],
-                    data: {
-                        2025: mockData.labels.map((label, index) => ({
-                            label: label,
-                            total_visitor: mockData.data[index]
-                        }))
-                    }
-                };
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-                setTableData(tableDataFormat);
-                setTableDataLeft(tableDataFormat);
-                setSelectedType("monthly");
-                setIsLoadingLeft(false);
-            });
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
-            setIsLoadingLeft(false);
-        }
-    }, []);
+        const data = await res.json();
+
+        const chart = autoBuildChartData(data, appliedFilters.type);
+
+        setChartDataL({
+            lineChart: chart,
+            barChart: chart,
+            pieChart: chart,
+        });
+
+        setIsLoadingLeft(false);
+    }, [appliedFilters]);
+
 
     const fetchChartDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -1557,7 +1495,7 @@ export default function Dashboard() {
                                                     <div className="px-5 pt-5">
                                                         <div className='flex justify-between'>
                                                             <p className="font-bold text-lg text-left">Filter</p>
-                                                         <button className='text-3xl font-medium mr-3'
+                                                            <button className='text-3xl font-medium mr-3'
                                                                 onClick={handleCancelFilters}>x</button>
                                                         </div>
                                                         <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>

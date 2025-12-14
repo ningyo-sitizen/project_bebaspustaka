@@ -14,6 +14,7 @@ import {
     IconHistory,
     IconUser,
     IconChevronDown,
+    IconSelector,
 } from "@tabler/icons-react";
 
 import { data, Link } from 'react-router-dom';
@@ -45,9 +46,11 @@ function ApprovalSA() {
     const [search, setSearch] = useState("");
     const [checkedItems, setCheckedItems] = useState({});
     const [approvedAll, setApprovedAll] = useState(false);
-
     const [searchTimeout, setSearchTimeout] = useState(null);
-    const [backendTotal, setBackendTotal] = useState(0);
+
+    //gonta ganti tab
+    const [changeTab, setChangeTab] = useState(); //ini buat render data base on folder
+    const [changeTabColor, setChangeTabColor] = useState("#D8DFEC")
 
     const [sortBy, setSortBy] = useState('priority');
     const [sortOrder, setSortOrder] = useState('asc');
@@ -126,6 +129,9 @@ function ApprovalSA() {
         setSearchTimeout(timeout);
     };
 
+    const handleToggleFilter = () => {
+        setShowFilter(prev => !prev);
+    };
 
     //GET login user
     const [profileData, setProfileData] = useState({
@@ -171,7 +177,7 @@ function ApprovalSA() {
             for (let i = 0; i < chunks.length; i++) {
                 await axios.post(
                     "http://localhost:8080/api/bebaspustaka/approveAll",
-                    { mahasiswa: chunks[i],username},
+                    { mahasiswa: chunks[i], username },
                     { headers: { Authorization: `Bearer ${token}` } }
                 );
 
@@ -610,8 +616,8 @@ function ApprovalSA() {
 
 
 
-                            <div className="flex flex-wrap gap-3 items-center justify-between mt-4">
-                                <div className="flex items-center text-[#9A9A9A] font-semibold">
+                            <div className="flex flex-wrap gap-2 items-center justify-between mt-4">
+                                <div className="flex items-center text-[#616161] text-sm font-semibold">
                                     <p className="mr-2">Tunjukkan</p>
                                     <input
                                         type="number"
@@ -625,270 +631,283 @@ function ApprovalSA() {
                                                 setCurrentPage(1);
                                             }
                                         }}
-                                        className="w-16 h-8 bg-transparent border border-[#9A9A9A] rounded-lg shadow-sm text-center focus:outline-none"
+                                        className="w-24 h-8 bg-transparent border border-[#E3E3E3] text-center focus:outline-none"
                                     />
                                     <p className="ml-2">Entitas</p>
                                 </div>
 
-                                <p>
-                                    Range aktif: {startDate} — {endDate}
-                                </p>
+
                                 <div className="flex items-center gap-3">
-                                    <div className="relative">
-                                        <button
+                                    <div className="flex border-2 border-[#E3E3E3] items-center justify-center">
+                                        <div className="relative">
+                                            <div className="border-r-2 border-[#E3E3E3] text-sm h-full my-auto">
+                                                <button onClick={handleToggleFilter}
+                                                    className={`flex relative gap-4 px-4 py-2 active:scale-90 transition-transform duration-100
+                                                            ${showFilter
+                                                            ? 'bg-[#667790] text-white'
+                                                            : 'bg-transparent text-[#616161] cursor-pointer'
+                                                        }`}
+                                                >
+                                                    <svg
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        width="20"
+                                                        height="20"
+                                                        viewBox="0 0 24 24"
+                                                        fill="none"
+                                                        stroke="currentColor"
+                                                        strokeWidth="2"
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        className="icon icon-tabler"
+                                                    >
+                                                        <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                        <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />
+                                                    </svg>
+                                                    Filter
+                                                </button>
+                                            </div>
 
-                                            onClick={() =>
-                                                (statusRange === "out_of_range" || statusRange === "empty") &&
-                                                setShowFilter(!showFilter)
-                                            }
+                                            {showFilter && (
+                                                <div className="absolute top-full right-0 bg-white p-3 rounded-lg shadow-xl z-50 w-[90vw] max-w-[260px]">
 
-                                            disabled={statusRange === "on_range"}
-                                            className={`flex relative items-center gap-2 px-3 py-1 rounded border transition
-                                            ${statusRange === "on_range"
-                                                    ? 'bg-gray-300 text-gray-400 border-gray-300 cursor-not-allowed'
-                                                    : showFilter
+                                                    <div className="flex justify-between p-1">
+                                                        <p className="font-semibold text-base text-gray-800">Filter</p>
+                                                        <button className="font-semibold text-base text-gray-800"
+                                                            onClick={() => setShowFilter(false)}>X</button>
+                                                    </div>
+
+                                                    <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
+
+                                                    <div className="w-full max-w-xs items-center justify-start text-xs px-4 mb-[12px]">
+                                                        <DayPicker
+                                                            mode="range"
+                                                            selected={range}
+                                                            onSelect={handleRangeChange}
+                                                        />
+                                                    </div>
+
+                                                    <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
+
+                                                    {/* Start Date */}
+                                                    <div className="text-sm mb-3">
+                                                        <label className="block mb-1 font-medium text-xs text-left">
+                                                            Tanggal Mulai <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="date"
+                                                            value={startDate}
+                                                            onChange={handleStartInput}
+                                                            className="border border-gray-300 px-3 py-2 rounded-md w-full text-xs focus:outline-blue-400"
+                                                        />
+                                                    </div>
+
+                                                    {/* End Date */}
+                                                    <div className="text-sm mb-3">
+                                                        <label className="block mb-1 font-medium text-xs text-left">
+                                                            Tanggal Selesai <span className="text-red-500">*</span>
+                                                        </label>
+                                                        <input
+                                                            type="date"
+                                                            value={endDate}
+                                                            onChange={handleEndInput}
+                                                            className="border border-gray-300 px-3 py-2 rounded-md w-full text-xs focus:outline-blue-400"
+                                                        />
+                                                    </div>
+
+                                                    {/* Range Text */}
+                                                    <p className="text-[11px] font-semibold text-gray-700 mt-2 text-left">Rentang :</p>
+                                                    <p className="text-[11px] text-gray-500 mb-4">{rangeText}</p>
+
+                                                    {/* Buttons */}
+                                                    <div className="flex justify-end gap-2 mt-2">
+                                                        <button
+                                                            className="px-3 py-2 text-xs border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 active:scale-95 transition"
+                                                            onClick={() => setShowFilter(false)}
+                                                        >
+                                                            Reset
+                                                        </button>
+
+                                                        <button
+                                                            className="px-3 py-2 text-xs rounded-md bg-[#023048] text-white hover:bg-[#012C3F] active:scale-95 transition"
+                                                            onClick={date_change}
+                                                        >
+                                                            Cari Data
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative">
+                                            <button
+                                                onClick={approveAllRequest}
+                                                disabled={!approvedAll}
+                                                className={`cursor-pointer items-center text-sm flex gap-2 px-5 py-1 border-r-2 border-[#E3E3E3] active:scale-90 transition-transform duration-100
+                                                ${alertBebasPustakaAll
                                                         ? 'bg-[#667790] text-white border-[#667790]'
-                                                        : 'bg-transparent text-[#667790] border-[#667790] cursor-pointer'
-                                                }`}
-                                        >
+                                                        : 'bg-transparent text-[#616161] border-[#616161]'
+                                                    }`}
+                                            >
+                                                <IconSelector size={16} fill="#616161"></IconSelector>
+                                                Approve All
+                                            </button>
+                                            {isApproving && (
+                                                <div className="mt-3 w-full max-w-xs">
+                                                    <p className="text-sm font-semibold text-[#667790] mb-1">
+                                                        Memproses... {approveProgress}%
+                                                    </p>
+
+                                                    <div className="w-full bg-gray-300 h-3 rounded-full overflow-hidden">
+                                                        <div
+                                                            className="bg-[#023048] h-3 transition-all duration-300"
+                                                            style={{ width: `${approveProgress}%` }}
+                                                        ></div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="relative">
+                                            <button
+                                                onClick={() => setUrutkanBy(!urutkanBy)}
+                                                className={`cursor-pointer text-sm flex relative items-center gap-2 px-5 py-2 border-[#E3E3E3] active:scale-90 transition-transform duration-100
+                                                     ${urutkanBy
+                                                        ? 'bg-[#667790] text-white border-[#667790]'
+                                                        : 'bg-transparent text-[#616161] border-[#616161]'
+                                                    }`}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg"
+                                                    width="20"
+                                                    height="20"
+                                                    viewBox="0 0 24 24"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    strokeWidth="2"
+                                                    strokeLinecap="round"
+                                                    strokeLinejoin="round"
+                                                    className="icon icon-tabler icons-tabler-outline icon-tabler-sort-descending"
+                                                >
+                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                    <path d="M4 6l9 0" />
+                                                    <path d="M4 12l7 0" />
+                                                    <path d="M4 18l7 0" />
+                                                    <path d="M15 15l3 3l3 -3" />
+                                                    <path d="M18 6l0 12" />
+                                                </svg>
+                                                Urutkan
+                                            </button>
+                                            {urutkanBy && (
+                                                <div className="absolute top-12 right-0 flex flex-col gap-2 bg-[#F9FAFB] rounded-sm shadow z-50 w-40">
+                                                    <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
+                                                        <p className="text-[#616161] font-bold text-sm">Urutkan</p>
+                                                        <p
+                                                            className="text-[#616161] font-bold cursor-pointer text-sm"
+                                                            onClick={() => setUrutkanBy(false)}
+                                                        >
+                                                            X
+                                                        </p>
+                                                    </div>
+
+                                                    <button
+                                                        onClick={() => handleSort('priority')}
+                                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                    >
+                                                        Prioritas (Status Bermasalah)
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSort('latest')}
+                                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                    >
+                                                        Terbaru
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSort('oldest')}
+                                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                    >
+                                                        Terlama
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSort('name_asc')}
+                                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                    >
+                                                        A → Z
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleSort('name_desc')}
+                                                        className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
+                                                    >
+                                                        Z → A
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative w-40">
+                                            <input
+                                                type="text"
+                                                placeholder="Search..."
+                                                value={search}
+                                                onChange={handleSearchChange}
+                                                className="w-full bg-transparent pl-12 pr-4 py-2 text-sm border-l-2 border-[#E3E3E3] focus:outline-none focus:ring-1 focus:ring-[#A8B5CB]"
+                                            />
                                             <svg
                                                 xmlns="http://www.w3.org/2000/svg"
-                                                width="20"
-                                                height="20"
+                                                width="16"
+                                                height="16"
                                                 viewBox="0 0 24 24"
                                                 fill="none"
                                                 stroke="currentColor"
                                                 strokeWidth="2"
                                                 strokeLinecap="round"
                                                 strokeLinejoin="round"
-                                                className="icon icon-tabler"
+                                                className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500 ml-3"
                                             >
                                                 <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />
+                                                <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
+                                                <path d="M21 21l-6 -6" />
                                             </svg>
-                                            Date
-                                        </button>
 
-                                        {showFilter && (
-                                            <div className="absolute top-12 right-0 bg-white p-3 rounded-md shadow-lg z-50 w-[90vw] max-w-[260px]">
-                                                <p className="text-sm font-semibold text-gray-700 mb-3">Filter</p>
-                                                <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
-
-                                                <div className="calendar-scale w-full max-w-xs px-2 py-3">
-                                                    <DayPicker
-                                                        mode="range"
-                                                        selected={range}
-                                                        onSelect={handleRangeChange}
-                                                    />
-                                                </div>
-
-                                                <div className="w-full h-[1px] bg-gray-300 mb-4"></div>
-
-                                                {/* Start Date */}
-                                                <div className="text-sm mb-3">
-                                                    <label className="block mb-1 font-medium">
-                                                        Tanggal Mulai <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="date"
-                                                        value={startDate}
-                                                        onChange={handleStartInput}
-                                                        className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-blue-400"
-                                                    />
-                                                </div>
-
-                                                {/* End Date */}
-                                                <div className="text-sm mb-3">
-                                                    <label className="block mb-1 font-medium">
-                                                        Tanggal Selesai <span className="text-red-500">*</span>
-                                                    </label>
-                                                    <input
-                                                        type="date"
-                                                        value={endDate}
-                                                        onChange={handleEndInput}
-                                                        className="border border-gray-300 px-3 py-2 rounded-md w-full text-sm focus:outline-blue-400"
-                                                    />
-                                                </div>
-
-                                                {/* Range Text */}
-                                                <p className="text-[11px] font-semibold text-gray-700 mt-2">Rentang :</p>
-                                                <p className="text-[11px] text-gray-500 mb-4">{rangeText}</p>
-
-                                                {/* Buttons */}
-                                                <div className="flex justify-end gap-2 mt-2">
-                                                    <button
-                                                        className="px-3 py-2 text-sm border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-                                                        onClick={() => setShowFilter(false)}
-                                                    >
-                                                        Batalkan
-                                                    </button>
-
-                                                    <button
-                                                        className="px-3 py-2 text-sm rounded-md bg-[#023048] text-white hover:bg-[#012C3F] active:scale-95 transition"
-                                                        onClick={date_change}
-                                                    >
-                                                        Cari Data
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-
-                                    <button
-                                        onClick={approveAllRequest}
-                                        disabled={!approvedAll}
-                                        className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
-                                  ${alertBebasPustakaAll
-                                                ? 'bg-[#667790] text-white border-[#667790]'
-                                                : 'bg-transparent text-[#616161] border-[#616161]'
-                                            }`}
-                                    >
-                                        <svg xmlns="http://www.w3.org/2000/svg"
-                                            width="24"
-                                            height="24"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="icon icon-tabler icons-tabler-outline icon-tabler-square-check"
-                                        >
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
-                                            <path d="M9 12l2 2l4 -4" />
-                                        </svg>
-                                        Approve All
-                                    </button>
-                                    {isApproving && (
-                                        <div className="mt-3 w-full max-w-xs">
-                                            <p className="text-sm font-semibold text-[#667790] mb-1">
-                                                Memproses... {approveProgress}%
-                                            </p>
-
-                                            <div className="w-full bg-gray-300 h-3 rounded-full overflow-hidden">
-                                                <div
-                                                    className="bg-[#023048] h-3 transition-all duration-300"
-                                                    style={{ width: `${approveProgress}%` }}
-                                                ></div>
-                                            </div>
                                         </div>
-                                    )}
-                                    <div className="relative">
-                                        <button
-                                            onClick={() => setUrutkanBy(!urutkanBy)}
-                                            className={`cursor-pointer flex relative items-center gap-2 px-3 py-1 rounded border active:scale-90 transition-transform duration-100
-                                  ${urutkanBy
-                                                    ? 'bg-[#667790] text-white border-[#667790]'
-                                                    : 'bg-transparent text-[#616161] border-[#616161]'
-                                                }`}
-                                        >
-                                            <svg xmlns="http://www.w3.org/2000/svg"
-                                                width="24"
-                                                height="24"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className="icon icon-tabler icons-tabler-outline icon-tabler-sort-descending"
-                                            >
-                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                <path d="M4 6l9 0" />
-                                                <path d="M4 12l7 0" />
-                                                <path d="M4 18l7 0" />
-                                                <path d="M15 15l3 3l3 -3" />
-                                                <path d="M18 6l0 12" />
-                                            </svg>
-                                            Urutkan
-                                        </button>
-                                        {urutkanBy && (
-                                            <div className="absolute top-12 right-0 flex flex-col gap-2 bg-[#F9FAFB] rounded-sm shadow z-50 w-40">
-                                                <div className="flex items-center justify-between px-3 py-2 border-b border-gray-200">
-                                                    <p className="text-[#616161] font-bold text-sm">Urutkan</p>
-                                                    <p
-                                                        className="text-[#616161] font-bold cursor-pointer text-sm"
-                                                        onClick={() => setUrutkanBy(false)}
-                                                    >
-                                                        X
-                                                    </p>
-                                                </div>
-
-                                                <button
-                                                    onClick={() => handleSort('priority')}
-                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                                >
-                                                    Prioritas (Status Bermasalah)
-                                                </button>
-                                                <button
-                                                    onClick={() => handleSort('latest')}
-                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                                >
-                                                    Terbaru
-                                                </button>
-                                                <button
-                                                    onClick={() => handleSort('oldest')}
-                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                                >
-                                                    Terlama
-                                                </button>
-                                                <button
-                                                    onClick={() => handleSort('name_asc')}
-                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                                >
-                                                    A → Z
-                                                </button>
-                                                <button
-                                                    onClick={() => handleSort('name_desc')}
-                                                    className="px-3 py-1 w-full font-normal text-left text-sm rounded-sm hover:bg-gray-300 focus:bg-[#A8B5CB] outline-none transition-colors"
-                                                >
-                                                    Z → A
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="relative w-40">
-                                        <input
-                                            type="text"
-                                            placeholder="Search..."
-                                            value={search}
-                                            onChange={handleSearchChange}
-                                            className="w-full pl-8 pr-2 py-2 text-sm rounded-sm border border-gray-300 focus:outline-none focus:ring-1 focus:ring-[#A8B5CB]"
-                                        />
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-500"
-                                        >
-                                            <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                            <path d="M10 10m-7 0a7 7 0 1 0 14 0a7 7 0 1 0 -14 0" />
-                                            <path d="M21 21l-6 -6" />
-                                        </svg>
-
                                     </div>
 
                                 </div>
                             </div>
 
-
-
-                            <div className='grid grid-cols-1 gap-8 '>
+                            <div className='grid grid-cols-1 mt-9'>
+                                <div className="flex">
+                                    <div onClick={() => setChangeTabColor("#D8DFEC")}
+                                        className="w-40 h-12 bg-[#D8DFEC] 
+                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                        <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
+                                            <p>Menunggu</p>
+                                            <div className="rounded bg-white px-1">hai</div>
+                                        </div>
+                                    </div>
+                                    <div onClick={() => setChangeTabColor("#E7ECF5")}
+                                        className="w-40 h-12 bg-[#E7ECF5] 
+                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                        <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
+                                            <p>Disetujui</p>
+                                            <div className="rounded bg-white px-1">hai</div>
+                                        </div>
+                                    </div>
+                                    <div onClick={() => setChangeTabColor("#EEF3FB")}
+                                        className="w-40 h-12 bg-[#EEF3FB] 
+                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                        <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
+                                            <p>Semua</p>
+                                            <div className="rounded bg-white px-1">hai</div>
+                                        </div>
+                                    </div>
+                                    <p className="ml-auto mt-4 text-xs text-[#9A9A9A]">
+                                        Range aktif: {startDate} — {endDate}
+                                    </p>
+                                </div>
 
                                 <div className="overflow-x-auto w-full">
-                                    <table className="min-w-full border-collapse mt-7">
+                                    <table className="min-w-full border-collapse">
                                         <thead>
-                                            <tr className="bg-[#D8DFEC]">
-                                                <th className="text-left p-4 font-normal text-gray-600 bg-[#D8DFEC]">
+                                            <tr style={{ backgroundColor: changeTabColor }}>
+                                                <th className="text-left p-4 font-normal text-gray-600">
                                                     <label className="flex items-center cursor-pointer">
                                                         <input
                                                             type="checkbox"
@@ -921,18 +940,14 @@ function ApprovalSA() {
                                                         </div>
                                                     </label>
                                                 </th>
-
-
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Nama</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">NIM</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">institusi</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">program studi</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Status Peminjaman</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Status denda</th>
-                                                <th className=" p-4 font-normal text-white bg-[#667790]">Status</th>
-                                                <th className="p-4 font-normal text-white bg-[#667790]">Tindakan</th>
-                                                <th className=" p-4 font-normal text-white bg-[#667790]">Keterangan</th>
-
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Nama</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">NIM</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">institusi</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">program studi</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Status Peminjaman</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Status</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Tindakan</th>
+                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Keterangan</th>
                                             </tr>
                                         </thead>
 
@@ -943,7 +958,7 @@ function ApprovalSA() {
                                                 <tr key={item.id ?? index}
                                                     className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
                                                 >
-                                                    <td className="p-4">
+                                                    <td className="p-2">
                                                         <label className="flex items-center cursor-pointer">
                                                             <input
                                                                 type="checkbox"
@@ -975,31 +990,42 @@ function ApprovalSA() {
                                                             </div>
                                                         </label>
                                                     </td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.name || 'N/A'}</td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.nim || 'N/A'}</td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.institusi || 'N/A'}</td>
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto truncate">{item.program_studi || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.name || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.nim || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.institusi || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.program_studi || 'N/A'}</td>
 
                                                     {/* Status Peminjaman */}
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status_peminjaman === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
-                                                        {item.status_peminjaman === 1 ? "Sudah Dikembalikan" : "Belum Dikembalikan"}
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
+                                                        <span
+                                                            className={`px-2 py-1 text-xs font-medium rounded-full inline-block
+                                                                ${item.status_peminjaman === 1
+                                                                    ? "bg-[#D9FBD9] text-[#4ABC4C]"
+                                                                    : "bg-[#FFE1E1] text-[#FF1515]"
+                                                                }`}
+                                                        >
+                                                            {item.status_peminjaman === 1
+                                                                ? "Sudah Dikembalikan"
+                                                                : "Belum Dikembalikan"}
+                                                        </span>
                                                     </td>
 
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${item.status_denda === 1 ? "text-[#4ABC4C]" : "text-[#FF1515]"}`}>
-                                                        {item.status_denda === 1 ? "bebas denda" : "memiliki denda"}
-                                                    </td>
 
                                                     {/* Status - Kombinasi peminjaman & denda */}
-                                                    <td className={`p-4 whitespace-nowrap overflow-x-auto ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "text-[#4ABC4C]" : "text-[#FF1515]"
-                                                        }`}>
-                                                        {(item.status_peminjaman === 1 && item.status_denda === 1) ? "Memenuhi Syarat" : "Belum Memenuhi Syarat"}
+                                                    <td className={`py-2 px-4 whitespace-nowrap overflow-x-auto `}>
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "bg-[#D9FBD9] text-[#4ABC4C]" : "bg-[#FFE1E1] text-[#FF1515]"}`}
+                                                        >
+                                                            {item.status_denda === 1 && item.status_peminjaman === 1
+                                                                ? "Memenuhi syarat"
+                                                                : "Belum Memenuhi Syarat"}
+                                                        </span>
+
 
                                                     </td>
 
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto">
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
                                                         {item.status_bepus === "pending" ? (
                                                             <button
-
                                                                 type="button"
                                                                 onClick={() => {
                                                                     if (item.status_peminjaman === 1 && item.status_denda === 1) {
@@ -1007,13 +1033,13 @@ function ApprovalSA() {
                                                                     }
                                                                 }}
                                                                 disabled={!(item.status_peminjaman === 1 && item.status_denda === 1)}
-                                                                className={`px-5 py-1 rounded-md border font-semibold transition 
+                                                                className={`px-2 py-1 text-xs rounded-md border transition 
                                                                   ${item.status_peminjaman === 1 && item.status_denda === 1
-                                                                        ? "cursor-pointer bg-[#EDF1F3] border-[#A8B5CB] text-[#A8B5CB] active:scale-90"
+                                                                        ? "cursor-pointer bg-[#023048] border-[#023048] text-white active:scale-90"
                                                                         : "cursor-not-allowed bg-gray-200 border-gray-300 text-gray-400"
                                                                     }`}
                                                             >
-                                                                approve
+                                                                Approve
                                                             </button>
                                                         ) : (
                                                             <p className="text-[#4ABC4C] font-semibold">Sudah di approve</p>
@@ -1022,7 +1048,7 @@ function ApprovalSA() {
                                                     </td>
 
                                                     {/* Keterangan */}
-                                                    <td className="p-4 whitespace-nowrap overflow-x-auto">
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
                                                         <button
                                                             className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
                                                                       transition-all active:scale-90 hover:text-[#445266]"
@@ -1045,41 +1071,43 @@ function ApprovalSA() {
                             </div>
 
                             {/* pagination dan export */}
-                            <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                                onClick={() => console.log("PDF clicked")}>Cetak ke PDF
-                            </button>
-
-                            <div className="flex flex-wrap gap-2 justify-center mt-4 items-center">
-                                {/* Prev */}
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
-                                >
-                                    ← Sebelumnya
-                                </button>
-
-                                {pageNumbers.map(num => (
+                            <div className="flex ml-60">
+                                <div className="flex flex-wrap gap-2 justify-center mt-8 items-center">
+                                    {/* Prev */}
                                     <button
-                                        key={num}
-                                        onClick={() => setCurrentPage(num)}
-                                        className={`px-3 py-1 rounded-md transition-all duration-150
-                                    ${currentPage === num
-                                                ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
-                                                : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
-                                            }`}
+                                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                     >
-                                        {num}
+                                        ← Sebelumnya
                                     </button>
-                                ))}
 
-                                {/* Next */}
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                                    disabled={currentPage === totalPages}
-                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
-                                >
-                                    Selanjutnya →
+                                    {pageNumbers.map(num => (
+                                        <button
+                                            key={num}
+                                            onClick={() => setCurrentPage(num)}
+                                            className={`px-3 py-1 rounded-md transition-all duration-150
+                                    ${currentPage === num
+                                                    ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
+                                                    : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
+                                                }`}
+                                        >
+                                            {num}
+                                        </button>
+                                    ))}
+
+                                    {/* Next */}
+                                    <button
+                                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+                                    >
+                                        Selanjutnya →
+                                    </button>
+                                </div>
+
+                                 <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
+                                    onClick={() => console.log("PDF clicked")}>Cetak ke PDF
                                 </button>
                             </div>
 
