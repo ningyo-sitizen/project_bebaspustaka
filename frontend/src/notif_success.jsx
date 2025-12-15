@@ -27,7 +27,7 @@ export default function Notif({ type, message, onClose }) {
       `}</style>
 
       <div
-        className={`fixed top-5 right-5 w-[300px] bg-white shadow-xl rounded-md p-4 border-l-4 ${
+        className={`fixed top-5 right-5 z-[9999] w-[300px] bg-white shadow-xl rounded-md p-4 border-l-4 ${
           closing ? "slide-out" : "slide-in"
         }`}
         style={{ borderColor: isSuccess ? "#4ABC4C" : "#FF3B30" }}

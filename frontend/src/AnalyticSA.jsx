@@ -14,7 +14,8 @@ import {
     Tooltip,
     Legend
 } from 'chart.js';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
 import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
@@ -30,6 +31,8 @@ import {
     IconHistory,
     IconMenu2,
     IconChevronDown,
+    IconAdjustmentsHorizontal,
+    IconX,
 } from "@tabler/icons-react";
 ChartJS.register(
     CategoryScale,
@@ -47,6 +50,7 @@ export default function Dashboard() {
     authCheckSA()
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [toggleSidebar, setToggleSidebar] = useState(false);
 
@@ -74,8 +78,8 @@ export default function Dashboard() {
             setIsClosing(false); // reset state
         }, 300); // durasi animation sama kayak CSS transition
     };
-    const openModal = () => {
-        setIsClosing(false); // pastiin modal buka dengan animasi fade-in
+    const openModalLeft = () => {
+        setIsClosing(false);
         setShowFilterL(true);
     };
 
@@ -87,6 +91,10 @@ export default function Dashboard() {
             setIsClosingR(false);
         }, 300);
     }
+    const openModalRight = () => {
+        setIsClosingR(false);
+        setShowFilterR(true);
+    };
 
     const [tableData, setTableData] = useState(null);
     const [visitorPage, setVisitorPage] = useState(1);
@@ -102,36 +110,48 @@ export default function Dashboard() {
     const [actJurusanR, setActJurusanR] = useState(false);
     const [actJurusanL, setActJurusanL] = useState(false);
 
-    const [activeChartR, setActiveChartR] = useState("Line");
-    const [activeChartL, setActiveChartL] = useState("Line");
+    const [activeChartR, setActiveChartR] = useState(localStorage.getItem("chart_type_right") || "Line");
+
+  
+
+    // const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
+    const [appliedFilters, setAppliedFilters] = useState(() => {
+        return JSON.parse(localStorage.getItem("filters_left"));
+    });
+      const [draftChartTypeL, setDraftChartTypeL] = useState(
+        appliedFilters?.chartType || "Line"
+    );
+
+    const [selectedYears, setSelectedYears] = useState(
+        appliedFilters?.years || []
+    );
+    const [selectedType, setSelectedType] = useState(
+        appliedFilters?.type || "monthly"
+    );
+
 
     const [years, setYears] = useState([]);
-    const [selectedYears, setSelectedYears] = useState([]);
-    const [selectedType, setSelectedType] = useState("");
-    const [tempYears, setTempYears] = useState([]);
-    const [tempType, setTempType] = useState("");
-
-
-
     const [tablePageLeft, setTablePageLeft] = useState(1);
     const [tableLimitLeft] = useState(50);
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
     const [tableDataLeft, setTableDataLeft] = useState(null);
 
+    const statefilterKanan = JSON.parse(localStorage.getItem("filters_right")) || {};
+
 
     const [isLoadingR, setIsLoadingR] = useState(false);
     const [angkatan, setAngkatan] = useState([]);
-    const [selectedAngkatan, setSelectedAngkatan] = useState([]);
+    const [selectedAngkatan, setSelectedAngkatan] = useState(statefilterKanan.angkatan || []);
     const [tempAngkatan, setTempAngkatan] = useState([]);
-    const [actAngkatan, setActAngkatan] = useState([]);
+    const [actAngkatan, setActAngkatan] = useState(statefilterKanan.angkatan || []);
     const [lembaga, setLembaga] = useState([]);
-    const [selectedLembaga, setSelectedLembaga] = useState([]);
+    const [selectedLembaga, setSelectedLembaga] = useState(statefilterKanan.lembaga || []);
     const [tempLembaga, setTempLembaga] = useState([]);
-    const [actLembaga, setActLembaga] = useState([]);
+    const [actLembaga, setActLembaga] = useState(statefilterKanan.lembaga || []);
     const [prodi, setProdi] = useState({});
-    const [selectedProdi, setSelectedProdi] = useState([]);
+    const [selectedProdi, setSelectedProdi] = useState(statefilterKanan.prodi || []);
     const [tempProdi, setTempProdi] = useState([]);
-    const [actProdi, setActProdi] = useState([]);
+    const [actProdi, setActProdi] = useState(statefilterKanan.prodi || []);
 
     const [activeProdiR, setActiveProdiR] = useState(false);
     const [tableDataRight, setTableDataRight] = useState(null);
@@ -140,14 +160,19 @@ export default function Dashboard() {
     const [tablePaginationRight, setTablePaginationRight] = useState(null);
 
     const [loanHistory, setLoanHistory] = useState([]);
+    const [total, setTotal] = useState(0);
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
 
+<<<<<<< HEAD
     const maxReached = activeChartL === "circle" && selectedYears.length >= 5;
+=======
+>>>>>>> ad3a454fd5e11e2ca0a289570955acb8aa16289d
 
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
+    const maxReached = draftChartTypeL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
+
+    const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
 
     const [profileData, setProfileData] = useState({
         name: "Loading...",
@@ -213,48 +238,62 @@ export default function Dashboard() {
         return query.toString();
     };
 
-    let debounceTimer = null;
+    const handleApplyFiltersLeft = () => {
+        const filters = {
+            years: selectedYears,
+            type: selectedType,
+            chartType: draftChartTypeL,
+        };
 
-    const debouncedApplyFiltersLeft = () => {
-        closeModal(false);
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-            handleApplyFiltersLeft();
-        }, 250); // delay 250ms, bisa diubah sesuai selera
+        localStorage.setItem("filters_left", JSON.stringify(filters));
+        setAppliedFilters(filters); // 🔥 trigger SEMUA
     };
 
-    let debounceTimerRight = null;
+
+    const debounceTimer = useRef(null);
+
+    const debouncedApplyFiltersLeft = useCallback(() => {
+        closeModal(false);
+
+        if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+        debounceTimer.current = setTimeout(() => {
+            handleApplyFiltersLeft();
+        }, 250);
+    }, [handleApplyFiltersLeft]);
+
+    const debounceTimerRight = useRef(null);
 
     const debouncedApplyFiltersRight = () => {
         closeModalR(false);
-        if (debounceTimerRight) clearTimeout(debounceTimerRight);
-        debounceTimerRight = setTimeout(() => {
+        if (debounceTimerRight.current) clearTimeout(debounceTimerRight.current);
+        debounceTimerRight.current = setTimeout(() => {
             handleApplyFiltersRight();
         }, 250); // delay 250ms, bisa diubah sesuai selera
     };
 
 
     //label buaat chart kiri
-    const autoBuildChartData = (data, selectedType) => {
+    const autoBuildChartData = (data, type) => {
         const monthLabels = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         ];
 
         let baseLabels = [];
-        if (selectedType === "monthly") baseLabels = monthLabels;
-        else if (selectedType === "yearly") baseLabels = data.years;
-        else if (selectedType === "weekly") {
+        if (type === "monthly") baseLabels = monthLabels;
+        else if (type === "yearly") baseLabels = data.years;
+        else if (type === "weekly") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
-        } else if (selectedType === "daily") {
+        } else if (type === "daily") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
         }
 
-        if (selectedType === "monthly") {
+        if (type === "monthly") {
             baseLabels = monthLabels.filter(m =>
                 Object.values(data.data)
                     .flat()
@@ -285,27 +324,27 @@ export default function Dashboard() {
     };
 
     const fetchTableDataLeft = useCallback(async (pageNum) => {
-        try {
-            const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
-            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
-            if (selectedType) query.append("period", selectedType);
-            query.append("page", pageNum);
-            query.append("limit", tableLimitLeft);
-            query.append("tableOnly", "true");
+        if (!appliedFilters) return;
 
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${buildQueryParams({ years: selectedYears, type: selectedType, page: pageNum, limit: tableLimitLeft, tableOnly: true })}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
+        const token = localStorage.getItem("token");
 
-            setTableDataLeft(data);
-            setTablePaginationLeft(data.pagination);
-            setTablePageLeft(pageNum);
-        } catch (err) {
-            console.error("Error fetching table data:", err);
-        }
-    }, [selectedYears, selectedType, tableLimitLeft]);
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+                page: pageNum,
+                limit: tableLimitLeft,
+                tableOnly: true
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = await res.json();
+        setTableDataLeft(data);
+        setTablePaginationLeft(data.pagination);
+        setTablePageLeft(pageNum);
+    }, [appliedFilters, tableLimitLeft]);
+
 
     const fetchTableDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -366,293 +405,247 @@ export default function Dashboard() {
 
     }, [actAngkatan, actLembaga, actProdi, tableLimitRight]);
 
-    let fetchController = null;
-
-    const handleApplyFiltersLeft = useCallback(async () => {
-        const isFilterChanged = (
-            JSON.stringify(selectedYears) !== JSON.stringify(tempYears) ||
-            selectedType !== tempType
-        );
-        setTempYears(selectedYears);
-        setTempType(selectedType);
-        setShowFilterL(false);
-        setIsLoadingLeft(true);
-
-        if (fetchController) fetchController.abort();
-        fetchController = new AbortController();
-        const { signal } = fetchController;
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        try {
-            const token = localStorage.getItem("token");
-            const query = buildQueryParams({ years: selectedYears, type: selectedType });
-
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                signal
-            });
-            const responseData = await res.json();
-
-            requestAnimationFrame(() => {
-                const chart = autoBuildChartData(responseData, selectedType, activeChartL);
-
-                setChartDataL({
-                    lineChart: chart,
-                    barChart: chart,
-                    pieChart: chart,
-                });
-
-                setTableData(responseData);
-                setIsLoadingLeft(false);
-            });
-            fetchTableDataLeft(isFilterChanged ? 1 : tablePageLeft);
-
-        } catch (err) {
-            if (err.name === "AbortError") {
-                console.log("Previous fetch aborted due to new filter");
-            } else {
-                console.error("Error applying filters:", err);
-                setIsLoadingLeft(false);
-            }
-        }
-
-    }, [[selectedYears, selectedType, activeChartL, tempYears, tempType, tablePageLeft]]);
-
-
-
-const autoBuildChartDataRight = (apiResponse) => {
-    console.log("📊 Chart Builder Input:", apiResponse);
-
-    if (!apiResponse || !apiResponse.data) {
-        console.warn("⚠️ Invalid apiResponse");
-        return { labels: [], datasets: [] };
-    }
-
-    const { mode, data, years = [] } = apiResponse;
-
-    if (!years || years.length === 0) {
-        console.warn("⚠️ No years available");
-        return { labels: [], datasets: [] };
-    }
-
-    const generateColors = (count) => {
-        const baseColors = [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-            '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
-            '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
-        ];
-        return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
+    const handlePickChartType = (type) => {
+        setDraftChartTypeL(type);
     };
 
-    const sortedYears = [...years].sort((a, b) => a - b);
+    const fetchController = useRef(null);
 
-    if (mode === "default_year") {
-        const chartData = sortedYears.map(year => {
-            const yearData = data[year];
-            if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
-                return 0;
-            }
-            return yearData[0].total || yearData[0].total_pinjam || 0;
-        });
 
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: [{
-                label: "Total Peminjaman",
-                data: chartData,
-                backgroundColor: generateColors(sortedYears.length),
-                borderColor: generateColors(sortedYears.length),
-                borderWidth: 2,
-                tension: 0.3
-            }]
-        };
-    }
 
-    if (mode === "per_lembaga") {
-        const lembagaSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => {
-                    if (item.lembaga) lembagaSet.add(item.lembaga);
-                });
-            }
-        });
 
-        const lembagaList = Array.from(lembagaSet);
-        const colors = generateColors(lembagaList.length);
+    const autoBuildChartDataRight = (apiResponse) => {
+        console.log("📊 Chart Builder Input:", apiResponse);
 
-        console.log("🏢 Lembaga found:", lembagaList);
-
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: lembagaList.map((lem, idx) => ({
-                label: lem,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.lembaga === lem);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
-        };
-    }
-
-    if (mode === "per_program") {
-        const programSet = new Set();
-        sortedYears.forEach(year => {
-            if (data[year] && Array.isArray(data[year])) {
-                data[year].forEach(item => {
-                    if (item.program) programSet.add(item.program);
-                });
-            }
-        });
-
-        const programList = Array.from(programSet);
-        
-        console.log("🎓 Total Programs found:", programList.length);
-        console.log("🎓 Programs:", programList);
-        
-        // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
-        const MAX_PROGRAMS = 15; // Adjust sesuai kebutuhan
-        const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
-        
-        if (programList.length > MAX_PROGRAMS) {
-            console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+        if (!apiResponse || !apiResponse.data) {
+            console.warn("⚠️ Invalid apiResponse");
+            return { labels: [], datasets: [] };
         }
 
-        const colors = generateColors(limitedPrograms.length);
+        const { mode, data, years = [] } = apiResponse;
 
-        return {
-            labels: sortedYears.map(y => String(y)),
-            datasets: limitedPrograms.map((prog, idx) => ({
-                label: prog,
-                data: sortedYears.map(year => {
-                    if (!data[year]) return 0;
-                    const found = data[year].find(item => item.program === prog);
-                    return found ? (found.total || found.total_pinjam || 0) : 0;
-                }),
-                backgroundColor: colors[idx],
-                borderColor: colors[idx],
-                borderWidth: 2,
-                tension: 0.3
-            }))
+        if (!years || years.length === 0) {
+            console.warn("⚠️ No years available");
+            return { labels: [], datasets: [] };
+        }
+
+        const generateColors = (count) => {
+            const baseColors = [
+                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+                '#FF9F40', '#8E44AD', '#E74C3C', '#2ECC71', '#F39C12',
+                '#3498DB', '#E67E22', '#95A5A6', '#34495E', '#16A085'
+            ];
+            return Array.from({ length: count }, (_, i) => baseColors[i % baseColors.length]);
         };
-    }
 
-    return { labels: [], datasets: [] };
-};
+        const sortedYears = [...years].sort((a, b) => a - b);
+
+        if (mode === "default_year") {
+            const chartData = sortedYears.map(year => {
+                const yearData = data[year];
+                if (!yearData || !Array.isArray(yearData) || yearData.length === 0) {
+                    return 0;
+                }
+                return yearData[0].total || yearData[0].total_pinjam || 0;
+            });
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: [{
+                    label: "Total Peminjaman",
+                    data: chartData,
+                    backgroundColor: generateColors(sortedYears.length),
+                    borderColor: generateColors(sortedYears.length),
+                    borderWidth: 2,
+                    tension: 0.3
+                }]
+            };
+        }
+
+        if (mode === "per_lembaga") {
+            const lembagaSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => {
+                        if (item.lembaga) lembagaSet.add(item.lembaga);
+                    });
+                }
+            });
+
+            const lembagaList = Array.from(lembagaSet);
+            const colors = generateColors(lembagaList.length);
+
+            console.log("🏢 Lembaga found:", lembagaList);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: lembagaList.map((lem, idx) => ({
+                    label: lem,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.lembaga === lem);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
+        if (mode === "per_program") {
+            const programSet = new Set();
+            sortedYears.forEach(year => {
+                if (data[year] && Array.isArray(data[year])) {
+                    data[year].forEach(item => {
+                        if (item.program) programSet.add(item.program);
+                    });
+                }
+            });
+
+            const programList = Array.from(programSet);
+
+            console.log("🎓 Total Programs found:", programList.length);
+            console.log("🎓 Programs:", programList);
+
+            // OPTIONAL: Limit untuk chart readability (bisa dihapus jika mau tampilkan semua)
+            const MAX_PROGRAMS = 30; // Adjust sesuai kebutuhan
+            const limitedPrograms = programList.slice(0, MAX_PROGRAMS);
+
+            if (programList.length > MAX_PROGRAMS) {
+                console.warn(`⚠️ Showing only ${MAX_PROGRAMS} out of ${programList.length} programs`);
+            }
+
+            const colors = generateColors(limitedPrograms.length);
+
+            return {
+                labels: sortedYears.map(y => String(y)),
+                datasets: limitedPrograms.map((prog, idx) => ({
+                    label: prog,
+                    data: sortedYears.map(year => {
+                        if (!data[year]) return 0;
+                        const found = data[year].find(item => item.program === prog);
+                        return found ? (found.total || found.total_pinjam || 0) : 0;
+                    }),
+                    backgroundColor: colors[idx],
+                    borderColor: colors[idx],
+                    borderWidth: 2,
+                    tension: 0.3
+                }))
+            };
+        }
+
+        return { labels: [], datasets: [] };
+    };
     const handleApplyFiltersRight = async () => {
         const setupfilter = {
             angkatan: selectedAngkatan,
             lembaga: selectedLembaga,
             prodi: selectedProdi
         };
+
+        // 1. Simpan ke LocalStorage agar saat refresh tidak hilang
         localStorage.setItem("filters_right", JSON.stringify(setupfilter));
 
+        // 2. Update state 'Act' untuk memicu useEffect fetching
+        setActAngkatan(selectedAngkatan);
+        setActLembaga(selectedLembaga);
+        setActProdi(selectedProdi);
 
-        setTempAngkatan(setupfilter.angkatan);
-        setTempLembaga(setupfilter.lembaga);
-        setTempProdi(setupfilter.prodi);
+        // 3. Update state temporer jika digunakan untuk display UI
+        setTempAngkatan(selectedAngkatan);
+        setTempLembaga(selectedLembaga);
+        setTempProdi(selectedProdi);
 
-        setActAngkatan(setupfilter.angkatan);
-        setActLembaga(setupfilter.lembaga);
-        setActProdi(setupfilter.prodi);
         closeModalR(true);
-
-        setIsLoadingR(true);
-        await fetchTableDataRight(1);
-        setIsLoadingR(false);
-
-    };
-const transformPagedDataForChart = (pagedData) => {
-    console.log("🔄 Transform input:", pagedData);
-
-    if (!pagedData) {
-        console.warn("⚠️ Invalid pagedData structure");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
-
-    // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
-    const dataSource = pagedData.allData || pagedData.data;
-
-    if (!Array.isArray(dataSource) || dataSource.length === 0) {
-        console.warn("⚠️ No data to transform");
-        return {
-            mode: "default_year",
-            years: [],
-            data: {}
-        };
-    }
-
-    console.log("📊 Data source length:", dataSource.length);
-    console.log("📊 First 3 rows:", dataSource.slice(0, 3));
-
-    const grouped = {};
-    const years = new Set();
-
-    dataSource.forEach(row => {
-        const year = row.tahun;
-        years.add(year);
-
-        if (!grouped[year]) {
-            grouped[year] = [];
-        }
-
-        if (row.program) {
-            grouped[year].push({
-                program: row.program,
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else if (row.lembaga) {
-            grouped[year].push({
-                lembaga: row.lembaga,
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        } else {
-            grouped[year].push({
-                total: row.total_pinjam,
-                total_pinjam: row.total_pinjam
-            });
-        }
-    });
-
-    let mode = "default_year";
-    const firstRow = dataSource[0];
-    
-    if (firstRow.program) {
-        mode = "per_program";
-    } else if (firstRow.lembaga) {
-        mode = "per_lembaga";
-    }
-
-    const result = {
-        mode,
-        years: Array.from(years).sort((a, b) => a - b),
-        data: grouped
     };
 
-    console.log("✅ Transform output mode:", mode);
-    console.log("✅ Years:", result.years);
-    console.log("✅ Data keys:", Object.keys(result.data));
-    
-    // Debug: tampilkan berapa banyak item per tahun
-    Object.keys(result.data).forEach(year => {
-        console.log(`📅 Year ${year}: ${result.data[year].length} items`);
-    });
+    const transformPagedDataForChart = (pagedData) => {
+        console.log("🔄 Transform input:", pagedData);
 
-    return result;
-};
+        if (!pagedData) {
+            console.warn("⚠️ Invalid pagedData structure");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
+        }
+
+        // PENTING: Gunakan allData untuk chart, bukan data yang sudah dipaginate
+        const dataSource = pagedData.allData || pagedData.data;
+
+        if (!Array.isArray(dataSource) || dataSource.length === 0) {
+            console.warn("⚠️ No data to transform");
+            return {
+                mode: "default_year",
+                years: [],
+                data: {}
+            };
+        }
+
+        console.log("📊 Data source length:", dataSource.length);
+        console.log("📊 First 3 rows:", dataSource.slice(0, 3));
+
+        const grouped = {};
+        const years = new Set();
+
+        dataSource.forEach(row => {
+            const year = row.tahun;
+            years.add(year);
+
+            if (!grouped[year]) {
+                grouped[year] = [];
+            }
+
+            if (row.program) {
+                grouped[year].push({
+                    program: row.program,
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else if (row.lembaga) {
+                grouped[year].push({
+                    lembaga: row.lembaga,
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            } else {
+                grouped[year].push({
+                    total: row.total_pinjam,
+                    total_pinjam: row.total_pinjam
+                });
+            }
+        });
+
+        let mode = "default_year";
+        const firstRow = dataSource[0];
+
+        if (firstRow.program) {
+            mode = "per_program";
+        } else if (firstRow.lembaga) {
+            mode = "per_lembaga";
+        }
+
+        const result = {
+            mode,
+            years: Array.from(years).sort((a, b) => a - b),
+            data: grouped
+        };
+
+        console.log("✅ Transform output mode:", mode);
+        console.log("✅ Years:", result.years);
+        console.log("✅ Data keys:", Object.keys(result.data));
+
+        // Debug: tampilkan berapa banyak item per tahun
+        Object.keys(result.data).forEach(year => {
+            console.log(`📅 Year ${year}: ${result.data[year].length} items`);
+        });
+
+        return result;
+    };
     function DataTable({ selectedType, data, pagination, onPageChange, isLoading }) {
         if (!data || !data.data) {
             return <p className="text-center text-gray-500">No data available</p>;
@@ -733,7 +726,7 @@ const transformPagedDataForChart = (pagedData) => {
                                 <thead className="bg-gray-100 sticky top-0">
                                     <tr>
                                         {headers.map((header, idx) => (
-                                            <th key={idx} className="p-3 border font-normal text-center">
+                                            <th key={idx} className="p-3 font-normal text-sm text-center">
                                                 {header}
                                             </th>
                                         ))}
@@ -863,8 +856,9 @@ const transformPagedDataForChart = (pagedData) => {
             }
         };
 
+        //tabel kanan yang benar
         return (
-            <div className="bg-white p-6 rounded-lg border border-gray-300">
+            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                 <h3 className="font-semibold text-base mb-4 text-left">{getTitle()}</h3>
 
                 <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-100">
@@ -872,7 +866,7 @@ const transformPagedDataForChart = (pagedData) => {
                         <thead className="bg-gray-100">
                             <tr>
                                 {headers.map((header, idx) => (
-                                    <th key={idx} className="p-3 border font-normal text-center">
+                                    <th key={idx} className="p-3 font-normal text-sm text-center">
                                         {header}
                                     </th>
                                 ))}
@@ -887,14 +881,11 @@ const transformPagedDataForChart = (pagedData) => {
         );
     }
 
-
-
-
     const renderChartL = () => {
         if (!chartDataL.lineChart || !chartDataL.pieChart || !chartDataL.barChart) {
             return <p>Loading chart...</p>;
         }
-        switch (activeChartL) {
+        switch (appliedFilters.chartType) {
             case "Line":
                 return (
                     <Line
@@ -936,24 +927,6 @@ const transformPagedDataForChart = (pagedData) => {
                                 }
                             }
                         },
-                        title: {
-                            display: true,
-                            text: [
-                                'Data kunjungan mahasiswa ke perpustakaan',
-                                'mencatat jumlah dan frekuensi kehadiran mereka.'
-                            ],
-                            color: '#616161',
-                            font: {
-                                family: '"Plus Jakarta Sans", sans-serif',
-                                size: 14,
-                                weight: '300',
-                            },
-                            padding: {
-                                top: 10,
-                                bottom: 20,
-                            },
-                            align: 'center',
-                        },
                     },
                     scales: {
                         x: {
@@ -982,24 +955,6 @@ const transformPagedDataForChart = (pagedData) => {
                                         family: '"Plus Jakarta Sans", sans-serif',
                                     }
                                 }
-                            },
-                            title: {
-                                display: true,
-                                text: [
-                                    'Data kunjungan mahasiswa ke perpustakaan',
-                                    'mencatat jumlah dan frekuensi kehadiran mereka.'
-                                ],
-                                color: '#616161',
-                                font: {
-                                    family: '"Plus Jakarta Sans", sans-serif',
-                                    size: 14,
-                                    weight: '300',
-                                },
-                                padding: {
-                                    top: 10,
-                                    bottom: 20,
-                                },
-                                align: 'center',
                             },
                         },
                         scales: {
@@ -1118,6 +1073,7 @@ const transformPagedDataForChart = (pagedData) => {
                 );
         }
     };
+
     useEffect(() => {
         fetchChartDataRight();
     }, [actAngkatan, actLembaga, actProdi]);
@@ -1152,12 +1108,18 @@ const transformPagedDataForChart = (pagedData) => {
         };
         fetchProfile();
         fetchYears();
-        fetchChartDataLeft();
         fetchAngkatan();
         fetchLoanHistory(1);
         fetchLembaga();
 
     }, []);
+    useEffect(() => {
+        if (!appliedFilters) return;
+
+        fetchChartDataLeft();
+        fetchTableDataLeft(1);
+    }, [appliedFilters]);
+
 
     useEffect(() => {
         fetchChartDataRight();
@@ -1207,17 +1169,50 @@ const transformPagedDataForChart = (pagedData) => {
             console.log("gagal mengambil lembaga")
         }
     })
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [pageNumbers, setPageNumbers] = useState([]);
+    const [rowsPerPage, setRowsPerPage] = useState(10);
 
     const fetchLoanHistory = useCallback(async (page = 1) => {
         const res = await fetch(
-            `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${limit}`,
+            `http://localhost:8080/api/loan/loanHistory?page=${page}&limit=${rowsPerPage}`,
             { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
         );
 
         const result = await res.json();
+
+        // Set data dari API
         setLoanHistory(result.data);
-        setPage(result.page);
-    });
+        setTotal(result.total);
+
+        // Update currentPage biar sinkron
+        setCurrentPage(page);
+
+        // Hitung totalPages
+        const totalPageCount = Math.ceil(result.total / rowsPerPage);
+        setTotalPages(totalPageCount);
+
+        // Generate visible page numbers
+        const maxVisible = 5;
+        let start = Math.max(1, page - Math.floor(maxVisible / 2));
+        let end = start + maxVisible - 1;
+
+        if (end > totalPageCount) {
+            end = totalPageCount;
+            start = Math.max(1, end - maxVisible + 1);
+        }
+
+        const pages = [];
+        for (let i = start; i <= end; i++) pages.push(i);
+
+        setPageNumbers(pages);
+
+    }, [rowsPerPage]);
+
+
+
+
 
 
     const fetchProdi = useCallback(async (lembagaList) => {
@@ -1246,63 +1241,30 @@ const transformPagedDataForChart = (pagedData) => {
 
     const fetchChartDataLeft = useCallback(async () => {
         setIsLoadingLeft(true);
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const mockData = await res.json();
 
-            requestAnimationFrame(() => {
-                setChartDataL({
-                    lineChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan tahun 2025',
-                            data: mockData.data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1
-                        }]
-                    },
-                    pieChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: "Kunjungan",
-                            data: mockData.data,
-                            backgroundColor: ['#537FF1', '#8979FF', '#A8B5CB', '#667790']
-                        }]
-                    },
-                    barChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan',
-                            data: mockData.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)'
-                        }]
-                    }
-                });
+        const token = localStorage.getItem("token");
 
-                const tableDataFormat = {
-                    years: [2025],
-                    data: {
-                        2025: mockData.labels.map((label, index) => ({
-                            label: label,
-                            total_visitor: mockData.data[index]
-                        }))
-                    }
-                };
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-                setTableData(tableDataFormat);
-                setTableDataLeft(tableDataFormat);
-                setSelectedType("monthly");
-                setIsLoadingLeft(false);
-            });
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
-            setIsLoadingLeft(false);
-        }
-    }, []);
+        const data = await res.json();
+
+        const chart = autoBuildChartData(data, appliedFilters.type);
+
+        setChartDataL({
+            lineChart: chart,
+            barChart: chart,
+            pieChart: chart,
+        });
+
+        setIsLoadingLeft(false);
+    }, [appliedFilters]);
+
 
     const fetchChartDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -1437,7 +1399,7 @@ const transformPagedDataForChart = (pagedData) => {
                     ></div>
                 )}
                 <div className="flex-1 flex flex-col min-h-screen">
-                    <header className="w-full bg-white border-b px-8 flex justify-between lg:justify-end relative z-20">
+                    <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
                             onClick={toggleSidebar}
@@ -1447,12 +1409,12 @@ const transformPagedDataForChart = (pagedData) => {
                         </button>
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
-                            onClick={toggleDropdown}
+                            onClick={toggleProfileDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
                             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
+                                Hai, {profileData.name}
                             </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
@@ -1462,31 +1424,22 @@ const transformPagedDataForChart = (pagedData) => {
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">
-                                            {profileData.name}
-                                        </p>
+                                        <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
                                         <p className="text-xs text-gray-500">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">
-                                    <button
-                                        onClick={() => navigate("/profile")}
-                                        className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                                    >
-                                        <IconUser size={18} />
-                                        Profile
+                                    <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
+                                        <IconUser size={18} /> Profile
                                     </button>
-                                    <a
-                                        href="/logout"
-                                        className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
-                                    >
-                                        <IconLogout size={18} />
-                                        Keluar
+                                    <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                        <IconLogout size={18} /> Keluar
                                     </a>
                                 </div>
                             </div>
                         )}
                     </header>
+
                     <div className="flex-1 overflow-y-auto p-8">
                         <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
 
@@ -1522,9 +1475,10 @@ const transformPagedDataForChart = (pagedData) => {
                             <div>
                                 <div className="flex justify-between items-center mb-4 w-full">
                                     <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
-                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
-                                        onClick={openModal}>
-                                        Filter &gt;
+                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                        onClick={openModalLeft}>
+                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                        Filter
                                     </p>
                                 </div>
 
@@ -1543,7 +1497,11 @@ const transformPagedDataForChart = (pagedData) => {
                                                     onClick={(e) => e.stopPropagation()}>
 
                                                     <div className="px-5 pt-5">
-                                                        <p className="font-bold text-lg text-left">Filter</p>
+                                                        <div className='flex justify-between'>
+                                                            <p className="font-bold text-lg text-left">Filter</p>
+                                                            <button className='text-3xl font-medium mr-3'
+                                                                onClick={handleCancelFilters}>x</button>
+                                                        </div>
                                                         <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>
                                                     </div>
 
@@ -1552,14 +1510,14 @@ const transformPagedDataForChart = (pagedData) => {
 
                                                     {/* Tahun */}
                                                     <div className="px-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Tahun Masuk</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {years.length > 0 ? (years.map((year) => {
                                                                 const isSelected = selectedYears.includes(year);
                                                                 return (<button key={year} onClick={() => isSelected ?
                                                                     setSelectedYears(selectedYears.filter((y) => y !== year))
                                                                     : !maxReached && setSelectedYears([...selectedYears, year])}
-                                                                    className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                    className={`px-3 py-1 rounded text-xs transition-colors 
                                                                     ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161]"} 
                                                                     ${maxReached && !isSelected ? "opacity-40 cursor-not-allowed" : ""}`} >
                                                                     {year}
@@ -1572,7 +1530,7 @@ const transformPagedDataForChart = (pagedData) => {
 
                                                     {/* Periode */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Periode</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Periode</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {["daily", "weekly", "monthly", "yearly"].map((type) => {
                                                                 const isActive = selectedType === type;
@@ -1583,7 +1541,7 @@ const transformPagedDataForChart = (pagedData) => {
                                                                         type="button"
                                                                         disabled={isBlocked}
                                                                         onClick={() => !isBlocked && setSelectedType(type)}
-                                                                        className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                        className={`px-3 py-1 rounded text-xs transition-colors 
                                                                 ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                 ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                     >
@@ -1597,20 +1555,20 @@ const transformPagedDataForChart = (pagedData) => {
 
                                                     {/* Jenis Diagram */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Jenis Diagram</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {[{ label: "Diagram Lingkaran", value: "circle" },
                                                             { label: "Diagram Garis", value: "Line" },
                                                             { label: "Diagram Batang", value: "Bar" },]
                                                                 .map((chart) => {
-                                                                    const isActive = activeChartL === chart.value;
+                                                                    const isActive = draftChartTypeL === chart.value;
                                                                     const isBlocked = selectedYears.length > 1 && chart.value === "circle";
                                                                     return (
                                                                         <button
                                                                             key={chart.value}
                                                                             disabled={isBlocked}
-                                                                            onClick={() => !isBlocked && setActiveChartL(chart.value)}
-                                                                            className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                            onClick={() => !isBlocked && handlePickChartType(chart.value)}
+                                                                            className={`px-3 py-1 rounded text-xs transition-colors 
                                                                     ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                     ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                         >
@@ -1625,19 +1583,15 @@ const transformPagedDataForChart = (pagedData) => {
                                                     {/* Button */}
                                                     <div className="w-full mt-6">
                                                         <div className="h-[1.5px] bg-gray-200 mb-5 mx-5"></div>
-                                                        <div className="flex justify-between px-5 pb-5 gap-3">
+                                                        <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 "
                                                                 onClick={handleResetFilters}>
                                                                 Atur ulang
                                                             </button>
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                                onClick={handleCancelFilters}>
-                                                                Batalkan
-                                                            </button>
 
-                                                            <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
+                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white "
                                                                 onClick={debouncedApplyFiltersLeft}>
                                                                 Filter Data
                                                             </button>
@@ -1660,9 +1614,10 @@ const transformPagedDataForChart = (pagedData) => {
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-semibold text-lg">Data Bebas Pustaka</h3>
-                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={() => setShowFilterR(!showFilterR)}>
-                                        Filter &gt;
+                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                        Filter
                                     </p>
 
                                 </div>
@@ -1680,8 +1635,13 @@ const transformPagedDataForChart = (pagedData) => {
 
                                                     {/* Header */}
                                                     <div className="px-5 pt-5">
-                                                        <p className="font-bold text-lg text-left">Filter</p>
-                                                        <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1">
+                                                        <div className='flex justify-between'>
+                                                            <p className="font-bold text-lg text-left">Filter</p>
+                                                            <button className='text-3xl font-medium mr-3'
+                                                                onClick={handleCancelFiltersRight}>x</button>
+
+                                                        </div>
+                                                        <p className="font-thin text-sm text-left text-[#9A9A9A]">
                                                             Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.
                                                         </p>
                                                     </div>
@@ -1817,7 +1777,10 @@ const transformPagedDataForChart = (pagedData) => {
                                                                         return (
                                                                             <button
                                                                                 key={chart.value}
-                                                                                onClick={() => setActiveChartR(chart.value)}
+                                                                                onClick={() => {
+                                                                                    setActiveChartR(chart.value);
+                                                                                    localStorage.setItem("chart_type_right", chart.value);
+                                                                                }}
                                                                                 className={`px-3 py-1 rounded text-sm transition-colors 
                                                                                             ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
                                                                                           `}
@@ -1829,19 +1792,14 @@ const transformPagedDataForChart = (pagedData) => {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex justify-between px-5 pb-5 gap-3">
+                                                        <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 mt-4"
                                                                 onClick={handleResetFiltersRight}>
                                                                 Atur ulang
                                                             </button>
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                                onClick={handleCancelFiltersRight}>
-                                                                Batalkan
-                                                            </button>
-
-                                                            <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
+                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white mt-4"
                                                                 disabled={isLoadingR}
                                                                 onClick={debouncedApplyFiltersRight}>
                                                                 Filter Data
@@ -1862,12 +1820,16 @@ const transformPagedDataForChart = (pagedData) => {
                                 </div>
                             </div>
 
-                            <div className='mt-5'>
-                                <div className="relative mb-6">
+
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-7">
+                            <div>
+                                <div className="relative mb-4">
                                     <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
                                 </div>
 
-                                <div className="bg-white p-6 rounded-xl border border-gray-300">
+                                <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                                     <div className="relative">
                                         {tableDataLeft ? (
                                             <DataTable
@@ -1890,46 +1852,45 @@ const transformPagedDataForChart = (pagedData) => {
                                 </div>
                             </div>
 
-                            <div className='mt-5'>
-                                <div className="mb-4 h-[32px]"></div>
-                                <div className="bg-white rounded-xl">
-                                    <div className="relative">
-                                        <div className="overflow-x-auto">
-                                            {tableDataRight && (
-                                                <DataTableRight
-                                                    data={tableDataRight}
-                                                    pagination={tablePaginationRight}
-                                                    onPageChange={fetchTableDataRight}
-                                                />
-                                            )}
+                            <div>
+                                <div className="mb-4 h-[32px] mt-[44px]">
+                                    <div className="bg-white rounded-xl">
+                                        <div className="relative">
+                                            <div className="overflow-x-auto">
+                                                {tableDataRight && (
+                                                    <DataTableRight
+                                                        data={tableDataRight}
+                                                        pagination={tablePaginationRight}
+                                                        onPageChange={fetchTableDataRight}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
-
                         <div className='grid grid-cols-1 gap-8 '>
                             <div className="relative inline-flex justify-between items-center mt-20">
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
                             </div>
 
-                            <div className="bg-white p-6 ">
+                            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                                 <div className="relative bottom-0">
 
                                     <div className="overflow-x-auto">
-                                        <div className="font-semibold font-black text-left mb-4">Data Bebas Pustaka</div>
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="bg-[#667790] border-b-2 border-black">
-                                                    <th className="text-left p-4 font-normal text-white text-sm">No</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">loan id</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Member ID</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">item code</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal Pinjam</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Deadline</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal di kembalikan</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Status Buku</th>
+                                                <tr className="bg-[#D8DFEC] whitespace-nowrap">
+                                                    <th className="p-3 font-normal text-sm">No</th>
+                                                    <th className="p-3 font-normal text-sm">ID Peminjaman</th>
+                                                    <th className="p-3 font-normal text-sm">ID Member</th>
+                                                    <th className="p-3 font-normal text-sm">Kode Item</th>
+                                                    <th className="p-3 font-normal text-sm">Tanggal Pinjam</th>
+                                                    <th className="p-3 font-normal text-sm">Tenggat</th>
+                                                    <th className="p-3 font-normal text-sm">Tanggal di kembalikan</th>
+                                                    <th className="p-3 font-normal text-sm">Status Buku</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
@@ -1970,21 +1931,40 @@ const transformPagedDataForChart = (pagedData) => {
 
 
                                         </table>
-                                        <div className="flex gap-3 mt-4">
+                                        <div className="flex gap-3 mt-12 justify-center text-sm">
+
+                                            {/* Prev */}
                                             <button
-                                                className="px-4 py-2 bg-gray-300 rounded"
-                                                onClick={() => page > 1 && fetchLoanHistory(page - 1)}
+                                                className="flex gap-3 px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                disabled={currentPage <= 1}
+                                                onClick={() => fetchLoanHistory(currentPage - 1)}
                                             >
-                                                Prev
+                                                <p>←</p>
+                                                <span>Sebelumnya</span>
                                             </button>
 
-                                            <span className="px-4 py-2">Page {page}</span>
+                                            {/* Number buttons */}
+                                            {pageNumbers.map(num => (
+                                                <button
+                                                    key={num}
+                                                    onClick={() => fetchLoanHistory(num)}
+                                                    className={`px-3 py-1 rounded-md transition-all duration-150
+                                                            ${currentPage === num
+                                                            ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
+                                                            : 'text-[#023048]  hover:bg-[#F3F6F9]'
+                                                        }`}
+                                                >
+                                                    {num}
+                                                </button>
+                                            ))}
 
+                                            {/* Next */}
                                             <button
-                                                className="px-4 py-2 bg-gray-300 rounded"
-                                                onClick={() => fetchLoanHistory(page + 1)}
+                                                className="px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                disabled={currentPage >= totalPages}
+                                                onClick={() => fetchLoanHistory(currentPage + 1)}
                                             >
-                                                Next
+                                                Selanjutnya →
                                             </button>
                                         </div>
 

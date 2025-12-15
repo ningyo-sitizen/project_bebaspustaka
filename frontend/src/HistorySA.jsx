@@ -6,7 +6,7 @@ import authCheckSA from "./authCheckSA";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
-    IconX, IconChevronRight, IconChevronLeft, IconCheck,
+    IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar
 } from "@tabler/icons-react";
 
 // URL Foto Dummy yang digunakan di Navbar dan Timeline
@@ -197,7 +197,9 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
         : 'Rentang :';
 
     return (
-        <div className="absolute right-0 top-[48px] z-50 w-72 bg-white rounded-lg shadow-xl border p-4 font-['Plus_Jakarta_Sans']">
+        <div className={`absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-72 bg-white rounded-lg shadow-xl border p-4 font-['Plus_Jakarta_Sans'] origin-top transition-all duration-150
+                ${isOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"}`}
+        >
             <div className="flex justify-between items-center pb-3 border-b mb-4">
                 <h3 className="font-semibold text-base text-gray-800">Filter</h3>
                 <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
@@ -233,7 +235,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
 
             <div className="mt-4 space-y-3">
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Tanggal Mulai*</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1 text-left">Tanggal Mulai <span className="text-[#FF1515]">*</span></label>
                     <input
                         type="date"
                         value={startDateISO}
@@ -243,7 +245,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
                     />
                 </div>
                 <div>
-                    <label className="block text-xs font-medium text-gray-700 mb-1">Tanggal Selesai*</label>
+                    <label className="block text-xs font-medium text-gray-700 mb-1 text-left">Tanggal Selesai <span className="text-[#FF1515]">*</span></label>
                     <input
                         type="date"
                         value={endDateISO}
@@ -251,7 +253,7 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
                         className="w-full p-2 border border-gray-300 rounded-lg bg-white text-sm focus:border-[#023048] focus:ring-[#023048]"
                         placeholder="Pilih tanggal selesai"
                     />
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className="text-xs text-gray-500 mt-2 text-left">
                         {currentRangeText}
                     </p>
                 </div>
@@ -276,29 +278,6 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
     );
 };
 
-// ---------------------------------------------------
-// KOMPONEN: Sort Dropdown
-// ---------------------------------------------------
-const SortDropdown = ({ isOpen, onClose, selectedSort, setSelectedSort }) => {
-    if (!isOpen) return null;
-
-    const sortOptions = ["Terbaru", "Terlama", "A > Z", "Z > A"];
-
-    return (
-        <div className="absolute right-0 top-[48px] z-50 w-36 bg-white rounded-lg shadow-xl border py-2 font-['Plus_Jakarta_Sans']">
-            {sortOptions.map((option) => (
-                <button
-                    key={option}
-                    onClick={() => { setSelectedSort(option); onClose(); }}
-                    className={`flex justify-between items-center w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100 transition duration-100 ${selectedSort === option ? 'text-[#023048] font-semibold bg-gray-100' : 'text-gray-700'}`}
-                >
-                    {option}
-                    {selectedSort === option && <IconCheck size={16} className="text-[#023048]" />}
-                </button>
-            ))}
-        </div>
-    );
-};
 
 // ---------------------------------------------------
 // KOMPONEN UTAMA HISTORY
@@ -542,9 +521,7 @@ const History = () => {
             )}
 
             {/* Main */}
-            <div className="flex-1 lg:ml-0">
-
-                {/* Navbar */}
+            <div className="flex-1 flex flex-col min-h-screen">
                 <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                     <button
                         className="lg:hidden text-[#023048]"
@@ -570,8 +547,8 @@ const History = () => {
                             <div className="flex items-center gap-3 p-4 border-b">
                                 <IconUser size={24} className="text-gray-500" />
                                 <div>
-                                    <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
-                                    <p className="text-xs text-gray-500">{profileData.role}</p>
+                                    <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                                    <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                 </div>
                             </div>
                             <div className="p-2 space-y-1">
@@ -591,122 +568,198 @@ const History = () => {
 
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
                         <div className="mb-4 md:mb-0">
-                            <h1 className="text-xl font-semibold text-[#023048]">History</h1>
-                            <p className="text-sm text-gray-600 mt-1">
+                            <h1 className="text-xl font-semibold text-left">History</h1>
+                            <p className="text-sm text-[#9A9A9A] mt-1 text-left">
                                 Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
                             </p>
                         </div>
 
-                        <div className="flex gap-3 relative flex-wrap justify-end">
-                            <div className="relative">
-                                <button
-                                    onClick={toggleFilter}
-                                    className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition duration-150 ${isFilterOpen ? 'bg-[#023048] text-white border-[#023048]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                                >
-                                    <IconFilter size={18} /> Filter
-                                    {(dateFilter.start || dateFilter.end) && (
-                                        <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
-                                    )}
-                                </button>
-                                {isFilterOpen && (
-                                    <FilterModal
-                                        isOpen={isFilterOpen}
-                                        onClose={() => setIsFilterOpen(false)}
-                                        onApplyFilter={handleApplyDateFilter}
-                                        initialStart={dateFilter.start}
-                                        initialEnd={dateFilter.end}
-                                    />
-                                )}
-                            </div>
 
-                            <div className="relative">
-                                <button
-                                    onClick={toggleSort}
-                                    className={`flex items-center gap-2 px-4 py-2 border rounded-lg text-sm font-medium transition duration-150 ${isSortOpen ? 'bg-[#023048] text-white border-[#023048]' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
-                                >
-                                    <IconSortDescendingLetters size={18} /> Urutkan
-                                </button>
-                                {isSortOpen && (
-                                    <SortDropdown
-                                        isOpen={isSortOpen}
-                                        onClose={() => setIsSortOpen(false)}
-                                        selectedSort={selectedSort}
-                                        setSelectedSort={setSelectedSort}
-                                    />
-                                )}
-                            </div>
-
-                            <div className="relative w-48 sm:w-64 flex-shrink-0">
-                                <input
-                                    type="text"
-                                    placeholder="Cari data...."
-                                    className="w-full p-2 pl-10 border border-gray-300 rounded-lg focus:ring-[#023048] focus:border-[#023048] text-sm"
-                                    value={searchTerm}
-                                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                                />
-                                <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            </div>
-                        </div>
                     </div>
 
-                    <div className="w-full border-b border-gray-200 mb-8"></div>
+                    <div className="w-full border-b border-gray-200 mb-5"></div>
 
-                    {/* Timeline */}
-                    {isLoading ? (
-                        <div className="text-center py-20 text-gray-600">
-                            <svg className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            Memuat data histori...
+                    <div className="flex flex-col lg:flex-row gap-5 p-5">
+                        <div>
+                            {isLoading ? (
+                                <div className="text-center py-20 text-gray-600">
+                                    <svg
+                                        className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        fill="none"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <circle
+                                            className="opacity-25"
+                                            cx="12"
+                                            cy="12"
+                                            r="10"
+                                            stroke="currentColor"
+                                            strokeWidth="4"
+                                        ></circle>
+                                        <path
+                                            className="opacity-75"
+                                            fill="currentColor"
+                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                        ></path>
+                                    </svg>
+                                    Memuat data histori...
+                                </div>
+                            ) : filteredData.length > 0 ? (
+                                <div className="space-y-8">
+                                    {filteredData.map((item, index) => (
+                                        <div key={item.id} className="relative flex w-full">
+                                            <div className="flex flex-col">
+
+                                                {index < filteredData.length - 1 && (
+                                                    <p>{formatDisplayTimestamp(item.timestamp)}</p>
+                                                )}
+
+                                                <div className="w-full">
+                                                    <div className="flex-1 mt-5 relative">
+                                                        <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-4 min-w-[650px]">
+
+                                                            {/* Garis kiri FULL karena nempel wrapper */}
+                                                            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#4ABC4C] rounded-l-lg"></div>
+
+                                                            {/* Konten (baru dikasih padding) */}
+                                                            <div className="p-4 pl-6">
+
+                                                                {/* Header */}
+                                                                <div className="flex flex-wrap items-center gap-2 mb-3">
+                                                                    <p className="font-semibold text-base text-[#023048]">
+                                                                        Di edit oleh {item.name}
+                                                                    </p>
+
+                                                                    <span
+                                                                        className={`text-xs px-2 py-0.5 rounded-md font-medium ${item.role === 'super admin'
+                                                                            ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
+                                                                            : item.role === 'Admin'
+                                                                                ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+                                                                                : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
+                                                                            }`}
+                                                                    >
+                                                                        {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                                                                    </span>
+                                                                </div>
+
+                                                                {/* Isi aktivitas */}
+                                                                <div className="break-words max-w-10">
+                                                                    <p className="text-left text-sm text-gray-700">
+                                                                        {item.activity}
+                                                                    </p>
+                                                                </div>
+
+                                                            </div>
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                            ) : (
+                                <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
+                                    Tidak ada aktivitas yang ditemukan dengan kriteria tersebut.
+                                </div>
+                            )}
                         </div>
-                    ) : filteredData.length > 0 ? (
-                        <div className="space-y-8">
-                            {filteredData.map((item, index) => (
-                                <div key={item.id} className="relative flex">
-                                    {index < filteredData.length - 1 && (
-                                        <div className="absolute left-[15px] top-0 h-full w-px bg-gray-300 z-0"></div>
-                                    )}
 
-                                    <div className="flex flex-col items-center flex-shrink-0 mr-4">
-                                        <div className="w-8 h-8 rounded-full flex items-center justify-center border border-gray-300 bg-gray-100 flex-shrink-0 z-10">
-                                            {item.photo ? (
-                                                <img src={item.photo} alt={item.name} className="w-full h-full object-cover rounded-full" />
-                                            ) : (
-                                                <IconUser size={20} className="text-gray-500" />
-                                            )}
-                                        </div>
-                                    </div>
+                        <div className="flex flex-col p-5 bg-white w-full lg:w-80 shrink-0">
+                            {/* filter */}
+                            <div className="flex flex-col gap-3 relative flex-wrap justify-center">
+                                <p className="font-semibold text-lg mr-auto">Filter</p>
 
-                                    <div className="flex-1 -mt-1">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <p className="font-semibold text-base text-[#023048]">{item.name}</p>
-                                            <span
-                                                className={`text-xs px-2 py-0.5 rounded-md font-medium ${item.role === 'super admin'
-                                                        ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
-                                                        : item.role === 'Admin'
-                                                            ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
-                                                            : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
-                                                    }`}
-                                            >
-                                                {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
-                                            </span>
+                                <div className="relative w-full sm:w-64">
+                                    <input
+                                        type="text"
+                                        placeholder="Cari data...."
+                                        className="w-full p-2 pl-10 border border-[#B3B3B3] focus:ring-[#023048] focus:border-[#023048] text-sm text-black"
+                                        value={searchTerm}
+                                        onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                                    />
+                                    <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                </div>
 
-                                        </div>
+                                <div className="flex flex-col gap-3 relative">
+                                    <p className="font-regular text-sm mr-auto mt-3">Tindakan</p>
 
-                                        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 w-full">
-                                            <p className="text-xs text-gray-500 font-medium mb-2">{formatDisplayTimestamp(item.timestamp)}</p>
-                                            <p className="text-sm text-gray-700">{item.activity}</p>
+                                    <div className="relative w-full sm:w-64">
+                                        {/* Trigger */}
+                                        <button
+                                            onClick={() => setIsSortOpen(!isSortOpen)}
+                                            className={`w-full p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isSortOpen
+                                                ? "bg-[#023048] text-white border-[#023048]"
+                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                }`}
+                                        >
+                                            Urutkan Data
+                                        </button>
+                                        <div
+                                            className={`${isSortOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"}
+                                                                         absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-full max-w-[240px] bg-white rounded-lg shadow-xl border py-2 origin-top transition-all duration-150`}
+                                        >
+                                            {["Terbaru", "Terlama", "A > Z", "Z > A"].map((option) => (
+                                                <button
+                                                    key={option}
+                                                    onClick={() => {
+                                                        setSelectedSort(option);
+                                                        setIsSortOpen(false);
+                                                    }}
+                                                    className={`flex justify-between items-center w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100 transition duration-100 ${selectedSort === option
+                                                        ? "text-[#023048] font-semibold bg-gray-100"
+                                                        : "text-gray-700"
+                                                        }`}
+                                                >
+                                                    {option}
+
+                                                    {selectedSort === option && (
+                                                        <IconCheck size={16} className="text-[#023048] ml-4" />
+                                                    )}
+                                                </button>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                            ))}
+                                <p className="font-regular text-sm mr-auto mt-3">Waktu</p>
+
+                                <div className="relative">
+                                    <button
+                                        onClick={toggleFilter}
+                                        className={`w-full flex p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isFilterOpen
+                                            ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                            : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                            }`}                                    >
+                                        Urutkan Waktu
+                                        <IconCalendar size={20} className="text-gray-600 ml-auto" />
+                                        {(dateFilter.start || dateFilter.end) && (
+                                            <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
+                                        )}
+                                    </button>
+                                    {isFilterOpen && (
+                                        <FilterModal
+                                            isOpen={isFilterOpen}
+                                            onClose={() => setIsFilterOpen(false)}
+                                            onApplyFilter={handleApplyDateFilter}
+                                            initialStart={dateFilter.start}
+                                            initialEnd={dateFilter.end}
+                                        />
+                                    )}
+                                </div>
+
+
+
+
+                            </div>
                         </div>
-                    ) : (
-                        <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
-                            Tidak ada aktivitas yang ditemukan dengan kriteria tersebut.
-                        </div>
-                    )}
+
+                    </div>
+
+
+
 
                     {/* Pagination */}
                     <div className="flex justify-center mt-10 gap-3">

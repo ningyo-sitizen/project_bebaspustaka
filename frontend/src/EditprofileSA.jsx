@@ -310,13 +310,13 @@ const handleSubmit = async (e) => {
             {/* Navigasi Breadcrumb */}
             <button
               onClick={() => navigate("/profileSA")}
-              className="text-[#667790] text-lg sm:text-2xl font-semibold hover:underline"
+              className="text-[#667790] text-lg sm:text-2xl font-semibold hover:underline "
             >
               Profile
             </button>
 
             <span className="mx-2 text-gray-400">&gt;</span>
-            <span className="text-[#023048] font-semibold text-lg sm:text-2xl">
+            <span className="text-[#023048] font-semibold text-lg sm:text-2xl ">
               Edit Profile
             </span>
           </div>
@@ -328,10 +328,10 @@ const handleSubmit = async (e) => {
                 <IconUser size={40} className="text-gray-500 sm:size={50}" />
               </div>
               <div>
-                <h2 className="text-lg sm:text-xl font-semibold text-[#023048]">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#023048] text-left">
                   {formData.name}
                 </h2>
-                <p className="text-sm text-gray-500">{profileData.role}</p>
+                <p className="text-sm text-gray-500 text-left ">{profileData.role}</p>
               </div>
             </div>
 
@@ -346,7 +346,7 @@ const handleSubmit = async (e) => {
                 Rincian Saya
               </button>
 
-              <span className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium text-xs sm:text-sm">
+              <span className="pb-2 border-b-2 border-[#023048] text-[#023048] font-medium text-xs sm:text-sm text-left">
                 Edit Profile
               </span>
             </div>
@@ -357,14 +357,14 @@ const handleSubmit = async (e) => {
 
                 {/* Edit Profile Utama */}
                 <div className="space-y-4 sm:space-y-6">
-                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-[#023048]">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-[#023048] text-left">
                     Edit Profile Utama
                   </h3>
 
                   <div className="space-y-4">
                     {/* Nama */}
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 text-left">
+                      <label className="text-sm font-medium text-gray-700 text-left ">
                         Nama<span className="text-[#FF1515]">*</span>
                       </label>
                       <div className="relative">
@@ -383,8 +383,8 @@ const handleSubmit = async (e) => {
                     </div>
 
                     {/* Peran */}
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 text-left">
+                      <label className="text-sm font-medium text-gray-700 text-left">
                         Peran
                       </label>
                       <input
@@ -396,8 +396,8 @@ const handleSubmit = async (e) => {
                     </div>
 
                     {/* Username */}
-                    <div className="space-y-1">
-                      <label className="text-sm font-medium text-gray-700">
+                    <div className="space-y-1 text-left">
+                      <label className="text-sm font-medium text-gray-700 text-left">
                         Username<span className="text-[#FF1515]">*</span>
                       </label>
                       <div className="relative">
@@ -418,14 +418,14 @@ const handleSubmit = async (e) => {
                 </div>
 
                 {/* Edit Password */}
-                <div className="space-y-4 sm:space-y-6">
-                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-[#023048]">
+                <div className="space-y-4 sm:space-y-6 text-left">
+                  <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4 text-[#023048] text-left">
                     Edit Password
                   </h3>
 
                   {/* Password Baru */}
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-1 text-left">
+                    <label className="text-sm font-medium text-gray-700 text-left">
                       Password Baru<span className="text-[#FF1515]">*</span>
                     </label>
                     <div className="relative">
@@ -453,8 +453,8 @@ const handleSubmit = async (e) => {
                   </div>
 
                   {/* Konfirmasi Password */}
-                  <div className="space-y-1">
-                    <label className="text-sm font-medium text-gray-700">
+                  <div className="space-y-1 text-left">
+                    <label className="text-sm font-medium text-gray-700 text-left">
                       Konfirmasi Password<span className="text-[#FF1515]">*</span>
                     </label>
                     <div className="relative">
