@@ -153,7 +153,9 @@ function ApprovalSA() {
         try {
             const token = localStorage.getItem("token");
             const user = JSON.parse(localStorage.getItem('user'))
-            const username = user.username;
+            console.log("USERNAME FRONTEND:", user);
+            console.log("USERNAME:", user.username);
+            const username = user.name;
             const allData = await fetchAllData();
             const selectedMahasiswa = allData.filter(item => checkedItems[item.id]);
 
@@ -446,7 +448,6 @@ function ApprovalSA() {
             const user_id = user.user_id;
             const token = localStorage.getItem('token')
             try {
-                // Ganti URL sesuai endpoint backend Anda
                 const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
                     headers: {
                         "Content-Type": "application/json",
@@ -1042,7 +1043,7 @@ function ApprovalSA() {
 
                             {/* pagination dan export */}
                             <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                                onClick={() => console.log("PDF clicked")}>Cetak ke PDF
+                               onClick={() => window.open('http://localhost:8080/api/bebaspustaka/export/pdf', '_blank')}>Cetak ke PDF
                             </button>
 
                             <div className="flex flex-wrap gap-2 justify-center mt-4 items-center">

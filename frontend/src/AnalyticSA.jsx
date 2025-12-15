@@ -143,7 +143,7 @@ export default function Dashboard() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
 
-    const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
+    const maxReached = activeChartL === "circle" && selectedYears.length >= 5;
 
     const toggleDropdown = () => {
         setIsDropdownOpen(!isDropdownOpen);
