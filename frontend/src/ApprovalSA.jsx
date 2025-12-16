@@ -270,6 +270,9 @@ function ApprovalSA() {
 
     const [alertBebasPustakaAll, setAlertBebasPustakaAll] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
+    const resetdate = useState(false);
+
+    
     const [urutkanBy, setUrutkanBy] = useState(false);
     //sort by
     // Ganti fungsi sortAZ dan sortZA dengan ini:
@@ -742,7 +745,7 @@ function ApprovalSA() {
                                                     <div className="flex justify-end gap-2 mt-2">
                                                         <button
                                                             className="px-3 py-2 text-xs border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-                                                            onClick={() => setShowFilter(false)}
+                                                            onClick={resetdate}
                                                         >
                                                             Reset
                                                         </button>
