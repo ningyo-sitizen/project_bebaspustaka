@@ -164,7 +164,7 @@ function ApprovalSA() {
         try {
             const token = localStorage.getItem("token");
             const user = JSON.parse(localStorage.getItem('user'))
-            const username = user.username;
+            const username = user.name;
             const allData = await fetchAllData();
             const selectedMahasiswa = allData.filter(item => checkedItems[item.id]);
 
