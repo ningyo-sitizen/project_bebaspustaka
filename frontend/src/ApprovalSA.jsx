@@ -15,6 +15,7 @@ import {
     IconUser,
     IconChevronDown,
     IconSelector,
+    IconFile,
 } from "@tabler/icons-react";
 
 import { data, Link } from 'react-router-dom';
@@ -129,9 +130,9 @@ function ApprovalSA() {
         setSearchTimeout(timeout);
     };
 
-    const handleToggleFilter = () => {
-        setShowFilter(prev => !prev);
-    };
+    // const handleToggleFilter = () => {
+    //     setShowFilter(prev => !prev);
+    // };
 
     //GET login user
     const [profileData, setProfileData] = useState({
@@ -155,6 +156,10 @@ function ApprovalSA() {
             ? `${baseClasses} bg-[#E7EBF1] text-[#023048] font-semibold`
             : `${baseClasses} text-[#667790] hover:bg-gray-100`;
     };
+
+    const openAlertBepusAll = () => {
+        setAlertBebasPustakaAll(true);
+    }
     const approveAllRequest = async () => {
         try {
             const token = localStorage.getItem("token");
@@ -169,6 +174,7 @@ function ApprovalSA() {
             }
 
             // Mulai Progress
+            setAlertBebasPustakaAll(false);
             setIsApproving(true);
             setApproveProgress(0);
 
@@ -194,7 +200,6 @@ function ApprovalSA() {
             setIsApproving(false);
         }
     };
-
 
 
     const cekAll = async () => {
@@ -260,6 +265,7 @@ function ApprovalSA() {
 
     //next page
     const goto = useNavigate();
+    const [selectedItem, setSelectedItem] = useState(null);
     const [alertBebasPustaka, setAlertBebasPustaka] = useState(false);
 
     const [alertBebasPustakaAll, setAlertBebasPustakaAll] = useState(false);
@@ -325,6 +331,10 @@ function ApprovalSA() {
             alert("Gagal approve: " + err.response?.data?.message);
         }
     };
+
+    const openAlertBepus = () => {
+        setAlertBebasPustaka(true)
+    }
 
 
     //pick date
@@ -409,6 +419,7 @@ function ApprovalSA() {
 
         setShowFilter(false);
     };
+
 
     //acc n
     const SetujuiBepus = async () => {
@@ -588,7 +599,7 @@ function ApprovalSA() {
 
                     <div className="p-1">
                         {/* TABLE APPROVAL */}
-                        <div className="ml-0 flex-1 p-4 md:p-8 overflow-x-auto">
+                        <div className="ml-0 flex-1 p-4 md:p-8 ">
 
                             <p className="font-semibold text-2xl text-black mb-2 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
                             <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
@@ -641,11 +652,20 @@ function ApprovalSA() {
                                     <div className="flex border-2 border-[#E3E3E3] items-center justify-center">
                                         <div className="relative">
                                             <div className="border-r-2 border-[#E3E3E3] text-sm h-full my-auto">
-                                                <button onClick={handleToggleFilter}
+                                                <button
+
+                                                    onClick={() =>
+                                                        (statusRange === "out_of_range" || statusRange === "empty") &&
+                                                        setShowFilter(!showFilter)
+                                                    }
+
+                                                    disabled={statusRange === "on_range"}
                                                     className={`flex relative gap-4 px-4 py-2 active:scale-90 transition-transform duration-100
-                                                            ${showFilter
-                                                            ? 'bg-[#667790] text-white'
-                                                            : 'bg-transparent text-[#616161] cursor-pointer'
+                                                      ${statusRange === "on_range"
+                                                            ? 'text-gray-400 cursor-not-allowed'
+                                                            : showFilter
+                                                                ? 'bg-[#667790] text-white'
+                                                                : 'bg-transparent text-[#616161] cursor-pointer'
                                                         }`}
                                                 >
                                                     <svg
@@ -740,7 +760,7 @@ function ApprovalSA() {
 
                                         <div className="relative">
                                             <button
-                                                onClick={approveAllRequest}
+                                                onClick={openAlertBepusAll}
                                                 disabled={!approvedAll}
                                                 className={`cursor-pointer items-center text-sm flex gap-2 px-5 py-1 border-r-2 border-[#E3E3E3] active:scale-90 transition-transform duration-100
                                                 ${alertBebasPustakaAll
@@ -751,20 +771,7 @@ function ApprovalSA() {
                                                 <IconSelector size={16} fill="#616161"></IconSelector>
                                                 Approve All
                                             </button>
-                                            {isApproving && (
-                                                <div className="mt-3 w-full max-w-xs">
-                                                    <p className="text-sm font-semibold text-[#667790] mb-1">
-                                                        Memproses... {approveProgress}%
-                                                    </p>
 
-                                                    <div className="w-full bg-gray-300 h-3 rounded-full overflow-hidden">
-                                                        <div
-                                                            className="bg-[#023048] h-3 transition-all duration-300"
-                                                            style={{ width: `${approveProgress}%` }}
-                                                        ></div>
-                                                    </div>
-                                                </div>
-                                            )}
                                         </div>
                                         <div className="relative">
                                             <button
@@ -872,7 +879,7 @@ function ApprovalSA() {
                                 </div>
                             </div>
 
-                            <div className='grid grid-cols-1 mt-9'>
+                            <div className='grid grid-cols-1 mt-9 overflow-x-auto'>
                                 <div className="flex">
                                     <div onClick={() => setChangeTabColor("#D8DFEC")}
                                         className="w-40 h-12 bg-[#D8DFEC] 
@@ -918,7 +925,7 @@ function ApprovalSA() {
 
                                                         <div className={`w-4 h-4 border rounded flex items-center justify-center ${approvedAll
                                                             ? 'bg-transparent border-[#A8B5CB]'
-                                                            : 'bg-transparent border-white'
+                                                            : 'bg-transparent border-black'
                                                             }`}
                                                         >
                                                             {approvedAll && (
@@ -940,14 +947,14 @@ function ApprovalSA() {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Nama</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">NIM</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">institusi</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">program studi</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Status Peminjaman</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Status</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Tindakan</th>
-                                                <th className="p-2 font-normal text-white text-[#333333] text-sm">Keterangan</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">Nama</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">NIM</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">institusi</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">program studi</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">Status Peminjaman</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">Status</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">Tindakan</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm">Keterangan</th>
                                             </tr>
                                         </thead>
 
@@ -1029,9 +1036,11 @@ function ApprovalSA() {
                                                                 type="button"
                                                                 onClick={() => {
                                                                     if (item.status_peminjaman === 1 && item.status_denda === 1) {
-                                                                        approveSingle(item)
+                                                                        setSelectedItem(item);
+                                                                        openAlertBepus();
                                                                     }
                                                                 }}
+
                                                                 disabled={!(item.status_peminjaman === 1 && item.status_denda === 1)}
                                                                 className={`px-2 py-1 text-xs rounded-md border transition 
                                                                   ${item.status_peminjaman === 1 && item.status_denda === 1
@@ -1087,7 +1096,7 @@ function ApprovalSA() {
                                             key={num}
                                             onClick={() => setCurrentPage(num)}
                                             className={`px-3 py-1 rounded-md transition-all duration-150
-                                    ${currentPage === num
+                                                ${currentPage === num
                                                     ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
                                                     : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
                                                 }`}
@@ -1106,7 +1115,7 @@ function ApprovalSA() {
                                     </button>
                                 </div>
 
-                                 <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
+                                <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
                                     onClick={() => console.log("PDF clicked")}>Cetak ke PDF
                                 </button>
                             </div>
@@ -1118,28 +1127,37 @@ function ApprovalSA() {
                             <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
                                 <div className="relative w-80 h-80 overflow-hidden">
 
-                                    <div className="absolute bg-[url('https://cdn.designfast.io/image/2025-11-22/cf3fe802-a5e6-4d12-89e9-3cdec8f83aed.png')] 
-                            bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
-                                    </div>
+                                    <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
+                                        <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                            <IconFile stroke="#023048" size={30} />
+                                        </div>
 
-                                    <p className='absolute ml-2 left-[270px] top-24 font-semibold text-xl cursor-pointer z-50' onClick={() => setAlertBebasPustaka(false)}> X </p>
-
-                                    <div className="absolute bottom-0 bg-white w-80 h-60 rounded-md font-semibold flex flex-col items-center justify-center text-center px-5">
-
-                                        <p className="text-xl mt-7">Setujui Data Ini?</p>
+                                        <p className="text-xl mt-5">Setujui Data Ini?</p>
                                         <p className="text-xs font-extralight mt-4 px-2">
                                             Setelah data disetujui, perubahan tidak dapat dibatalkan dan akan dianggap
                                             sebagai data yang sah serta tersimpan dalam sistem.
                                         </p>
 
-                                        <button
-                                            type="button"
-                                            onClick={SetujuiBepus}
-                                            className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-semibold
-                                    active:scale-90 transition-transform duration-100"
-                                        >
-                                            Setujui
-                                        </button>
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAlertBebasPustaka(false)} className="cursor-pointer mt-4 px-5 py-1 border border-[#023048] rounded-md bg-[#E5E7EB] text-[#023048] font-thin
+                                                    active:scale-90 transition-transform duration-100"
+                                            >
+                                                Batalkan
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    approveSingle(selectedItem);
+                                                    setAlertBebasPustaka(false);
+                                                }}
+                                                className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-thin
+                                                    active:scale-90 transition-transform duration-100"
+                                            >
+                                                Setujui
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1149,28 +1167,55 @@ function ApprovalSA() {
                             <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
                                 <div className="relative w-80 h-80 overflow-hidden">
 
-                                    <div className="absolute bg-[url('https://cdn.designfast.io/image/2025-11-22/cf3fe802-a5e6-4d12-89e9-3cdec8f83aed.png')] 
-                            bg-cover bg-center left-[120px] top-12 w-20 h-20 z-50">
-                                    </div>
+                                    <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
+                                        <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                            <IconFile stroke="#023048" size={30} />
+                                        </div>
 
-                                    <p className='absolute ml-2 left-[270px] top-24 font-semibold text-xl cursor-pointer z-50' onClick={() => setAlertBebasPustakaAll(false)}> X </p>
-
-                                    <div className="absolute bottom-0 bg-white w-80 h-60 rounded-md font-semibold flex flex-col items-center justify-center text-center px-5">
-
-                                        <p className="text-xl mt-7">Setujui Semua Data?</p>
+                                        <p className="text-xl mt-5">Setujui Semua Data?</p>
                                         <p className="text-xs font-extralight mt-4 px-2">
                                             Setelah data disetujui, perubahan tidak dapat dibatalkan dan akan dianggap
                                             sebagai data yang sah serta tersimpan dalam sistem.
                                         </p>
 
-                                        <button
-                                            type="button"
-                                            onClick={SetujuiSemuaBepus}
-                                            className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-semibold
+                                        <div className="flex gap-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setAlertBebasPustakaAll(false)}
+                                                className="cursor-pointer mt-4 px-5 py-1 border border-[#023048] rounded-md bg-[#E5E7EB] text-[#023048] font-thin
                                                     active:scale-90 transition-transform duration-100"
-                                        >
-                                            Setujui
-                                        </button>
+                                            >
+                                                Batalkan
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={approveAllRequest}
+                                                className="cursor-pointer mt-4 px-5 py-1 rounded-md bg-[#023048] text-white font-thin
+                                                    active:scale-90 transition-transform duration-100"
+                                            >
+                                                Setujui
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {isApproving && (
+                            <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
+                                <div className="max-width-xl bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center pb-3 px-6 mt-8 pt-3">
+
+                                    <div className=" w-full max-w-xs">
+                                        <p className="text-sm font-semibold text-[#667790] mb-1">
+                                            Memproses... {approveProgress}%
+                                        </p>
+
+                                        <div className="w-full bg-gray-300 h-3 rounded-full overflow-hidden">
+                                            <div
+                                                className="bg-[#023048] h-3 transition-all duration-300"
+                                                style={{ width: `${approveProgress}%` }}
+                                            ></div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -1180,7 +1225,7 @@ function ApprovalSA() {
                 </div >
             </div>
 
-            <div className="sticky w-full z-50">
+            <div className="sticky w-full z-90">
                 <AppLayout></AppLayout>
             </div>
         </main >

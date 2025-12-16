@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const verifyToken = require('../middleware/checktoken');
-const {getAndInsertDataBebasPustaka,setDateRangeAndGenerate,getDate} = require('../controller/testing');
+const {getAndInsertDataBebasPustaka,setDateRangeAndGenerate,getDate, resetPicks} = require('../controller/testing');
 const {getMahasiswaTI,getAllMahasiswaTI,approve,getMahasiswaTI_AllFull,approveAll} = require('../controller/bepuscontroller');
 
 
