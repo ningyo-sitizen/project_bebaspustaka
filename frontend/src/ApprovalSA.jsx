@@ -159,9 +159,7 @@ function ApprovalSA() {
         try {
             const token = localStorage.getItem("token");
             const user = JSON.parse(localStorage.getItem('user'))
-            console.log("USERNAME FRONTEND:", user);
-            console.log("USERNAME:", user.username);
-            const username = user.name;
+            const username = user.username;
             const allData = await fetchAllData();
             const selectedMahasiswa = allData.filter(item => checkedItems[item.id]);
 
@@ -266,6 +264,9 @@ function ApprovalSA() {
 
     const [alertBebasPustakaAll, setAlertBebasPustakaAll] = useState(false);
     const [showFilter, setShowFilter] = useState(false);
+    const resetdate = useState(false);
+
+    
     const [urutkanBy, setUrutkanBy] = useState(false);
     //sort by
     // Ganti fungsi sortAZ dan sortZA dengan ini:
@@ -454,6 +455,7 @@ function ApprovalSA() {
             const user_id = user.user_id;
             const token = localStorage.getItem('token')
             try {
+                // Ganti URL sesuai endpoint backend Anda
                 const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
                     headers: {
                         "Content-Type": "application/json",
@@ -723,7 +725,7 @@ function ApprovalSA() {
                                                     <div className="flex justify-end gap-2 mt-2">
                                                         <button
                                                             className="px-3 py-2 text-xs border border-gray-400 rounded-md text-gray-600 hover:bg-gray-100 active:scale-95 transition"
-                                                            onClick={() => setShowFilter(false)}
+                                                            onClick={resetdate}
                                                         >
                                                             Reset
                                                         </button>
@@ -1072,27 +1074,9 @@ function ApprovalSA() {
                             </div>
 
                             {/* pagination dan export */}
-<<<<<<< HEAD
-                            <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                               onClick={() => window.open('http://localhost:8080/api/bebaspustaka/export/pdf', '_blank')}>Cetak ke PDF
-                            </button>
-
-                            <div className="flex flex-wrap gap-2 justify-center mt-4 items-center">
-                                {/* Prev */}
-                                <button
-                                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                                    disabled={currentPage === 1}
-                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
-                                >
-                                    ← Sebelumnya
-                                </button>
-
-                                {pageNumbers.map(num => (
-=======
                             <div className="flex ml-60">
                                 <div className="flex flex-wrap gap-2 justify-center mt-8 items-center">
                                     {/* Prev */}
->>>>>>> ad3a454fd5e11e2ca0a289570955acb8aa16289d
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
@@ -1125,7 +1109,7 @@ function ApprovalSA() {
                                     </button>
                                 </div>
 
-                                 <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
+                                <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
                                     onClick={() => console.log("PDF clicked")}>Cetak ke PDF
                                 </button>
                             </div>

@@ -164,10 +164,6 @@ export default function Dashboard() {
     const [page, setPage] = useState(1);
     const [limit] = useState(10);
 
-<<<<<<< HEAD
-    const maxReached = activeChartL === "circle" && selectedYears.length >= 5;
-=======
->>>>>>> ad3a454fd5e11e2ca0a289570955acb8aa16289d
 
     const maxReached = draftChartTypeL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
 

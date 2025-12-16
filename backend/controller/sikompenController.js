@@ -1,21 +1,24 @@
-const { json } = require('express');
 const { bebaspustaka, opac } = require('../config');
 
 exports.getStatusPustaka = async (req, res) => {
     const { nim } = req.query;
+
     console.log("hit");
+    console.log(nim);
 
     if (!nim) {
         return res.status(400).json({
+            success: false,
             message: "NIM wajib dikirim"
         });
     }
 
     try {
-        const sql = `
-            SELECT STATUS_bebas_pustaka 
-            FROM bebas_pustaka 
+        const sql_status = `
+            SELECT STATUS_bebas_pustaka
+            FROM bebas_pustaka
             WHERE nim = ?
+            LIMIT 1
         `;
 
         const sql_borrow = `
@@ -34,29 +37,39 @@ exports.getStatusPustaka = async (req, res) => {
                 loan.is_return ASC
         `;
 
-        const [rows] = await bebaspustaka.query(sql, [nim]);
+        const sql_time = `
+            SELECT start_date, end_date
+            FROM bebas_pustaka_time_range
+            LIMIT 1
+        `;
 
-        if (rows.length === 0) {
-            return res.status(404).json({
-                message: "Data mahasiswa tidak ditemukan"
-            });
+        const [rowsStatus] = await bebaspustaka.query(sql_status, [nim]);
+        const [rowsLoan]   = await opac.query(sql_borrow, [nim]);
+        const [rowsTime]   = await bebaspustaka.query(sql_time);
+
+        let status = 'pending';
+
+        if (rowsStatus.length > 0) {
+            const rawStatus = rowsStatus[0].STATUS_bebas_pustaka;
+
+            if (rawStatus !== null && rawStatus !== '') {
+                status = rawStatus;
+            }
         }
 
-        const [rows_info] = await opac.query(sql_borrow, [nim]);
-
-        const loanInfo = rows_info.length > 0 ? rows_info[0] : null;
-
         return res.status(200).json({
+            success: true,
             nim,
-            status: rows[0].STATUS_bebas_pustaka,
-            loans: rows_info 
+            status,
+            loans: rowsLoan,        
+            time: rowsTime || []    
         });
 
     } catch (error) {
         console.error("getStatusPustaka error:", error);
         return res.status(500).json({
+            success: false,
             message: "Terjadi kesalahan server"
         });
     }
 };
-

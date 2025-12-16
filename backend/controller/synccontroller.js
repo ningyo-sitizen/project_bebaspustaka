@@ -99,11 +99,6 @@ async function syncDaily() {
 async function syncWeekly() {
   const updates = [];
 
-  const lastSummaryWeek = await getStatus("weekly");
-  const lastVisitorDate = await getLastVisitorDate();
-  if (!lastVisitorDate) return updates;
-  if (lastSummaryWeek === lastVisitorDate) return updates;
-
   const [rows] = await opac.query(`
     SELECT 
       YEAR(checkin_date) AS year,
@@ -115,19 +110,12 @@ async function syncWeekly() {
         INTERVAL 6 DAY
       ) AS end_week
     FROM visitor_count
-    WHERE DATE(checkin_date) > ? AND DATE(checkin_date) <= ?
     GROUP BY year, week
-  `, [lastSummaryWeek || "2000-01-01", lastVisitorDate]);
+  `);
 
-  const seen = new Set();
   for (const r of rows) {
-    const key = `${r.year}-${r.week}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-
-
-
     updates.push(`W${r.week}-${r.year}`);
+
     await bebaspustaka.query(`
       REPLACE INTO summary_weekly_visitor
       (year, week, start_date, end_date, total_visitor)
@@ -135,80 +123,76 @@ async function syncWeekly() {
     `, [r.year, r.week, r.start_week, r.end_week, r.total_visitor]);
   }
 
-  if (updates.length) {
-    await setStatus("weekly", lastVisitorDate);
-  }
-
   return updates;
 }
+
 
 /* ===================== MONTHLY SYNC ===================== */
 async function syncMonthly() {
   const updates = [];
 
-  const lastSummaryMonth = await getStatus("monthly");
-  const lastVisitorDate = await getLastVisitorDate();
-  if (!lastVisitorDate) return updates;
-
-  const d = new Date(lastVisitorDate);
-  const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
-  if (lastSummaryMonth === monthKey) return updates;
-
   const [rows] = await opac.query(`
-    SELECT YEAR(checkin_date) AS year,
-           MONTHNAME(checkin_date) AS month,
-           COUNT(*) AS total_visitor
-    FROM visitor_count
-    WHERE YEAR(checkin_date) = ? AND MONTH(checkin_date) = ?
-    GROUP BY YEAR(checkin_date), MONTH(checkin_date)
-  `, [d.getFullYear(), d.getMonth() + 1]);
+SELECT
+    YEAR(checkin_date) AS year,
+    CASE MONTH(checkin_date)
+        WHEN 1  THEN 'Januari'
+        WHEN 2  THEN 'Februari'
+        WHEN 3  THEN 'Maret'
+        WHEN 4  THEN 'April'
+        WHEN 5  THEN 'Mei'
+        WHEN 6  THEN 'Juni'
+        WHEN 7  THEN 'Juli'
+        WHEN 8  THEN 'Agustus'
+        WHEN 9  THEN 'September'
+        WHEN 10 THEN 'Oktober'
+        WHEN 11 THEN 'November'
+        WHEN 12 THEN 'Desember'
+    END AS month,
+    COUNT(*) AS total_visitor
+FROM visitor_count
+GROUP BY YEAR(checkin_date), MONTH(checkin_date)
+ORDER BY YEAR(checkin_date), MONTH(checkin_date);
+  `);
 
-  if (rows.length) {
-    const r = rows[0];
+  for (const r of rows) {
     updates.push(`${r.month} ${r.year}`);
 
     await bebaspustaka.query(`
-      REPLACE INTO summary_monthly_visitor (year, month, total_visitor)
+      REPLACE INTO summary_monthly_visitor
+      (year, month, total_visitor)
       VALUES (?, ?, ?)
     `, [r.year, r.month, r.total_visitor]);
-
-    await setStatus("monthly", monthKey);
   }
 
   return updates;
 }
+
+
 
 /* ===================== YEARLY SYNC ===================== */
 async function syncYearly() {
   const updates = [];
 
-  const lastSummaryYear = await getStatus("yearly");
-  const lastVisitorDate = await getLastVisitorDate();
-  if (!lastVisitorDate) return updates;
-
-  const year = new Date(lastVisitorDate).getFullYear();
-  if (lastSummaryYear === String(year)) return updates;
-
   const [rows] = await opac.query(`
     SELECT YEAR(checkin_date) AS year,
            COUNT(*) AS total_visitor
     FROM visitor_count
-    WHERE YEAR(checkin_date) = ?
     GROUP BY YEAR(checkin_date)
-  `, [year]);
+  `);
 
-  if (rows.length) {
-    updates.push(String(year));
+  for (const r of rows) {
+    updates.push(String(r.year));
+
     await bebaspustaka.query(`
-      REPLACE INTO summary_yearly_visitor (year, total_visitor)
+      REPLACE INTO summary_yearly_visitor
+      (year, total_visitor)
       VALUES (?, ?)
-    `, [rows[0].year, rows[0].total_visitor]);
-
-    await setStatus("yearly", String(year));
+    `, [r.year, r.total_visitor]);
   }
 
   return updates;
 }
+
 
 /* ===================== LOAN DAILY SYNC ===================== */
 async function syncLoanDaily() {
