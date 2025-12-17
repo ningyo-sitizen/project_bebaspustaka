@@ -11,6 +11,5 @@ router.get('/dataMahasiswaAll', verifyToken,getAllMahasiswaTI);
 router.post('/approve', verifyToken,approve);
 router.get('/getmahasiswaITAll', verifyToken,getMahasiswaTI_AllFull);
 router.post('/approveAll', verifyToken,approveAll);
-router.get("/export/pdf", exportPDF);
-
+router.get('/export-pdf', exportPDF);
 module.exports = router;

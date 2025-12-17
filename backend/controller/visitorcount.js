@@ -22,7 +22,10 @@ exports.getMonthlyForLandingPage = async (req, res) => {
   try {
     const year = req.query.year || new Date().getFullYear();
     const sql = `
-      SELECT month,total_visitor from bebaspustaka.summary_monthly_visitor where year = ?
+      SELECT no, month, total_visitor
+FROM bebaspustaka.summary_monthly_visitor
+WHERE year = ?
+ORDER BY no ASC;
     `;
     const [rows] = await bebaspustaka.query(sql, [year]);
     const labels = rows.map(r => r.month);
@@ -38,26 +41,26 @@ exports.getDashboardDatVisitor = async (req, res) => {
   try {
     const period = req.query.period || "daily";
     let yearParam = req.query.year || new Date().getFullYear().toString();
-    
+
     // ✅ Pagination untuk TABLE saja
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = (page - 1) * limit;
     const tableOnly = req.query.tableOnly === 'true'; // Flag untuk table-only request
-    
+
     if (Array.isArray(yearParam)) {
       yearParam = yearParam.join("");
     }
     const years = yearParam.split(",").map((y) => y.trim());
-    
+
     let sql = "";
     let countSql = "";
     let chartSql = ""; // 
     let params = [];
-    
+
     console.log("year =", years);
     console.log("period = ", period);
-    
+
     if (period === "daily") {
       chartSql = `
         SELECT year, DATE_FORMAT(hari, '%d-%m-%Y') as label, total_visitor 
@@ -65,7 +68,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         WHERE YEAR(hari) IN (?)
         ORDER BY hari
       `;
-      
+
       countSql = `
         SELECT COUNT(*) as total
         FROM summary_daily_visitor
@@ -80,7 +83,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
       `;
       params = [years, limit, offset];
     }
-    
+
     if (period === "weekly") {
       chartSql = `
         SELECT year, week as label, start_date, end_date, total_visitor 
@@ -88,7 +91,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         WHERE year IN (?)
         ORDER BY year, week
       `;
-      
+
       countSql = `
         SELECT COUNT(*) as total
         FROM summary_weekly_visitor
@@ -103,7 +106,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
       `;
       params = [years, limit, offset];
     }
-    
+
     if (period === "yearly") {
       chartSql = `
         SELECT year, CAST(year as CHAR) as label, total_visitor 
@@ -111,7 +114,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         WHERE year IN (?)
         ORDER BY year
       `;
-      
+
       countSql = `
         SELECT COUNT(*) as total
         FROM summary_yearly_visitor
@@ -126,7 +129,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
       `;
       params = [years, limit, offset];
     }
-    
+
     if (period === "monthly") {
       chartSql = `
         SELECT year, month as label, total_visitor 
@@ -134,7 +137,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         WHERE year IN (?)
         ORDER BY year, month
       `;
-      
+
       countSql = `
         SELECT COUNT(*) as total
         FROM summary_monthly_visitor
@@ -149,17 +152,17 @@ exports.getDashboardDatVisitor = async (req, res) => {
       `;
       params = [years, limit, offset];
     }
-    
+
     const formatDate = (d) => {
       if (!d) return null;
       return new Date(d).toISOString().split("T")[0];
     };
-    
+
     if (tableOnly) {
       const [[{ total }]] = await bebaspustaka.query(countSql, [years]);
       const totalPages = Math.ceil(total / limit);
       const [rows] = await bebaspustaka.query(sql, params);
-      
+
       const groupedData = rows.reduce((acc, r) => {
         if (!acc[r.year]) acc[r.year] = [];
         acc[r.year].push({
@@ -173,7 +176,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
 
       console.log(groupedData)
 
-      
+
       return res.json({
         years: years,
         data: groupedData,
@@ -187,10 +190,10 @@ exports.getDashboardDatVisitor = async (req, res) => {
         }
       });
     }
-    
+
     // ✅ Default: Return FULL data untuk chart (no pagination)
     const [chartRows] = await bebaspustaka.query(chartSql, [years]);
-    
+
     const groupedChartData = chartRows.reduce((acc, r) => {
       if (!acc[r.year]) acc[r.year] = [];
       acc[r.year].push({
@@ -201,11 +204,11 @@ exports.getDashboardDatVisitor = async (req, res) => {
       });
       return acc;
     }, {});
-    
-          console.log("🟥 Raw chartRows length =", chartRows.length);
-  console.log("🟥 Raw sample =", chartRows.slice(0, 20));
+
+    console.log("🟥 Raw chartRows length =", chartRows.length);
+    console.log("🟥 Raw sample =", chartRows.slice(0, 20));
     const [[{ total }]] = await bebaspustaka.query(countSql, [years]);
-    
+
     res.json({
       years: years,
       data: groupedChartData,
@@ -215,7 +218,7 @@ exports.getDashboardDatVisitor = async (req, res) => {
         return acc;
       }, {})
     });
-    
+
   } catch (err) {
     console.error("❌ Error:", err);
     res.status(500).json({ message: "Server error" });
