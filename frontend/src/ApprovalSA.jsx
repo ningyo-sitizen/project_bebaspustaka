@@ -16,6 +16,7 @@ import {
     IconChevronDown,
     IconSelector,
     IconFile,
+    IconCheckupList
 } from "@tabler/icons-react";
 
 import { data, Link } from 'react-router-dom';
@@ -25,7 +26,7 @@ import axios from "axios";
 
 function ApprovalSA() {
     authCheckSA();
-    const [statusRange, setStatusRange] = useState("on_range");
+    const [statusRange, setStatusRange] = useState();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
     const [currentPage, setCurrentPage] = useState(1);
@@ -272,7 +273,7 @@ function ApprovalSA() {
     const [showFilter, setShowFilter] = useState(false);
     const resetdate = useState(false);
 
-    
+
     const [urutkanBy, setUrutkanBy] = useState(false);
     //sort by
     // Ganti fungsi sortAZ dan sortZA dengan ini:
@@ -411,6 +412,7 @@ function ApprovalSA() {
 
             if (data.success) {
                 alert("Tanggal berhasil disimpan dan data berhasil digenerate!");
+                setStatusRange("on_range");
             } else {
                 alert("Gagal: " + data.message);
             }
@@ -444,20 +446,18 @@ function ApprovalSA() {
 
     useEffect(() => {
         const fetchdate = async () => {
-            const token = localStorage.getItem('token')
-            const response = await axios.get(`http://localhost:8080/api/bebaspustaka/kompenDate`, {
-                headers: {
-                    "Content-Type": "application/json",
-                    "Authorization": `Bearer ${token}`
-                }
-            });
+            const token = localStorage.getItem('token');
+            const res = await axios.get(
+                "http://localhost:8080/api/bebaspustaka/kompenDate",
+                { headers: { Authorization: `Bearer ${token}` } }
+            );
 
-            setStatusRange(response.data.status);
-            console.log(response.data.status)
+            const status = res.data.status?.toLowerCase();
+            setStatusRange(status);
 
-            if (response.data.start_date && response.data.end_date) {
-                setStartDate(response.data.start_date);
-                setEndDate(response.data.end_date);
+            if (res.data.start_date && res.data.end_date) {
+                setStartDate(res.data.start_date);
+                setEndDate(res.data.end_date);
             }
         };
         fetchdate();
@@ -535,6 +535,11 @@ function ApprovalSA() {
                                 <IconHistory size={20} />
                                 History
                             </a>
+
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                            <IconCheckupList size={20} />
+                            History Approval
+                        </a>
 
                         </nav>
                     </div>

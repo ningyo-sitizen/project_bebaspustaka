@@ -32,7 +32,7 @@ import {
     IconMenu2,
     IconChevronDown,
     IconAdjustmentsHorizontal,
-    IconX,
+    IconCheckupList,
 } from "@tabler/icons-react";
 ChartJS.register(
     CategoryScale,
@@ -112,13 +112,13 @@ export default function Dashboard() {
 
     const [activeChartR, setActiveChartR] = useState(localStorage.getItem("chart_type_right") || "Line");
 
-  
+
 
     // const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
     const [appliedFilters, setAppliedFilters] = useState(() => {
         return JSON.parse(localStorage.getItem("filters_left"));
     });
-      const [draftChartTypeL, setDraftChartTypeL] = useState(
+    const [draftChartTypeL, setDraftChartTypeL] = useState(
         appliedFilters?.chartType || "Line"
     );
 
@@ -1383,6 +1383,10 @@ export default function Dashboard() {
                             <a href="/historySA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
                                 History
+                            </a>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                                <IconCheckupList size={20} />
+                                History Approval
                             </a>
                         </nav>
                     </div>

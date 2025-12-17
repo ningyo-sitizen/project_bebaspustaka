@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 import authCheckSA from "./authCheckSA";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
-    IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
+    IconMenu2, IconUsers, IconHistory, IconSearch, IconCheckupList, IconSortDescendingLetters,
     IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar
 } from "@tabler/icons-react";
 
@@ -509,6 +509,10 @@ const History = () => {
                         <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
                         <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
                         <a href="/historySA" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
+                        <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                            <IconCheckupList size={20} />
+                            History Approval
+                        </a>
                     </nav>
                 </div>
             </aside>

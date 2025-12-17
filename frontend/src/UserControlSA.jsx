@@ -20,7 +20,7 @@ import {
     IconEye,
     IconEyeOff,
     IconCheck,
-    IconAdOff,
+    IconCheckupList,
 } from "@tabler/icons-react";
 
 // Counter ID untuk simulasi penambahan user baru
@@ -578,6 +578,10 @@ export default function UserControl() {
                         <a href="/historySA" className={getSidebarItemClass()}>
                             <IconHistory size={20} />
                             History
+                        </a>
+                        <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                            <IconCheckupList size={20} />
+                            History Approval
                         </a>
                     </nav>
                 </div>

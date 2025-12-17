@@ -14,33 +14,35 @@ import ProfileSA from "./ProfileSA.jsx";
 import EditProfileSA from "./EditprofileSA.jsx";
 import UserControlSA from "./UserControlSA.jsx";
 import HistorySA from "./HistorySA.jsx";
+import HistoryApprovalSA from "./HistoryApprovalSA.jsx";
 import Logout from "./logout.jsx";
 import Keterangan from "./Keterangan.jsx";
 import KeteranganSA from "./KeteranganSA.jsx";
-import {NotificationProvider } from "./NotificationContext.jsx";
+import { NotificationProvider } from "./NotificationContext.jsx";
 
 export default function App() {
   return (
-  <NotificationProvider>
-    <Routes>
-      <Route path="/" element={<Login />} />
-      <Route path="/login" element={<Login />}/>
-      <Route path="/dashboard" element={<Dashboard />} />
-      <Route path="/analytic" element={<Analytic />}></Route>
-      <Route path="/Approval" element={<Approval/>} />
-      <Route path="/Profile" element = {<Profile />}/>
-      <Route path="/edit-profile" element = {<EditProfile/>}/>
-      <Route path="/dashboardSA" element={<DashboardSA />} />
-      <Route path="/Keterangan/:nim" element={<Keterangan />} />
-      <Route path="/analyticSA" element={<AnalyticSA />}></Route>
-      <Route path="/approvalSA" element={<ApprovalSA />} />
-      <Route path="/ProfileSA" element = {<ProfileSA />}/>
-      <Route path="/edit-profileSA" element = {<EditProfileSA/>}/>
-      <Route path="/usercontrolSA" element = {<UserControlSA/>}/>
-      <Route path="/historySA" element = {<HistorySA/>}/>
-      <Route path="/logout" element = {<Logout/>}/>
-      <Route path="/KeteranganSA/:nim" element={<KeteranganSA />} />
-    </Routes>
+    <NotificationProvider>
+      <Routes>
+        <Route path="/" element={<Login />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/analytic" element={<Analytic />}></Route>
+        <Route path="/Approval" element={<Approval />} />
+        <Route path="/Profile" element={<Profile />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/dashboardSA" element={<DashboardSA />} />
+        <Route path="/Keterangan/:nim" element={<Keterangan />} />
+        <Route path="/analyticSA" element={<AnalyticSA />}></Route>
+        <Route path="/approvalSA" element={<ApprovalSA />} />
+        <Route path="/ProfileSA" element={<ProfileSA />} />
+        <Route path="/edit-profileSA" element={<EditProfileSA />} />
+        <Route path="/usercontrolSA" element={<UserControlSA />} />
+        <Route path="/historySA" element={<HistorySA />} />
+        <Route path="/historyapprovalSA" element={<HistoryApprovalSA />} />
+        <Route path="/logout" element={<Logout />} />
+        <Route path="/KeteranganSA/:nim" element={<KeteranganSA />} />
+      </Routes>
     </NotificationProvider>
   );
 }
