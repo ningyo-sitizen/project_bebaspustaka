@@ -272,7 +272,7 @@ function ApprovalSA() {
     const [showFilter, setShowFilter] = useState(false);
     const resetdate = useState(false);
 
-    
+
     const [urutkanBy, setUrutkanBy] = useState(false);
     //sort by
     // Ganti fungsi sortAZ dan sortZA dengan ini:
@@ -355,7 +355,18 @@ function ApprovalSA() {
         const d = new Date(date);
         return d.toLocaleDateString("id-ID", { day: "2-digit", month: "long", year: "numeric" });
     };
+    const handleExportPDF = () => {
+        const token = localStorage.getItem("token");
 
+        if (!token) {
+            alert("Token tidak ditemukan. Silakan login ulang.");
+            return;
+        }
+
+        window.open(
+            `http://localhost:8080/api/bebaspustaka/export-pdf?token=${token}`,
+        );
+    };
 
     const handleRangeChange = (selectedRange) => {
         setRange(selectedRange);
@@ -379,7 +390,6 @@ function ApprovalSA() {
             setRangeText("");
         }
     };
-
     const handleEndInput = (e) => {
         const value = e.target.value;
         setEndDate(value);
@@ -1118,12 +1128,13 @@ function ApprovalSA() {
                                     </button>
                                 </div>
 
-                                <button className='cursor-pointer flex relative items-center p-2 top-4 my-5 ml-auto text-sm rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200'
-                                    onClick={() => console.log("PDF clicked")}>Cetak ke PDF
+                                <button
+                                    className="cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200"
+                                    onClick={handleExportPDF}
+                                >
+                                    Cetak ke PDF
                                 </button>
                             </div>
-
-
                         </div>
 
                         {alertBebasPustaka && (

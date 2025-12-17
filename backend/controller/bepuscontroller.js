@@ -9,13 +9,13 @@ function formatDateClean(date) {
   const pad = n => n.toString().padStart(2, '0');
 
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} `
-       + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    + `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 }
 
 function formatDateToMySQL(date) {
   const pad = n => n.toString().padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} `
-       + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+    + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
 
 
@@ -136,11 +136,11 @@ exports.getDate = async (req, res) => {
     console.log("[DATE] Status berubah → out_of_range");
   }
 
-res.json({
-  status: rows[0].STATUS_bebas_pustaka,
-  start_date: formatDateClean(rows[0].start_date),
-  end_date: formatDateClean(rows[0].end_date)
-});
+  res.json({
+    status: rows[0].STATUS_bebas_pustaka,
+    start_date: formatDateClean(rows[0].start_date),
+    end_date: formatDateClean(rows[0].end_date)
+  });
 
 };
 
@@ -357,33 +357,33 @@ exports.setDateRangeAndGenerate = async (req, res) => {
     return res.json({ success: true, message: "Generate ulang >3 bulan sukses" });
   }
 
-  
+
   console.log("[OUT_OF_RANGE <3 BULAN] Update status dan insert nim ang masih belum bebas pinjaman");
 
   await bebaspustaka.query(`
     UPDATE bebas_pustaka_time_range
     SET STATUS_bebas_pustaka='on_range', start_date=?, end_date=?
   `, [start_date, end_date]);
-    
+
   await updateStatusesJoin();
 
-      const [borrowing] = await bebaspustaka.query(`
+  const [borrowing] = await bebaspustaka.query(`
       SELECT nim, nama_mahasiswa, institusi, program_studi
       FROM bebas_pustaka
       WHERE STATUS_peminjaman = 0
     `);
 
-    const mysqlDate = formatDateToMySQL(new Date());
+  const mysqlDate = formatDateToMySQL(new Date());
 
-    for (const m of borrowing) {
-      await opac.query(`
+  for (const m of borrowing) {
+    await opac.query(`
         INSERT INTO visitor_count
         (member_id, member_name, institution, program_studi, checkin_date)
         VALUES (?, ?, ?, ?, ?)
       `, [m.nim, m.nama_mahasiswa, m.institusi, m.program_studi, mysqlDate]);
-    }
+  }
 
-    console.log("[END REFRESH] Total mahasiswa:", members.length);
+  console.log("[END REFRESH] Total mahasiswa:", members.length);
 
   res.json({ success: true, message: "Status diperbarui tanpa generate" });
 };
@@ -401,7 +401,7 @@ exports.approveAll = async (req, res) => {
     }
 
     const mysqlDate = formatDateToMySQL(new Date());
-    const petugas = req.body.username; 
+    const petugas = req.body.username;
     const sqlUpdate = `
       UPDATE bebas_pustaka
       SET STATUS_bebas_pustaka = 'approved',
@@ -418,19 +418,19 @@ exports.approveAll = async (req, res) => {
 
     // proses semua nim
     for (const m of mahasiswa) {
-  const nim = m.nim;
+      const nim = m.nim;
 
-  const nama = m.nama_mahasiswa ?? m.name ?? "";
-  const institusi = m.institusi;
-  const program_studi = m.program_studi;
-  const status_peminjaman = m.STATUS_peminjaman ?? m.status_peminjaman;
-  const status_denda = m.STATUS_denda ?? m.status_denda;
+      const nama = m.nama_mahasiswa ?? m.name ?? "";
+      const institusi = m.institusi;
+      const program_studi = m.program_studi;
+      const status_peminjaman = m.STATUS_peminjaman ?? m.status_peminjaman;
+      const status_denda = m.STATUS_denda ?? m.status_denda;
 
-  if (status_peminjaman !== 1 || status_denda !== 1) {
-    continue;
-  }
+      if (status_peminjaman !== 1 || status_denda !== 1) {
+        continue;
+      }
 
-      await bebaspustaka.query(sqlUpdate, [mysqlDate,petugas,nim]);
+      await bebaspustaka.query(sqlUpdate, [mysqlDate, petugas, nim]);
       console.log("nama petugas" + petugas)
       await opac.query(sqlInsert, [nim, nama, institusi, program_studi, mysqlDate]);
     }
@@ -485,14 +485,14 @@ exports.approve = async (req, res) => {
         petugas_approve = ?
       WHERE nim = ?
     `;
-    const sql_insert_visitor = 
-    `
+    const sql_insert_visitor =
+      `
     insert into visitor_count (member_id,member_name,institution,program_studi,checkin_date)
     values (?,?,?,?,?)
     `
 
-    const [updateResult] = await bebaspustaka.query(sql, [mysqlDate,username,nim]);
-    const [insertResult] = await opac.query(sql_insert_visitor, [nim,nama_mahasiswa,institusi,program_studi,mysqlDate]);
+    const [updateResult] = await bebaspustaka.query(sql, [mysqlDate, username, nim]);
+    const [insertResult] = await opac.query(sql_insert_visitor, [nim, nama_mahasiswa, institusi, program_studi, mysqlDate]);
 
     if (updateResult.affectedRows === 0) {
       return res.status(404).json({
@@ -506,7 +506,7 @@ exports.approve = async (req, res) => {
       data: { nim }
     });
 
-    
+
 
   } catch (err) {
     console.error("❌ Error approve:", err);
@@ -521,7 +521,7 @@ exports.approve = async (req, res) => {
 // ====================== GET MAHASISWA UNTUK APPROVAL ======================
 exports.getMahasiswaTI = async (req, res) => {
   try {
-  await updateStatusesJoin();
+    await updateStatusesJoin();
 
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -839,7 +839,7 @@ exports.exportPDF = async (req, res) => {
 
     doc.pipe(res);
 
-    
+
     doc.fontSize(16).text("Laporan Bebas Pustaka", { align: "center" });
     doc.moveDown();
 
@@ -863,5 +863,112 @@ exports.exportPDF = async (req, res) => {
   } catch (err) {
     console.error("❌ exportPDF Error:", err);
     res.status(500).json({ success: false, message: "Gagal export PDF" });
+  }
+};
+
+exports.exportPDF = async (req, res) => {
+  try {
+    const [data] = await bebaspustaka.query(`
+      SELECT 
+        nim,
+        nama_mahasiswa,
+        institusi,
+        program_studi,
+        STATUS_peminjaman,
+        STATUS_denda,
+        STATUS_bebas_pustaka,
+        waktu_bebaspustaka,
+        petugas_approve
+      FROM bebas_pustaka
+      ORDER BY id DESC
+    `);
+
+    if (!data || data.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'Data kosong'
+      });
+    }
+
+    const doc = new PDFDocument({ size: 'A4', margin: 30 });
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `inline; filename="BEBAS_PUSTAKA_${Date.now()}.pdf"`
+    );
+    doc.pipe(res);
+
+    /* ===================== JUDUL ===================== */
+    doc
+      .fontSize(16)
+      .font('Helvetica-Bold')
+      .text('LAPORAN BEBAS PUSTAKA', { align: 'center' });
+    doc.moveDown(2);
+
+    /* ===================== SETUP TABLE ===================== */
+    const startX = doc.x;
+    let y = doc.y;
+    const rowHeight = 20;
+
+    const col = {
+      no: 30,
+      nim: 90,
+      nama: 160,
+      prodi: 130,
+      status: 100
+    };
+
+    const drawRow = (y, row, isHeader = false) => {
+      doc.font(isHeader ? 'Helvetica-Bold' : 'Helvetica').fontSize(9);
+
+      let x = startX;
+      Object.values(col).forEach((w, i) => {
+        doc
+          .rect(x, y, w, rowHeight)
+          .stroke();
+
+        doc.text(
+          row[i],
+          x + 5,
+          y + 5,
+          { width: w - 10, align: 'left' }
+        );
+
+        x += w;
+      });
+    };
+
+    /* ===================== HEADER ===================== */
+    drawRow(y, ['No', 'NIM', 'Nama Mahasiswa', 'Program Studi', 'Status'], true);
+    y += rowHeight;
+
+    /* ===================== DATA ===================== */
+    data.forEach((row, i) => {
+      if (y + rowHeight > doc.page.height - 40) {
+        doc.addPage();
+        y = doc.y;
+        drawRow(y, ['No', 'NIM', 'Nama Mahasiswa', 'Program Studi', 'Status'], true);
+        y += rowHeight;
+      }
+
+      drawRow(y, [
+        String(i + 1),
+        String(row.nim),
+        row.nama_mahasiswa,
+        row.program_studi || '-',
+        row.STATUS_bebas_pustaka
+      ]);
+
+      y += rowHeight;
+    });
+
+    doc.end();
+
+  } catch (err) {
+    console.error('❌ exportPDF Error:', err);
+    res.status(500).json({
+      success: false,
+      message: 'Gagal generate PDF'
+    });
   }
 };
