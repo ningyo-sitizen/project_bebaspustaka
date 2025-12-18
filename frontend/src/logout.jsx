@@ -8,14 +8,14 @@ export default function Logout() {
   const { showNotif } = useNotif();
 
   useEffect(() => {
-  localStorage.removeItem("token");
-  localStorage.removeItem("user");
-  sessionStorage.removeItem("token");
-  sessionStorage.removeItem("user");
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("token");
+    sessionStorage.removeItem("user");
 
     showNotif("success", "Berhasil logout dari sistem");
     navigate("/login");
-    
+
   }, []);
 
   return null;

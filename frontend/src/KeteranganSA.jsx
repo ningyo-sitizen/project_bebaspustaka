@@ -151,14 +151,18 @@ export default function KeteranganSA() {
                         <button className="lg:hidden text-[#023048]" onClick={toggleSidebar} aria-label="Toggle menu">
                             <IconMenu2 size={24} />
                         </button>
+                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} />
+                        </a>
                         <div className="flex items-center gap-2 cursor-pointer pr-4 relative" onClick={toggleDropdown}>
-                            <IconChevronDown size={18} className="text-gray-600" />
-                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
-                            </p>
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
+                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                                Hai, {profileData.name}
+                            </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
+
                         </div>
                         {isDropdownOpen && (
                             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">

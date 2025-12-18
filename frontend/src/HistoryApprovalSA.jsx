@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import authCheckSA from "./authCheckSA";
@@ -6,9 +6,12 @@ import {
   IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
   IconMenu2, IconUsers, IconHistory, IconSearch, IconFilter, IconSortDescendingLetters,
   IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar,
-  IconCheckupList
+  IconCheckupList,
+  IconEye,
+  IconTrash
 } from "@tabler/icons-react";
-
+import LogoutAlert from "./logoutConfirm";
+import AppLayout from "./AppLayout";
 
 // nahhh pokoknya replace aja semua fungsi dengan call fungsi ke backend
 
@@ -278,6 +281,9 @@ const FilterModal = ({ isOpen, onClose, onApplyFilter, initialStart, initialEnd 
 
 const HistoryApprovalSA = () => {
   authCheckSA();
+  const [showLogout, setShowLogout] = useState(false);
+  const navigate = useNavigate();
+
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -293,15 +299,7 @@ const HistoryApprovalSA = () => {
 
   const [dateFilter, setDateFilter] = useState({ start: null, end: null });
 
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    currentPage: 1,
-    totalPages: 1,
-    totalRecords: 0,
-    hasNextPage: false,
-    hasPrevPage: false,
-    limit: 8,
-  });
+
 
   const [profileData, setProfileData] = useState({
     user_id: "",
@@ -311,7 +309,33 @@ const HistoryApprovalSA = () => {
     photo: "https://i.ibb.co/C07X0Q0/dummy-profile.jpg",
   });
 
-  const navigate = useNavigate();
+
+  // logic pagination
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalRecords: 0,
+    hasNextPage: false,
+    hasPrevPage: false,
+    limit: 8,
+  });
+  const totalPages = pagination.totalPages;
+  const maxPage = 5;
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const startPage = Math.max(
+    1,
+    currentPage - Math.floor(maxPage / 2)
+  );
+  const endPage = Math.min(
+    totalPages,
+    startPage + maxPage - 1
+  );
+  const pageNumbers = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, i) => startPage + i
+  );
+
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -481,275 +505,320 @@ const HistoryApprovalSA = () => {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
+    <div>
+      <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
 
-      {/* Sidebar */}
-      <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } lg:static lg:h-auto`}
-      >
-        <div className="flex flex-col h-full">
-          <div className="flex flex-col items-center p-6">
-            <div className="flex items-center gap-4 mb-6">
-              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
-              <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+        {/* Sidebar */}
+        <aside
+          className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+            } lg:static lg:h-auto`}
+        >
+          <div className="flex flex-col h-full">
+            <div className="flex flex-col items-center p-6">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+                <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+              </div>
+              <div className="w-full border-b border-gray-200"></div>
             </div>
-            <div className="w-full border-b border-gray-200"></div>
+
+            <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
+              <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
+              <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
+              <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
+              <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
+              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
+              
+            </nav>
           </div>
+        </aside>
 
-          <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
-            <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-            <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
-            <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
-            <a href="/historySA" className={getSidebarItemClass()}><IconHistory size={20} /> History</a>
-            <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}>
-              <IconCheckupList size={20} />
-              History Approval
-            </a>
-          </nav>
-        </div>
-      </aside>
-
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"
-          onClick={toggleSidebar}
-        ></div>
-      )}
-
-      {/* Main */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
-          <button
-            className="lg:hidden text-[#023048]"
-            onClick={toggleSidebar}
-            aria-label="Toggle menu"
-          >
-            <IconMenu2 size={24} />
-          </button>
+        {isSidebarOpen && (
           <div
-            className="flex items-center gap-2 cursor-pointer pr-4 relative"
-            onClick={toggleProfileDropdown}
-          >
-            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-              Hai, {profileData.name}
-            </p>
-            <IconChevronDown size={18} className="text-gray-600" />
-            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-              <IconUser size={24} className="text-gray-500" />
-            </div>
-          </div>
-          {isDropdownOpen && (
-            <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
-              <div className="flex items-center gap-3 p-4 border-b">
+            className="fixed inset-0 bg-black opacity-50 z-30 lg:hidden"
+            onClick={toggleSidebar}
+          ></div>
+        )}
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col min-h-screen">
+          <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
+            <button
+              className="lg:hidden text-[#023048]"
+              onClick={toggleSidebar}
+              aria-label="Toggle menu"
+            >
+              <IconMenu2 size={24} />
+            </button>
+            <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+              <IconBell size={24} />
+            </a>
+
+            <div
+              className="flex items-center gap-2 cursor-pointer pr-4 relative"
+              onClick={toggleProfileDropdown}
+            >
+              <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                 <IconUser size={24} className="text-gray-500" />
-                <div>
-                  <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
-                  <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
-                </div>
               </div>
-              <div className="p-2 space-y-1">
-                <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
-                  <IconUser size={18} /> Profile
-                </button>
-                <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
-                  <IconLogout size={18} /> Keluar
-                </a>
-              </div>
-            </div>
-          )}
-        </header>
-
-        {/* Content */}
-        <div className="p-4 sm:p-8">
-
-          <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-            <div className="mb-4 md:mb-0">
-              <h1 className="text-xl font-semibold text-left">History</h1>
-              <p className="text-sm text-[#9A9A9A] mt-1 text-left">
-                Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
+              <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                Hai, {profileData.name}
               </p>
+              <IconChevronDown size={18} className="text-gray-600" />
+
+            </div>
+            {isDropdownOpen && (
+              <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
+                <div className="flex items-center gap-3 p-4 border-b">
+                  <IconUser size={24} className="text-gray-500" />
+                  <div>
+                    <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                    <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
+                  </div>
+                </div>
+                <div className="p-2 space-y-1">
+                  <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
+                    <IconUser size={18} /> Profile
+                  </button>
+                  <button
+                    onClick={() => setShowLogout(true)}
+                    className="flex items-center gap-3 p-2 w-full text-sm text-red-600 hover:bg-red-50 rounded-md"
+                  >
+                    <IconLogout size={18} />
+                    Keluar
+                  </button>
+                </div>
+              </div>
+            )}
+          </header>
+          {showLogout && (
+            <LogoutAlert onClose={() => setShowLogout(false)} />
+          )}
+
+          {/* Content */}
+          <div className="p-1 sm:p-2">
+
+            <div className="flex flex-col md:flex-row md:justify-between md:items-center my-3  ml-5">
+              <div className="mb-4 md:mb-0">
+                <h1 className="text-xl font-semibold text-left">History</h1>
+                <p className="text-sm text-[#9A9A9A] mt-1 text-left">
+                  Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
+                </p>
+              </div>
+
+
             </div>
 
+            <div className="w-full border-b border-gray-200 mb-5"></div>
 
-          </div>
-
-          <div className="w-full border-b border-gray-200 mb-5"></div>
-
-          <div className="flex flex-col lg:flex-row gap-5 p-5">
-            <div>
-              {isLoading ? (
-                <div className="text-center py-20 text-gray-600">
-                  <svg
-                    className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
-                  Memuat data histori...
-                </div>
+            <div className="flex flex-col lg:flex-row gap-5 p-5">
+              <div>
+                {isLoading ? (
+                  <div className="text-center py-20 text-gray-600">
+                    <svg
+                      className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      ></circle>
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                      ></path>
+                    </svg>
+                    Memuat data histori...
+                  </div>
 
 
-              ) : filteredData.length > 0 ? (
-                <div className="space-y-8">
-                  {filteredData.map((item, index) => (
-                    <div key={item.id} className="relative flex w-full">
-                      <div className="flex flex-col">
+                ) : filteredData.length > 0 ? (
+                  <div className="space-y-4">
+                    {filteredData.map((item, index) => (
+                      <div key={item.id} className="relative flex w-full">
+                        <div className="flex flex-col">
 
-                          <div className="flex-1 mt-5 relative w-full">
-                            <div className="relative bg-white rounded-lg shadow-sm border border-gray-200 p-4 min-w-[650px]">
-                              
-                              <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#A8B5CB] rounded-l-lg"></div>
-                                <div className="flex flex-wrap items-center gap-2 p-2">
+                          <div className="flex-1 gap-6 relative w-full">
+                            <div className="relative bg-white rounded-xs   shadow-sm border border-gray-200 p-4 min-w-[650px]">
+                              <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#A8B5CB] rounded-l-xs"></div>
+
+                              <div className="flex justify-between">
+                                <div className="flex items-center gap-2 p-2">
                                   <p className="text-sm text-[#023048]">
-                                    Permohonan ini telah mendapatkan persetujuan  pada tanggal a sampai b.
+                                    Permohonan ini telah mendapatkan persetujuan pada tanggal a sampai b.
                                   </p>
+
                                 </div>
+
+                                <div className="flex gap-3">
+
+                                  <div className="relative group inline-block">
+                                    <button className="bg-[#023048] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#023048]/90"
+                                      onClick={""}>
+                                      <IconEye size={20}></IconEye>
+                                    </button>
+                                    <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                  group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                    >
+                                      Lihat Detail
+                                    </span>
+                                  </div>
+                                  <div className="relative group inline-block">
+                                    <button className="bg-[#FF1515] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#FF1515]/90"
+                                      onClick={""}>
+                                      <IconTrash size={20}>
+                                      </IconTrash>
+                                    </button>
+                                    <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                  group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                    >
+                                      Hapus
+                                    </span>
+                                  </div>
+                                </div>
+                              </div>
                             </div>
 
                           </div>
                         </div>
 
                       </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
 
-              ) : (
-                <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
-                  Tidak ada aktivitas yang ditemukan dengan kriteria tersebut.
-                </div>
-              )}
-            </div>
+                ) : (
+                  <div className="text-center py-10 text-gray-500 bg-white rounded-lg border border-gray-200">
+                    Tidak ada aktivitas yang ditemukan dengan kriteria tersebut.
+                  </div>
+                )}
+              </div>
 
-            <div className="flex flex-col p-5 bg-white w-full lg:w-80 shrink-0">
-              {/* filter */}
-              <div className="flex flex-col gap-3 relative flex-wrap justify-center">
-                <p className="font-semibold text-lg mr-auto">Filter</p>
+              <div className="flex flex-col p-2 bg-white w-full lg:w-80 shrink-0 border border-[#EDEDED]">
+                {/* filter */}
+                <div className="flex flex-col mx-4 mt-2 gap-3 flex-wrap justify-center">
+                  <p className="font-semibold text-lg mr-auto">Filter</p>
 
-                <div className="relative w-full sm:w-64">
-                  <input
-                    type="text"
-                    placeholder="Cari data...."
-                    className="w-full p-2 pl-10 border border-[#B3B3B3] focus:ring-[#023048] focus:border-[#023048] text-sm text-black"
-                    value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                  />
-                  <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                </div>
+                  <div className="relative w-full">
+                    <input
+                      type="text"
+                      placeholder="Cari data...."
+                      className="w-full p-2 pl-10 border border-[#B3B3B3] focus:ring-[#023048] focus:border-[#023048] text-xs text-black"
+                      value={searchTerm}
+                      onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+                    />
+                    <IconSearch size={17} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  </div>
 
-                <div className="flex flex-col gap-3 relative">
-                  <p className="font-regular text-sm mr-auto mt-3">Tindakan</p>
+                  <div className="flex flex-col w-full">
+                    <p className="font-regular text-sm mr-auto mt-3">Tindakan</p>
 
-                  <div className="relative w-full sm:w-64">
-                    {/* Trigger */}
-                    <button
-                      onClick={() => setIsSortOpen(!isSortOpen)}
-                      className={`w-full p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isSortOpen
-                        ? "bg-[#023048] text-white border-[#023048]"
-                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                        }`}
-                    >
-                      Urutkan Data
-                    </button>
-                    <div
-                      className={`${isSortOpen ? "scale-100 opacity-100" : "scale-95 opacity-0 pointer-events-none"}
-                                                                         absolute left-1/2 -translate-x-1/2 top-full mt-2 z-50 w-full max-w-[240px] bg-white rounded-lg shadow-xl border py-2 origin-top transition-all duration-150`}
-                    >
-                      {["Terbaru", "Terlama", "A > Z", "Z > A"].map((option) => (
-                        <button
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      {["Terbaru", "Terlama"].map((option) => (
+                        <label
                           key={option}
-                          onClick={() => {
-                            setSelectedSort(option);
-                            setIsSortOpen(false);
-                          }}
-                          className={`flex justify-between items-center w-full px-3 py-1.5 text-sm text-left hover:bg-gray-100 transition duration-100 ${selectedSort === option
-                            ? "text-[#023048] font-semibold bg-gray-100"
-                            : "text-gray-700"
+                          className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded-sm border transition
+                           ${selectedSort === option
+                              ? "border-[#023048] bg-[#EDF1F3] text-[#023048] font-semibold"
+                              : "border-gray-300 text-gray-700 hover:bg-gray-50"
                             }`}
                         >
+                          <input
+                            type="radio"
+                            name="sort"
+                            checked={selectedSort === option}
+                            onChange={() => setSelectedSort(option)}
+                            className="accent-[#023048]"
+                          />
                           {option}
-
-                          {selectedSort === option && (
-                            <IconCheck size={16} className="text-[#023048] ml-4" />
-                          )}
-                        </button>
+                        </label>
                       ))}
                     </div>
                   </div>
-                </div>
-                <p className="font-regular text-sm mr-auto mt-3">Waktu</p>
 
-                <div className="relative">
-                  <button
-                    onClick={toggleFilter}
-                    className={`w-full flex p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isFilterOpen
-                      ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                      }`}                                    >
-                    Urutkan Waktu
-                    <IconCalendar size={20} className="text-gray-600 ml-auto" />
-                    {(dateFilter.start || dateFilter.end) && (
-                      <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
+                  <p className="font-regular text-sm mr-auto mt-3">Waktu</p>
+
+                  <div className="relative">
+                    <button
+                      onClick={toggleFilter}
+                      className={`w-full flex p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-xs text-black ${isFilterOpen
+                        ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                        }`}                                    >
+                      Urutkan Waktu
+                      <IconCalendar size={20} className="text-gray-600 ml-auto" />
+                      {(dateFilter.start || dateFilter.end) && (
+                        <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
+                      )}
+                    </button>
+                    {isFilterOpen && (
+                      <FilterModal
+                        isOpen={isFilterOpen}
+                        onClose={() => setIsFilterOpen(false)}
+                        onApplyFilter={handleApplyDateFilter}
+                        initialStart={dateFilter.start}
+                        initialEnd={dateFilter.end}
+                      />
                     )}
-                  </button>
-                  {isFilterOpen && (
-                    <FilterModal
-                      isOpen={isFilterOpen}
-                      onClose={() => setIsFilterOpen(false)}
-                      onApplyFilter={handleApplyDateFilter}
-                      initialStart={dateFilter.start}
-                      initialEnd={dateFilter.end}
-                    />
-                  )}
-                </div>
+                  </div>
 
+                </div>
               </div>
+
             </div>
 
+            {/* Pagination */}
+            <div className="flex flex-wrap gap-2 justify-center my-4 items-center">
+              {/* Prev */}
+              <button
+                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+              >
+                ← Sebelumnya
+              </button>
+
+              {pageNumbers.map(num => (
+                <button
+                  key={num}
+                  onClick={() => setCurrentPage(num)}
+                  className={`px-3 py-1 rounded-md transition-all duration-150
+                   ${currentPage === num
+                      ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
+                      : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
+                    }`}
+                >
+                  {num}
+                </button>
+              ))}
+
+              {/* Next */}
+              <button
+                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+              >
+                Selanjutnya →
+              </button>
+            </div>
           </div>
 
-          {/* Pagination */}
-          <div className="flex justify-center mt-10 gap-3">
-            <button
-              disabled={!pagination.hasPrevPage}
-              onClick={goPrev}
-              className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
-            >
-              Prev
-            </button>
-
-            <span className="px-4 py-2">
-              {pagination.currentPage} / {pagination.totalPages}
-            </span>
-
-            <button
-              disabled={!pagination.hasNextPage}
-              onClick={goNext}
-              className="px-4 py-2 bg-gray-200 rounded-md disabled:opacity-50"
-            >
-              Next
-            </button>
-          </div>
 
         </div>
+
+      </div>
+      <div className="sticky w-full z-99">
+        <AppLayout></AppLayout>
       </div>
     </div>
   );
 };
+
 
 export default HistoryApprovalSA;

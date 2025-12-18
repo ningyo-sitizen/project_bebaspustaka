@@ -18,14 +18,14 @@ import {
     IconFile,
     IconCheckupList
 } from "@tabler/icons-react";
-
-import { data, Link } from 'react-router-dom';
+import LogoutAlert from "./logoutConfirm";
 import "./App.css";
 
 import axios from "axios";
 
 function ApprovalSA() {
     authCheckSA();
+    const [showLogout, setShowLogout] = useState(false);
     const [statusRange, setStatusRange] = useState();
     const [data, setData] = useState([]);
     const [total, setTotal] = useState(0);
@@ -541,15 +541,10 @@ function ApprovalSA() {
                                 <IconUsers size={20} />
                                 User Control
                             </a>
-                            <a href="/historySA" className={getSidebarItemClass()}>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
                                 History
                             </a>
-
-                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
-                            <IconCheckupList size={20} />
-                            History Approval
-                        </a>
 
                         </nav>
                     </div>
@@ -572,24 +567,28 @@ function ApprovalSA() {
                         >
                             <IconMenu2 size={24} />
                         </button>
+                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} />
+                        </a>
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
-                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
-                            </p>
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
+                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                                Hai, {profileData.name}
+                            </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
+
                         </div>
                         {isDropdownOpen && (
                             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">
+                                        <p className="font-semibold text-sm text-[#023048] text-left">
                                             {profileData.name}
                                         </p>
                                         <p className="text-xs text-gray-500">{profileData.role}</p>
@@ -597,24 +596,28 @@ function ApprovalSA() {
                                 </div>
                                 <div className="p-2 space-y-1">
                                     <button
-                                        onClick={() => navigate("/profile")}
+                                        onClick={() => goto("/profileSA")}
                                         className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                     >
                                         <IconUser size={18} />
                                         Profile
                                     </button>
-                                    <a
-                                        href="/logout"
-                                        className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                    <button
+                                        onClick={() => setShowLogout(true)}
+                                        className="flex items-center gap-3 p-2 w-full text-sm text-red-600 hover:bg-red-50 rounded-md"
                                     >
                                         <IconLogout size={18} />
                                         Keluar
-                                    </a>
+                                    </button>
+
                                 </div>
                             </div>
                         )}
-                    </header>
 
+                    </header>
+                    {showLogout && (
+                        <LogoutAlert onClose={() => setShowLogout(false)} />
+                    )}
                     <div className="p-1">
                         {/* TABLE APPROVAL */}
                         <div className="ml-0 flex-1 p-4 md:p-8 ">
@@ -1048,7 +1051,7 @@ function ApprovalSA() {
 
                                                     </td>
 
-                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
+                                                    <td className="py-2 px-4 overflow-x-auto">
                                                         {item.status_bepus === "pending" ? (
                                                             <button
                                                                 type="button"
@@ -1075,19 +1078,26 @@ function ApprovalSA() {
                                                     </td>
 
                                                     {/* Keterangan */}
-                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
-                                                        <button
-                                                            className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
+                                                    <td className="py-2 px-4 items-center justify-center">
+                                                        <div className="relative group inline-block">
+                                                            <button
+                                                                className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
                                                                       transition-all active:scale-90 hover:text-[#445266]"
 
-                                                            onClick={() => goto(`/KeteranganSA/${item.nim}`)}
-                                                        >
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                                                <path stroke="none" d="M0 0h24v24H0z" fill="none" />
-                                                                <path d="M14 3v4a1 1 0 0 0 1 1h4" />
-                                                                <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
-                                                            </svg>
-                                                        </button>
+                                                                onClick={() => goto(`/KeteranganSA/${item.nim}`)}
+                                                            >
+                                                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                                    <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+                                                                    <path d="M14 3v4a1 1 0 0 0 1 1h4" />
+                                                                    <path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" />
+                                                                </svg>
+                                                            </button>
+                                                            <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                                            group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                                            >
+                                                                Keterangan Riwayat Peminjaman
+                                                            </span>
+                                                        </div>
                                                     </td>
                                                 </tr>
                                             ))}
@@ -1098,7 +1108,7 @@ function ApprovalSA() {
                             </div>
 
                             {/* pagination dan export */}
-                            <div className="flex ml-60">
+                            <div className="flex ml-60 justify-between">
                                 <div className="flex flex-wrap gap-2 justify-center mt-8 items-center">
                                     {/* Prev */}
                                     <button

@@ -18,7 +18,7 @@ import {
 } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 
-export default function EditProfile() {
+export default function EditProfileSA() {
   authCheckSA();
   // --- STATE MANAGEMENT ---
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -28,62 +28,62 @@ export default function EditProfile() {
   // State untuk data formulir
 
 
-    const [profileData, setProfileData] = useState({
-      name: "Loading...",
-      username: "Loading...",
-      role: "Loading...",
-    });
-
-      const [formData, setFormData] = useState({
-      name: `${profileData.name}`,
-      username: "zhrahprnm",
-      role : "",
-      newPassword: "",
-     confirmPassword: "",
+  const [profileData, setProfileData] = useState({
+    name: "Loading...",
+    username: "Loading...",
+    role: "Loading...",
   });
 
-    useEffect(() => {
+  const [formData, setFormData] = useState({
+    name: `${profileData.name}`,
+    username: "zhrahprnm",
+    role: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+
+  useEffect(() => {
     const fetchProfile = async () => {
       const user = JSON.parse(localStorage.getItem('user'))
       const user_id = user.user_id;
       const token = localStorage.getItem('token')
       try {
         // Ganti URL sesuai endpoint backend Anda
-        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`,{
-          headers : {
-                "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
+        const response = await axios.get(`http://localhost:8080/api/profile/userInfo?user_id=${user_id}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
           }
         });
 
         setProfileData(response.data);
 
-        
+
       } catch (error) {
         console.error("Gagal mengambil data profil:", error);
         // Tampilkan pesan default jika gagal
         setProfileData({
-            name: "Gagal memuat",
-            username: "N/A",
-            role: "N/A",
+          name: "Gagal memuat",
+          username: "N/A",
+          role: "N/A",
         });
 
       }
     };
-    
+
     fetchProfile();
   }, []);
 
   useEffect(() => {
-  if (profileData && profileData.name !== "Loading...") {
-    setFormData(prev => ({
-      ...prev,
-      name: profileData.name,
-      username: profileData.username,
-      role: profileData.role
-    }));
-  }
-}, [profileData]);
+    if (profileData && profileData.name !== "Loading...") {
+      setFormData(prev => ({
+        ...prev,
+        name: profileData.name,
+        username: profileData.username,
+        role: profileData.role
+      }));
+    }
+  }, [profileData]);
 
   const navigate = useNavigate();
 
@@ -109,74 +109,74 @@ export default function EditProfile() {
     }));
   };
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
+  const handleSubmit = async (e) => {
+    e.preventDefault();
 
-  if (formData.newPassword !== formData.confirmPassword) {
-    alert("Password baru dan konfirmasi tidak cocok!");
-    return;
-  }
-
-  if (formData.newPassword && formData.newPassword.length < 8) {
-    alert("Password minimal 8 karakter");
-    return;
-  }
-
-  try {
-    const token = localStorage.getItem("token");
-    const user = JSON.parse(localStorage.getItem("user"));
-    const userId = user.user_id;
-
-    const response = await axios.put(
-      "http://localhost:8080/api/profile/editProfile",
-      {
-        id: userId,
-        name: formData.name,
-        username: formData.username,
-        newPassword: formData.newPassword || ""
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`
-        }
-      }
-    );
-
-    // ===== SUCCESS =====
-    if (response.status === 200) {
-      alert("Profil berhasil diperbarui!");
-      const newUser = response.data.user;
-
-      // === Jika password berubah → Logout wajib ===
-      if (formData.newPassword) {
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
-        navigate("/login");
-        return; // STOP eksekusi, jangan lanjut
-      }
-
-      // === Jika TIDAK ubah password → update localStorage saja ===
-      
-
-      // Update UI
-      setFormData(prev => ({
-        ...prev,
-        name: newUser.name,
-        username: newUser.username,
-        newPassword: "",
-        confirmPassword: ""
-      }));
-
-      navigate("/profileSA");
+    if (formData.newPassword !== formData.confirmPassword) {
+      alert("Password baru dan konfirmasi tidak cocok!");
+      return;
     }
 
-  } catch (error) {
-    // ===== ERROR HANDLING =====
-    const errorMessage = error.response?.data?.message || "Terjadi kesalahan server.";
-    alert("Gagal memperbarui profil: " + errorMessage);
-  }
-};
+    if (formData.newPassword && formData.newPassword.length < 8) {
+      alert("Password minimal 8 karakter");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const user = JSON.parse(localStorage.getItem("user"));
+      const userId = user.user_id;
+
+      const response = await axios.put(
+        "http://localhost:8080/api/profile/editProfile",
+        {
+          id: userId,
+          name: formData.name,
+          username: formData.username,
+          newPassword: formData.newPassword || ""
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          }
+        }
+      );
+
+      // ===== SUCCESS =====
+      if (response.status === 200) {
+        alert("Profil berhasil diperbarui!");
+        const newUser = response.data.user;
+
+        // === Jika password berubah → Logout wajib ===
+        if (formData.newPassword) {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+          navigate("/login");
+          return; // STOP eksekusi, jangan lanjut
+        }
+
+        // === Jika TIDAK ubah password → update localStorage saja ===
+
+
+        // Update UI
+        setFormData(prev => ({
+          ...prev,
+          name: newUser.name,
+          username: newUser.username,
+          newPassword: "",
+          confirmPassword: ""
+        }));
+
+        navigate("/profileSA");
+      }
+
+    } catch (error) {
+      // ===== ERROR HANDLING =====
+      const errorMessage = error.response?.data?.message || "Terjadi kesalahan server.";
+      alert("Gagal memperbarui profil: " + errorMessage);
+    }
+  };
 
 
   // --- UTILITY CLASS ---
@@ -191,44 +191,44 @@ const handleSubmit = async (e) => {
     <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
 
       {/* SIDEBAR (RESPONSIVE) */}
-            <aside
-                className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-                    } lg:static lg:h-auto`}
-            >
-                <div className="flex flex-col h-full">
-                    <div className="flex flex-col items-center p-6">
-                        <div className="flex items-center gap-4 mb-6">
-                            {/* Icon Bebas Pustaka */}
-                            <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
-                            <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
-                        </div>
-                        <div className="w-full border-b border-gray-200"></div>
-                    </div>
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+          } lg:static lg:h-auto`}
+      >
+        <div className="flex flex-col h-full">
+          <div className="flex flex-col items-center p-6">
+            <div className="flex items-center gap-4 mb-6">
+              {/* Icon Bebas Pustaka */}
+              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+              <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
+            </div>
+            <div className="w-full border-b border-gray-200"></div>
+          </div>
 
-                    <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboardSA" className={getSidebarItemClass()}>
-                            <IconHome size={20} />
-                            Dashboard
-                        </a>
-                        <a href="/analyticSA" className={getSidebarItemClass()}>
-                            <IconChartBar size={20} />
-                            Data Analitik
-                        </a>
-                        <a href="/approvalSA" className={getSidebarItemClass()}>
-                            <IconBell size={20} />
-                            Konfirmasi Data
-                        </a>
-                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
-                            <IconUsers size={20} />
-                            User Control
-                        </a>
-                        <a href="/historySA" className={getSidebarItemClass()}>
-                            <IconHistory size={20} />
-                            History
-                        </a>
-                    </nav>
-                </div>
-            </aside>
+          <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
+            <a href="/dashboardSA" className={getSidebarItemClass()}>
+              <IconHome size={20} />
+              Dashboard
+            </a>
+            <a href="/analyticSA" className={getSidebarItemClass()}>
+              <IconChartBar size={20} />
+              Data Analitik
+            </a>
+            <a href="/approvalSA" className={getSidebarItemClass()}>
+              <IconBell size={20} />
+              Konfirmasi Data
+            </a>
+            <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
+              <IconUsers size={20} />
+              User Control
+            </a>
+            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+              <IconHistory size={20} />
+              History
+            </a>
+          </nav>
+        </div>
+      </aside>
 
       {/* Overlay untuk Mobile */}
       {isSidebarOpen && (
@@ -252,19 +252,22 @@ const handleSubmit = async (e) => {
           >
             <IconMenu2 size={24} />
           </button>
-
-          {/* Profil Dropdown Trigger */}
+          <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+            <IconBell size={24} />
+          </a>
           <div
             className="flex items-center gap-2 cursor-pointer pr-4 relative"
             onClick={toggleDropdown}
           >
-            <IconChevronDown size={18} className="text-gray-600" />
-            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-              Hai, {profileData.username}
-            </p>
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300">
               <IconUser size={24} className="text-gray-500" />
             </div>
+            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+              Hai, {profileData.username}
+            </p>
+
+            <IconChevronDown size={18} className="text-gray-600" />
+
           </div>
 
           {/* Dropdown Menu */}
@@ -273,10 +276,10 @@ const handleSubmit = async (e) => {
               <div className="flex items-center gap-3 p-4 border-b">
                 <IconUser size={24} className="text-gray-500" />
                 <div>
-                  <p className="font-semibold text-sm text-[#023048]">
+                  <p className="font-semibold text-sm text-[#023048] text-left">
                     {formData.name}
                   </p>
-                  <p className="text-xs text-gray-500">{profileData.role}</p>
+                  <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                 </div>
               </div>
 

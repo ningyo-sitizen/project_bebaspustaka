@@ -1,6 +1,7 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
 import authCheckSA from './authCheckSA';
+import LogoutAlert from "./logoutConfirm";
 
 import {
     Chart as ChartJS,
@@ -15,6 +16,7 @@ import {
     Legend
 } from 'chart.js';
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from "react-router-dom";
 import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
 import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
@@ -30,6 +32,8 @@ import {
     IconHistory,
     IconMenu2,
     IconChevronDown,
+    IconAdjustmentsHorizontal,
+    IconCheckupList,
 } from "@tabler/icons-react";
 ChartJS.register(
     CategoryScale,
@@ -43,14 +47,14 @@ ChartJS.register(
     Legend
 );
 
-export default function Dashboard() {
-    authCheckSA()
+export default function Analytic() {
+    authCheckSA();
+    const [showLogout, setShowLogout] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
+    const navigate = useNavigate();
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [toggleSidebar, setToggleSidebar] = useState(false);
-
-
 
     //setup chart
     const [chartDataR, setChartDataR] = useState({
@@ -109,15 +113,26 @@ export default function Dashboard() {
     const [actJurusanL, setActJurusanL] = useState(false);
 
     const [activeChartR, setActiveChartR] = useState(localStorage.getItem("chart_type_right") || "Line");
-    const [activeChartL, setActiveChartL] = useState("Line");
-    const [draftChartTypeL, setDraftChartTypeL] = useState(activeChartL);
+
+
+
+    // const statefilterKiri = JSON.parse(localStorage.getItem("filters_left")) || {};
+    const [appliedFilters, setAppliedFilters] = useState(() => {
+        return JSON.parse(localStorage.getItem("filters_left"));
+    });
+    const [draftChartTypeL, setDraftChartTypeL] = useState(
+        appliedFilters?.chartType || "Line"
+    );
+
+    const [selectedYears, setSelectedYears] = useState(
+        appliedFilters?.years || []
+    );
+    const [selectedType, setSelectedType] = useState(
+        appliedFilters?.type || "monthly"
+    );
+
 
     const [years, setYears] = useState([]);
-    const [selectedYears, setSelectedYears] = useState([]);
-    const [selectedType, setSelectedType] = useState("");
-    const [tempYears, setTempYears] = useState([]);
-    const [tempType, setTempType] = useState("");
-
     const [tablePageLeft, setTablePageLeft] = useState(1);
     const [tableLimitLeft] = useState(50);
     const [tablePaginationLeft, setTablePaginationLeft] = useState(null);
@@ -152,11 +167,10 @@ export default function Dashboard() {
     const [limit] = useState(10);
 
 
-    const maxReached = activeChartL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
+    const maxReached = draftChartTypeL === "circle" && selectedYears.length >= 5; //limit buat lingkaran
 
-    const toggleDropdown = () => {
-        setIsDropdownOpen(!isDropdownOpen);
-    };
+    const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
+
 
     const [profileData, setProfileData] = useState({
         name: "Loading...",
@@ -178,8 +192,6 @@ export default function Dashboard() {
     };
 
     const handleCancelFilters = () => {
-        setSelectedYears(tempYears);
-        setSelectedType(tempType);
         closeModal(true);
     };
 
@@ -222,15 +234,29 @@ export default function Dashboard() {
         return query.toString();
     };
 
+    const handleApplyFiltersLeft = () => {
+        const filters = {
+            years: selectedYears,
+            type: selectedType,
+            chartType: draftChartTypeL,
+        };
+
+        localStorage.setItem("filters_left", JSON.stringify(filters));
+        setAppliedFilters(filters); // 🔥 trigger SEMUA
+    };
+
+
     const debounceTimer = useRef(null);
 
-    const debouncedApplyFiltersLeft = () => {
+    const debouncedApplyFiltersLeft = useCallback(() => {
         closeModal(false);
+
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
         debounceTimer.current = setTimeout(() => {
             handleApplyFiltersLeft();
-        }, 250); // delay 250ms, bisa diubah sesuai selera
-    };
+        }, 250);
+    }, [handleApplyFiltersLeft]);
 
     const debounceTimerRight = useRef(null);
 
@@ -244,26 +270,26 @@ export default function Dashboard() {
 
 
     //label buaat chart kiri
-    const autoBuildChartData = (data, selectedType) => {
+    const autoBuildChartData = (data, type) => {
         const monthLabels = [
             "Januari", "Februari", "Maret", "April", "Mei", "Juni",
             "Juli", "Agustus", "September", "Oktober", "November", "Desember"
         ];
 
         let baseLabels = [];
-        if (selectedType === "monthly") baseLabels = monthLabels;
-        else if (selectedType === "yearly") baseLabels = data.years;
-        else if (selectedType === "weekly") {
+        if (type === "monthly") baseLabels = monthLabels;
+        else if (type === "yearly") baseLabels = data.years;
+        else if (type === "weekly") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
-        } else if (selectedType === "daily") {
+        } else if (type === "daily") {
             baseLabels = [...new Set(Object.values(data.data)
                 .flat()
                 .map(r => r.label))];
         }
 
-        if (selectedType === "monthly") {
+        if (type === "monthly") {
             baseLabels = monthLabels.filter(m =>
                 Object.values(data.data)
                     .flat()
@@ -294,27 +320,27 @@ export default function Dashboard() {
     };
 
     const fetchTableDataLeft = useCallback(async (pageNum) => {
-        try {
-            const token = localStorage.getItem("token");
-            const query = new URLSearchParams();
-            if (selectedYears.length > 0) query.append("year", selectedYears.join(","));
-            if (selectedType) query.append("period", selectedType);
-            query.append("page", pageNum);
-            query.append("limit", tableLimitLeft);
-            query.append("tableOnly", "true");
+        if (!appliedFilters) return;
 
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${buildQueryParams({ years: selectedYears, type: selectedType, page: pageNum, limit: tableLimitLeft, tableOnly: true })}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const data = await res.json();
+        const token = localStorage.getItem("token");
 
-            setTableDataLeft(data);
-            setTablePaginationLeft(data.pagination);
-            setTablePageLeft(pageNum);
-        } catch (err) {
-            console.error("Error fetching table data:", err);
-        }
-    }, [selectedYears, selectedType, tableLimitLeft]);
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+                page: pageNum,
+                limit: tableLimitLeft,
+                tableOnly: true
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        const data = await res.json();
+        setTableDataLeft(data);
+        setTablePaginationLeft(data.pagination);
+        setTablePageLeft(pageNum);
+    }, [appliedFilters, tableLimitLeft]);
+
 
     const fetchTableDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -381,56 +407,6 @@ export default function Dashboard() {
 
     const fetchController = useRef(null);
 
-    const handleApplyFiltersLeft = useCallback(async () => {
-        setActiveChartL(draftChartTypeL);
-        setTempYears(selectedYears);
-        setTempType(selectedType);
-        setIsLoadingLeft(true);
-
-
-        if (fetchController.current) {
-            fetchController.current.abort();
-        }
-
-        fetchController.current = new AbortController();
-        const { signal } = fetchController.current;
-
-        await new Promise(resolve => setTimeout(resolve, 100));
-
-        try {
-            const token = localStorage.getItem("token");
-            const query = buildQueryParams({ years: selectedYears, type: selectedType });
-
-            const res = await fetch(`http://localhost:8080/api/dashboard/visitor?${query}`, {
-                headers: { Authorization: `Bearer ${token}` },
-                signal
-            });
-            const responseData = await res.json();
-
-            requestAnimationFrame(() => {
-                const chart = autoBuildChartData(responseData, selectedType, draftChartTypeL);
-
-                setChartDataL({
-                    lineChart: chart,
-                    barChart: chart,
-                    pieChart: chart,
-                });
-
-                setTableData(responseData);
-                setIsLoadingLeft(false);
-            });
-            fetchTableDataLeft(isFilterChanged ? 1 : tablePageLeft);
-
-        } catch (err) {
-            if (err.name === "AbortError") {
-                console.log("Previous fetch aborted due to new filter");
-            } else {
-                console.error("Error applying filters:", err);
-                setIsLoadingLeft(false);
-            }
-        }
-
-    }, [selectedYears, selectedType, draftChartTypeL, tempYears, tempType, tablePageLeft]);
 
 
 
@@ -878,7 +854,7 @@ export default function Dashboard() {
 
         //tabel kanan yang benar
         return (
-            <div className="bg-white p-6 mt-12 rounded-sm border border-[#EDEDED]">
+            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
                 <h3 className="font-semibold text-base mb-4 text-left">{getTitle()}</h3>
 
                 <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-gray-100">
@@ -901,14 +877,11 @@ export default function Dashboard() {
         );
     }
 
-
-
-
     const renderChartL = () => {
         if (!chartDataL.lineChart || !chartDataL.pieChart || !chartDataL.barChart) {
             return <p>Loading chart...</p>;
         }
-        switch (activeChartL) {
+        switch (appliedFilters.chartType) {
             case "Line":
                 return (
                     <Line
@@ -1096,6 +1069,7 @@ export default function Dashboard() {
                 );
         }
     };
+
     useEffect(() => {
         fetchChartDataRight();
     }, [actAngkatan, actLembaga, actProdi]);
@@ -1130,12 +1104,18 @@ export default function Dashboard() {
         };
         fetchProfile();
         fetchYears();
-        fetchChartDataLeft();
         fetchAngkatan();
         fetchLoanHistory(1);
         fetchLembaga();
 
     }, []);
+    useEffect(() => {
+        if (!appliedFilters) return;
+
+        fetchChartDataLeft();
+        fetchTableDataLeft(1);
+    }, [appliedFilters]);
+
 
     useEffect(() => {
         fetchChartDataRight();
@@ -1257,63 +1237,30 @@ export default function Dashboard() {
 
     const fetchChartDataLeft = useCallback(async () => {
         setIsLoadingLeft(true);
-        try {
-            const token = localStorage.getItem("token");
-            const res = await fetch(`http://localhost:8080/api/landing/landingpagechart?year=2025`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            const mockData = await res.json();
 
-            requestAnimationFrame(() => {
-                setChartDataL({
-                    lineChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan tahun 2025',
-                            data: mockData.data,
-                            borderColor: 'rgb(75, 192, 192)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                            tension: 0.1
-                        }]
-                    },
-                    pieChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: "Kunjungan",
-                            data: mockData.data,
-                            backgroundColor: ['#537FF1', '#8979FF', '#A8B5CB', '#667790']
-                        }]
-                    },
-                    barChart: {
-                        labels: mockData.labels,
-                        datasets: [{
-                            label: 'Kunjungan per Bulan',
-                            data: mockData.data,
-                            backgroundColor: 'rgba(75, 192, 192, 0.5)'
-                        }]
-                    }
-                });
+        const token = localStorage.getItem("token");
 
-                const tableDataFormat = {
-                    years: [2025],
-                    data: {
-                        2025: mockData.labels.map((label, index) => ({
-                            label: label,
-                            total_visitor: mockData.data[index]
-                        }))
-                    }
-                };
+        const res = await fetch(
+            `http://localhost:8080/api/dashboard/visitor?${buildQueryParams({
+                years: appliedFilters.years,
+                type: appliedFilters.type,
+            })}`,
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
 
-                setTableData(tableDataFormat);
-                setTableDataLeft(tableDataFormat);
-                setSelectedType("monthly");
-                setIsLoadingLeft(false);
-            });
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
-            setIsLoadingLeft(false);
-        }
-    }, []);
+        const data = await res.json();
+
+        const chart = autoBuildChartData(data, appliedFilters.type);
+
+        setChartDataL({
+            lineChart: chart,
+            barChart: chart,
+            pieChart: chart,
+        });
+
+        setIsLoadingLeft(false);
+    }, [appliedFilters]);
+
 
     const fetchChartDataRight = useCallback(async (pageNum = 1) => {
         try {
@@ -1450,12 +1397,12 @@ export default function Dashboard() {
                         </button>
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
-                            onClick={toggleDropdown}
+                            onClick={toggleProfileDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
                             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
+                                Hai, {profileData.name}
                             </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
@@ -1465,31 +1412,28 @@ export default function Dashboard() {
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">
-                                            {profileData.name}
-                                        </p>
-                                        <p className="text-xs text-gray-500">{profileData.role}</p>
+                                        <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                                        <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">
-                                    <button
-                                        onClick={() => navigate("/profile")}
-                                        className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
-                                    >
-                                        <IconUser size={18} />
-                                        Profile
+                                    <button onClick={() => navigate("/profile")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
+                                        <IconUser size={18} /> Profile
                                     </button>
-                                    <a
-                                        href="/logout"
-                                        className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                    <button
+                                        onClick={() => setShowLogout(true)}
+                                        className="flex items-center gap-3 p-2 w-full text-sm text-red-600 hover:bg-red-50 rounded-md"
                                     >
                                         <IconLogout size={18} />
                                         Keluar
-                                    </a>
+                                    </button>
                                 </div>
                             </div>
                         )}
                     </header>
+                    {showLogout && (
+                        <LogoutAlert onClose={() => setShowLogout(false)} />
+                    )}
                     <div className="flex-1 overflow-y-auto p-8">
                         <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
 
@@ -1525,9 +1469,10 @@ export default function Dashboard() {
                             <div>
                                 <div className="flex justify-between items-center mb-4 w-full">
                                     <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
-                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={openModalLeft}>
-                                        Filter &gt;
+                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                        Filter
                                     </p>
                                 </div>
 
@@ -1546,7 +1491,11 @@ export default function Dashboard() {
                                                     onClick={(e) => e.stopPropagation()}>
 
                                                     <div className="px-5 pt-5">
-                                                        <p className="font-bold text-lg text-left">Filter</p>
+                                                        <div className='flex justify-between'>
+                                                            <p className="font-bold text-lg text-left">Filter</p>
+                                                            <button className='text-3xl font-medium mr-3'
+                                                                onClick={handleCancelFilters}>x</button>
+                                                        </div>
                                                         <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>
                                                     </div>
 
@@ -1555,14 +1504,14 @@ export default function Dashboard() {
 
                                                     {/* Tahun */}
                                                     <div className="px-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Tahun Masuk</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {years.length > 0 ? (years.map((year) => {
                                                                 const isSelected = selectedYears.includes(year);
                                                                 return (<button key={year} onClick={() => isSelected ?
                                                                     setSelectedYears(selectedYears.filter((y) => y !== year))
                                                                     : !maxReached && setSelectedYears([...selectedYears, year])}
-                                                                    className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                    className={`px-3 py-1 rounded text-xs transition-colors 
                                                                     ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161]"} 
                                                                     ${maxReached && !isSelected ? "opacity-40 cursor-not-allowed" : ""}`} >
                                                                     {year}
@@ -1575,7 +1524,7 @@ export default function Dashboard() {
 
                                                     {/* Periode */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Periode</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Periode</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {["daily", "weekly", "monthly", "yearly"].map((type) => {
                                                                 const isActive = selectedType === type;
@@ -1586,7 +1535,7 @@ export default function Dashboard() {
                                                                         type="button"
                                                                         disabled={isBlocked}
                                                                         onClick={() => !isBlocked && setSelectedType(type)}
-                                                                        className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                        className={`px-3 py-1 rounded text-xs transition-colors 
                                                                 ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                 ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                     >
@@ -1600,7 +1549,7 @@ export default function Dashboard() {
 
                                                     {/* Jenis Diagram */}
                                                     <div className="px-5 mt-5">
-                                                        <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
+                                                        <p className="font-regular mb-4 text-sm text-left">Jenis Diagram</p>
                                                         <div className="flex gap-2 flex-wrap">
                                                             {[{ label: "Diagram Lingkaran", value: "circle" },
                                                             { label: "Diagram Garis", value: "Line" },
@@ -1613,7 +1562,7 @@ export default function Dashboard() {
                                                                             key={chart.value}
                                                                             disabled={isBlocked}
                                                                             onClick={() => !isBlocked && handlePickChartType(chart.value)}
-                                                                            className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                            className={`px-3 py-1 rounded text-xs transition-colors 
                                                                     ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
                                                                     ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                         >
@@ -1628,19 +1577,15 @@ export default function Dashboard() {
                                                     {/* Button */}
                                                     <div className="w-full mt-6">
                                                         <div className="h-[1.5px] bg-gray-200 mb-5 mx-5"></div>
-                                                        <div className="flex justify-between px-5 pb-5 gap-3">
+                                                        <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 "
                                                                 onClick={handleResetFilters}>
                                                                 Atur ulang
                                                             </button>
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                                onClick={handleCancelFilters}>
-                                                                Batalkan
-                                                            </button>
 
-                                                            <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
+                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white "
                                                                 onClick={debouncedApplyFiltersLeft}>
                                                                 Filter Data
                                                             </button>
@@ -1663,9 +1608,10 @@ export default function Dashboard() {
                             <div>
                                 <div className="flex justify-between items-center mb-4">
                                     <h3 className="font-semibold text-lg">Data Bebas Pustaka</h3>
-                                    <p className="font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
                                         onClick={() => setShowFilterR(!showFilterR)}>
-                                        Filter &gt;
+                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                        Filter
                                     </p>
 
                                 </div>
@@ -1683,8 +1629,13 @@ export default function Dashboard() {
 
                                                     {/* Header */}
                                                     <div className="px-5 pt-5">
-                                                        <p className="font-bold text-lg text-left">Filter</p>
-                                                        <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1">
+                                                        <div className='flex justify-between'>
+                                                            <p className="font-bold text-lg text-left">Filter</p>
+                                                            <button className='text-3xl font-medium mr-3'
+                                                                onClick={handleCancelFiltersRight}>x</button>
+
+                                                        </div>
+                                                        <p className="font-thin text-sm text-left text-[#9A9A9A]">
                                                             Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.
                                                         </p>
                                                     </div>
@@ -1835,19 +1786,14 @@ export default function Dashboard() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex justify-between px-5 pb-5 gap-3">
+                                                        <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
+                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 mt-4"
                                                                 onClick={handleResetFiltersRight}>
                                                                 Atur ulang
                                                             </button>
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100"
-                                                                onClick={handleCancelFiltersRight}>
-                                                                Batalkan
-                                                            </button>
-
-                                                            <button className="text-sm text-gray-600 border-2 border-gray-400 px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white"
+                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white mt-4"
                                                                 disabled={isLoadingR}
                                                                 onClick={debouncedApplyFiltersRight}>
                                                                 Filter Data
@@ -1868,6 +1814,10 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
+
+                        </div>
+
+                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-7">
                             <div>
                                 <div className="relative mb-4">
                                     <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
@@ -1896,24 +1846,25 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <div >
-                                <div className="mb-4 h-[32px]">
-                                    <div className="relative">
-                                        <div className="overflow-x-auto">
-                                            {tableDataRight && (
-                                                <DataTableRight
-                                                    data={tableDataRight}
-                                                    pagination={tablePaginationRight}
-                                                    onPageChange={fetchTableDataRight}
-                                                />
-                                            )}
+                            <div>
+                                <div className="mb-4 h-[32px] mt-[44px]">
+                                    <div className="bg-white rounded-xl">
+                                        <div className="relative">
+                                            <div className="overflow-x-auto">
+                                                {tableDataRight && (
+                                                    <DataTableRight
+                                                        data={tableDataRight}
+                                                        pagination={tablePaginationRight}
+                                                        onPageChange={fetchTableDataRight}
+                                                    />
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                         </div>
-
                         <div className='grid grid-cols-1 gap-8 '>
                             <div className="relative inline-flex justify-between items-center mt-20">
                                 <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
@@ -1925,15 +1876,15 @@ export default function Dashboard() {
                                     <div className="overflow-x-auto">
                                         <table className="w-full border-collapse">
                                             <thead>
-                                                <tr className="bg-[#667790]">
-                                                    <th className="text-left p-4 font-normal text-white text-sm">No</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">loan id</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Member ID</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">item code</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal Pinjam</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Deadline</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Tanggal di kembalikan</th>
-                                                    <th className="text-left p-4 font-normal text-white text-sm">Status Buku</th>
+                                                <tr className="bg-[#D8DFEC] whitespace-nowrap">
+                                                    <th className="p-3 font-normal text-sm">No</th>
+                                                    <th className="p-3 font-normal text-sm">ID Peminjaman</th>
+                                                    <th className="p-3 font-normal text-sm">ID Member</th>
+                                                    <th className="p-3 font-normal text-sm">Kode Item</th>
+                                                    <th className="p-3 font-normal text-sm">Tanggal Pinjam</th>
+                                                    <th className="p-3 font-normal text-sm">Tenggat</th>
+                                                    <th className="p-3 font-normal text-sm">Tanggal di kembalikan</th>
+                                                    <th className="p-3 font-normal text-sm">Status Buku</th>
                                                 </tr>
                                             </thead>
                                             <tbody>

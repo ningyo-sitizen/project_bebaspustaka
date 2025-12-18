@@ -1,6 +1,7 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
 import authCheckSA from './authCheckSA';
+import LogoutAlert from "./logoutConfirm";
 
 import {
     Chart as ChartJS,
@@ -46,8 +47,9 @@ ChartJS.register(
     Legend
 );
 
-export default function Dashboard() {
-    authCheckSA()
+export default function AnalyticSA() {
+    authCheckSA();
+    const [showLogout, setShowLogout] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};
     const navigate = useNavigate();
@@ -190,8 +192,6 @@ export default function Dashboard() {
     };
 
     const handleCancelFilters = () => {
-        setSelectedYears(tempYears);
-        setSelectedType(tempType);
         closeModal(true);
     };
 
@@ -1380,13 +1380,9 @@ export default function Dashboard() {
                                 <IconUsers size={20} />
                                 User Control
                             </a>
-                            <a href="/historySA" className={getSidebarItemClass()}>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
                                 History
-                            </a>
-                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
-                                <IconCheckupList size={20} />
-                                History Approval
                             </a>
                         </nav>
                     </div>
@@ -1407,24 +1403,29 @@ export default function Dashboard() {
                         >
                             <IconMenu2 size={24} />
                         </button>
+                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} />
+                        </a>
+
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleProfileDropdown}
                         >
+                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
+                                <IconUser size={24} className="text-gray-500" />
+                            </div>
                             <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
                                 Hai, {profileData.name}
                             </p>
                             <IconChevronDown size={18} className="text-gray-600" />
-                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
-                                <IconUser size={24} className="text-gray-500" />
-                            </div>
+
                         </div>
                         {isDropdownOpen && (
                             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
+                                        <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
                                         <p className="text-xs text-gray-500">{profileData.role}</p>
                                     </div>
                                 </div>
@@ -1432,14 +1433,20 @@ export default function Dashboard() {
                                     <button onClick={() => navigate("/profileSA")} className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700">
                                         <IconUser size={18} /> Profile
                                     </button>
-                                    <a href="/logout" className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
-                                        <IconLogout size={18} /> Keluar
-                                    </a>
+                                    <button
+                                        onClick={() => setShowLogout(true)}
+                                        className="flex items-center gap-3 p-2 w-full text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                    >
+                                        <IconLogout size={18} />
+                                        Keluar
+                                    </button>
                                 </div>
                             </div>
                         )}
                     </header>
-
+                    {showLogout && (
+                        <LogoutAlert onClose={() => setShowLogout(false)} />
+                    )}
                     <div className="flex-1 overflow-y-auto p-8">
                         <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
 

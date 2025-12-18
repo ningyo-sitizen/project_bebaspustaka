@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import authCheckSA from "./authCheckSA";
+import LogoutAlert from "./logoutConfirm";
 import {
     IconHome,
     IconChartBar,
@@ -373,6 +374,7 @@ const AddUserModal = ({ isOpen, onClose, onAddSuccess }) => {
 // --- KOMPONEN UTAMA USER CONTROL ---
 export default function UserControl() {
     authCheckSA();
+    const [showLogout, setShowLogout] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -575,13 +577,9 @@ export default function UserControl() {
                             <IconUsers size={20} />
                             User Control
                         </a>
-                        <a href="/historySA" className={getSidebarItemClass()}>
+                        <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                             <IconHistory size={20} />
                             History
-                        </a>
-                        <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
-                            <IconCheckupList size={20} />
-                            History Approval
                         </a>
                     </nav>
                 </div>
@@ -607,17 +605,20 @@ export default function UserControl() {
                     >
                         <IconMenu2 size={24} />
                     </button>
+                    <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                        <IconBell size={24} />
+                    </a>
                     <div
                         className="flex items-center gap-2 cursor-pointer pr-4 relative"
                         onClick={toggleDropdown}
                     >
-                        <IconChevronDown size={18} className="text-gray-600" />
-                        <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                            Hai, {profileData.name.split(" ")[0]}
-                        </p>
                         <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                             <IconUser size={24} className="text-gray-500" />
                         </div>
+                        <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                            Hai, {profileData.name.split(" ")[0]}
+                        </p>
+                        <IconChevronDown size={18} className="text-gray-600" />
                     </div>
                     {isDropdownOpen && (
                         <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
@@ -636,18 +637,21 @@ export default function UserControl() {
                                     <IconUser size={18} />
                                     Profile
                                 </button>
-                                <a
-                                    href="/logout"
-                                    className="flex items-center gap-3 p-2 text-sm text-red-600 hover:bg-red-50 rounded-md"
+                                <button
+                                    onClick={() => setShowLogout(true)}
+                                    className="flex items-center gap-3 p-2 w-full text-sm text-red-600 hover:bg-red-50 rounded-md"
                                 >
                                     <IconLogout size={18} />
                                     Keluar
-                                </a>
+                                </button>
+
                             </div>
                         </div>
                     )}
                 </header>
-
+                {showLogout && (
+                    <LogoutAlert onClose={() => setShowLogout(false)} />
+                )}
                 {/* MAIN USER CONTROL CONTENT */}
                 <div className="p-4 sm:p-8">
 
@@ -663,8 +667,6 @@ export default function UserControl() {
                         <div className="flex-shrink-0 flex items-center mt-2 sm:mt-0">
 
                             <div className="relative group">
-
-                                {/* Tombol yang di-klik */}
                                 <button
                                     className="w-10 h-10 bg-[#023048] border rounded-lg flex text-white items-center justify-center active:scale-90 transition-transform duration-100 hover:bg-[#023048]/90"
                                     onClick={openAddModal}
@@ -677,26 +679,40 @@ export default function UserControl() {
                                     Tambah Pengguna Baru
                                 </span>
                             </div>
-                            <button
-                                onClick={() => setViewMode('grid')}
-                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'grid'
-                                    ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
-                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
-                                    } transition duration-150`}
-                                aria-label="Tampilan Grid"
-                            >
-                                <IconLayoutGrid size={20} />
-                            </button>
-                            <button
-                                onClick={() => setViewMode('list')}
-                                className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'list'
-                                    ? 'bg-[#023048] text-white border-[#023048]'
-                                    : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
-                                    } transition duration-150`}
-                                aria-label="Tampilan List"
-                            >
-                                <IconList size={20} />
-                            </button>
+                            <div className="relative group">
+                                <button
+                                    onClick={() => setViewMode('grid')}
+                                    className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'grid'
+                                        ? 'bg-[#023048] text-white border-[#023048] shadow-sm'
+                                        : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                        } transition duration-150`}
+                                    aria-label="Tampilan Grid"
+                                >
+                                    <IconLayoutGrid size={20} />
+                                </button>
+                                <span className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                >
+                                    Ganti ke Grid
+                                </span>
+                            </div>
+                            <div className="relative group">
+                                <button
+                                    onClick={() => setViewMode('list')}
+                                    className={`w-10 h-10 border rounded-lg flex items-center justify-center ml-3 active:scale-90 transition-transform duration-100 ${viewMode === 'list'
+                                        ? 'bg-[#023048] text-white border-[#023048]'
+                                        : 'bg-white text-[#667790] border-gray-300 hover:bg-gray-50'
+                                        } transition duration-150`}
+                                    aria-label="Tampilan List"
+                                >
+                                    <IconList size={20} />
+                                </button>
+                                <span className="absolute z-10 bottom-full mb-1 left-1/2 -translate-x-1/2 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                                >
+                                    Ganti ke Baris
+                                </span>
+                            </div>
                         </div>
                     </div>
 

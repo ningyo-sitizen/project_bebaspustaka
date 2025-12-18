@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotif } from "./NotificationContext"
-import { decrypt, encrypt } from "./addindx";
+import imgpnj from "./assets/logo_pnj.jpg";
 
 function Login() {
   const { showNotif } = useNotif();
@@ -63,7 +63,7 @@ function Login() {
         })
         if (rememberMe) {
           localStorage.setItem("remember_name", name);
-          localStorage.setItem("remember_password", encrypt(password));
+          localStorage.setItem("remember_password", (password));
         } else {
           localStorage.removeItem("remember_name");
           localStorage.removeItem("remember_password");
@@ -98,18 +98,16 @@ function Login() {
       setFailedLogin("*Maaf, Username/Password yang anda masukan salah, silahkan coba lagi!");
     }
   };
-
   useEffect(() => {
     const savedName = localStorage.getItem("remember_name");
     const savedPw = localStorage.getItem("remember_password");
 
     if (savedName && savedPw) {
       setName(savedName);
-      setPassword(decrypt(savedPw));
+      setPassword(savedPw);
       setRememberMe(true);
     }
   }, []);
-
 
 
   return (
@@ -120,26 +118,19 @@ function Login() {
         <section className="flex-1 flex flex-col justify-center items-center lg:items-start text-center">
           <div className="hidden lg:block absolute inset-0 overflow-visible pointer-events-none">
 
-            <div className="absolute top-1/2 -translate-x-[40%] -translate-y-1/2 w-[72vw] h-[73vw] rounded-full bg-[#EDF1F3]">
+            <div className="absolute top-1/2 -translate-x-[40%] -translate-y-1/2 w-[72vw] h-[73vw] rounded-full overflow-hidden">
+              {/* GAMBAR */}
+              <div
+                className="absolute inset-0 bg-no-repeat bg-center bg-contain "
+                style={{ backgroundImage: `url(${imgpnj})` }}></div>
+
+              {/* OVERLAY */}
+              <div className="absolute inset-0 bg-[#172D8C] opacity-25"></div>
             </div>
+
 
             <div className="absolute top-1/2 -translate-x-[40%] -translate-y-1/2 w-[75vw] h-[73vw] rounded-full border-4 border-[#EDF1F3]">
-            </div>
-          </div>
 
-          {/* Logo besar kiri */}
-          <div className="flex flex-col items-center justify-center mb-8 ml-16 py-2 z-10">
-
-            <div className="w-[350px] h-[300px] bg-[length:400px_200px] bg-[url('https://cdn.designfast.io/image/2025-12-09/8d95b9bd-3314-46ce-8e32-6f8c410dd604.png')] bg-contain bg-no-repeat bg-center"></div>
-
-            {/* Text */}
-            <div className="max-w-lg space-y-4 z-10 gap-4 py-3 mx-10">
-              <h1 className="text-2xl lg:text-3xl font-semibold text-[#023048]">
-                SELAMAT DATANG
-              </h1>
-              <h2 className="text-lg lg:text-xl font-medium text-[#023048]">
-                Di Website Sistem Bebas Pustaka PNJ
-              </h2>
             </div>
           </div>
 
@@ -164,7 +155,7 @@ function Login() {
             </div>
 
             {/* Username */}
-            <div className="flex items-center border border-gray-300 rounded-lg p-2 w-full focus-within:ring-2 focus-within:ring-[#023048]">
+            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048]">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="text-gray-400 mr-2"
@@ -185,14 +176,16 @@ function Login() {
                 type="text"
                 placeholder="Username"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                }}
                 className="outline-none w-full"
 
               />
             </div>
 
             {/* Password */}
-            <div className="flex items-center border border-gray-300 rounded-lg p-2 w-full focus-within:ring-2 focus-within:ring-[#023048]">
+            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048]">
               <svg xmlns="http://www.w3.org/2000/svg"
                 width="20"
                 height="20"
@@ -214,7 +207,9 @@ function Login() {
                 type="password"
                 placeholder="Password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                }}
                 className="outline-none w-full"
 
               />

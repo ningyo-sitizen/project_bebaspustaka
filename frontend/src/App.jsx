@@ -16,6 +16,7 @@ import UserControlSA from "./UserControlSA.jsx";
 import HistorySA from "./HistorySA.jsx";
 import HistoryApprovalSA from "./HistoryApprovalSA.jsx";
 import Logout from "./logout.jsx";
+import LogoutAlert from "./logoutConfirm.jsx";
 import Keterangan from "./Keterangan.jsx";
 import KeteranganSA from "./KeteranganSA.jsx";
 import { NotificationProvider } from "./NotificationContext.jsx";
@@ -41,6 +42,7 @@ export default function App() {
         <Route path="/historySA" element={<HistorySA />} />
         <Route path="/historyapprovalSA" element={<HistoryApprovalSA />} />
         <Route path="/logout" element={<Logout />} />
+        <Route path="/logoutConfirm" element={<LogoutAlert />} />
         <Route path="/KeteranganSA/:nim" element={<KeteranganSA />} />
       </Routes>
     </NotificationProvider>

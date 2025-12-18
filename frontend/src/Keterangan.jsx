@@ -1,6 +1,6 @@
 import AppLayout from './AppLayout';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 import { useNavigate, useParams } from "react-router-dom";
 import {
     IconBookOff,
@@ -17,7 +17,7 @@ import {
 import { useState, useEffect } from 'react';
 
 export default function Keterangan() {
-    authCheck();
+    authCheckSA();
 
     const [data, setData] = useState([]);
     const [dataMahasiswa, setDataMahasiswa] = useState([]);
@@ -134,10 +134,9 @@ export default function Keterangan() {
                             <div className="w-full border-b border-gray-200"></div>
                         </div>
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard </a>
-                            <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-                            <a href="/ApprovalSA" className={getSidebarItemClass(true)}><IconBell size={20} /> Konfirmasi Data</a>
-                           
+                            <a href="/dashboard" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard </a>
+                            <a href="/analytic" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
+                            <a href="/Approval" className={getSidebarItemClass(true)}><IconBell size={20} /> Konfirmasi Data</a>
                         </nav>
                     </div>
                 </aside>
@@ -164,8 +163,8 @@ export default function Keterangan() {
                                 <div className="flex items-center gap-3 p-4 border-b">
                                     <IconUser size={24} className="text-gray-500" />
                                     <div>
-                                        <p className="font-semibold text-sm text-[#023048]">{profileData.name}</p>
-                                        <p className="text-xs text-gray-500">{profileData.role}</p>
+                                        <p className="font-semibold text-sm text-[#023048] text-left">{profileData.name}</p>
+                                        <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">
@@ -190,7 +189,7 @@ export default function Keterangan() {
                             <div className="flex items-center flex-wrap gap-2 mb-4 text-sm font-medium">
                                 <p className="text-[#667790]">&gt;</p>
                                 <p className="px-1 text-[#667790] hover:underline cursor-pointer"
-                                    onClick={() => goto('/Approval')} >
+                                    onClick={() => goto('/approvalSA')} >
                                     Konfirmasi Data
                                 </p>
                                 <p className="">&gt;</p>
