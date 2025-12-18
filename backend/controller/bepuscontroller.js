@@ -2,6 +2,7 @@ const { opac, bebaspustaka } = require('../config');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
+
 let GENERATING = false;
 
 function formatDateClean(date) {
@@ -17,6 +18,7 @@ function formatDateToMySQL(date) {
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} `
     + `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
 }
+
 
 
 async function updateStatusesJoin() {
@@ -195,7 +197,7 @@ exports.getMahasiswaTI_AllFull = async (req, res) => {
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
       WHERE 
-        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?) AND STATUS_bebas_pustaka = "pending"
       ORDER BY ${orderClause}
     `;
 
@@ -479,7 +481,7 @@ exports.approve = async (req, res) => {
       UPDATE bebaspustaka.bebas_pustaka
       SET 
         STATUS_bebas_pustaka = 'approved',
-        waktu_bebaspustaka = ?
+        waktu_bebaspustaka = ?,
         petugas_approve = ?
       WHERE nim = ?
     `;
@@ -572,7 +574,7 @@ exports.getMahasiswaTI = async (req, res) => {
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
       WHERE 
-        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?) AND STATUS_bebas_pustaka = "pending"
       ORDER BY ${orderClause}
       LIMIT ? OFFSET ?
     `;
@@ -629,122 +631,7 @@ exports.getMahasiswaTI = async (req, res) => {
 
 
 // ====================== GET MAHASISWA WITH "ALL" OPTION ======================
-exports.getMahasiswaTIWithAll = async (req, res) => {
-  try {
-    // ========== PAGINATION & PARAMS ==========
-    const page = parseInt(req.query.page) || 1;
-    const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
-    const isSelectAll = req.query.selectAll === 'true';
-    const showAll = req.query.all === 'true';
 
-    // Limit null jika selectAll atau all=true
-    const limit = !isSelectAll && !showAll ? (parseInt(req.query.limit) || 10) : null;
-    const offset = limit ? (page - 1) * limit : null;
-
-    // ========== SORTING ==========
-    const sortBy = req.query.sortBy || 'priority';
-
-    let orderClause = '';
-    switch (sortBy) {
-      case 'priority':
-        orderClause = `
-          CASE 
-            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
-            ELSE 1 
-          END ASC, 
-          waktu_bebaspustaka DESC
-        `;
-        break;
-      case 'latest':
-        orderClause = `waktu_bebaspustaka DESC`;
-        break;
-      case 'oldest':
-        orderClause = `waktu_bebaspustaka ASC`;
-        break;
-      case 'name_asc':
-        orderClause = `nama_mahasiswa ASC`;
-        break;
-      case 'name_desc':
-        orderClause = `nama_mahasiswa DESC`;
-        break;
-      default:
-        orderClause = `waktu_bebaspustaka DESC`;
-    }
-
-    // ========== QUERY AMBIL DATA ==========
-    let query = `
-      SELECT 
-        id,
-        nim,
-        nama_mahasiswa,
-        institusi,
-        program_studi,
-        STATUS_peminjaman,
-        STATUS_denda,
-        STATUS_bebas_pustaka,
-        DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
-      FROM bebas_pustaka
-      WHERE 
-        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
-      ORDER BY ${orderClause}
-    `;
-
-    const params = [search, search];
-
-    // Tambah LIMIT OFFSET jika ada pagination
-    if (limit) {
-      query += ` LIMIT ? OFFSET ?`;
-      params.push(limit, offset);
-    }
-
-    const [rows] = await bebaspustaka.query(query, params);
-
-    // ========== QUERY TOTAL COUNT ==========
-    const [totalData] = await bebaspustaka.query(`
-      SELECT COUNT(*) AS total
-      FROM bebas_pustaka
-      WHERE 
-        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
-    `, [search, search]);
-
-    const total = totalData[0].total;
-
-
-    const data = rows.map(r => ({
-      id: r.id,
-      nim: r.nim,
-      name: r.nama_mahasiswa,
-      nama_mahasiswa: r.nama_mahasiswa,
-      institusi: r.institusi,
-      program_studi: r.program_studi,
-      status_peminjaman: r.STATUS_peminjaman,
-      STATUS_peminjaman: r.STATUS_peminjaman,
-      status_denda: r.STATUS_denda,
-      STATUS_denda: r.STATUS_denda,
-      status_bepus: r.STATUS_bebas_pustaka,
-      STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
-      waktu_bebaspustaka: r.waktu_bebaspustaka
-    }));
-
-    // ========== RESPONSE ==========
-    res.json({
-      success: true,
-      total: total,
-      page: limit ? page : "all",
-      limit: limit || "all",
-      totalPages: limit ? Math.ceil(total / limit) : 1,
-      data: data
-    });
-
-  } catch (err) {
-    console.error("❌ Error getMahasiswaTIWithAll:", err);
-    res.status(500).json({
-      success: false,
-      message: "Gagal mengambil data mahasiswa",
-      error: err.message
-    });
-  }
-};
 
 
 exports.getMahasiswaTIWithAll = async (req, res) => {
@@ -821,48 +708,6 @@ exports.getMahasiswaTIWithAll = async (req, res) => {
 };
 
 // ====================== EXPORT PDF ======================
-exports.exportPDF = async (req, res) => {
-  try {
-    const { header, data } = req.body;
-
-    if (!data || !Array.isArray(data) || data.length === 0) {
-      return res.status(400).json({ success: false, message: "Data export kosong" });
-    }
-
-    const doc = new PDFDocument({ size: "A4", margin: 30 });
-    const filename = `BEPUS_${Date.now()}.pdf`;
-
-    res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-    res.setHeader("Content-Type", "application/pdf");
-
-    doc.pipe(res);
-
-
-    doc.fontSize(16).text("Laporan Bebas Pustaka", { align: "center" });
-    doc.moveDown();
-
-    // Header Table
-    doc.fontSize(10);
-    header.forEach(h => {
-      doc.text(h, { continued: true, width: 100 });
-    });
-    doc.moveDown();
-
-    // Isi Table
-    data.forEach(row => {
-      Object.values(row).forEach(col => {
-        doc.text(col ? col.toString() : "-", { continued: true, width: 100 });
-      });
-      doc.moveDown();
-    });
-
-    doc.end();
-
-  } catch (err) {
-    console.error("❌ exportPDF Error:", err);
-    res.status(500).json({ success: false, message: "Gagal export PDF" });
-  }
-};
 
 exports.exportPDF = async (req, res) => {
   try {
