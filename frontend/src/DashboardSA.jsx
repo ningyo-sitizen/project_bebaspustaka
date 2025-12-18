@@ -11,7 +11,7 @@ import {
     IconUser,
     IconChevronDown,
     IconMenu2,
-    IconTrash,
+    IconCheckupList,
     IconUsers,
     IconHistory,
     IconPlus,
@@ -210,6 +210,10 @@ export default function DashboardSA() {
                             <a href="/historySA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
                                 History
+                            </a>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                                <IconCheckupList size={20} />
+                                History Approval
                             </a>
                         </nav>
                     </div>

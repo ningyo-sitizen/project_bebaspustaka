@@ -115,8 +115,6 @@ async function generateBebasPustakaData({ forceRefresh = false } = {}) {
 }
 
 
-
-
 exports.getDate = async (req, res) => {
   const [rows] = await bebaspustaka.query(`
     SELECT STATUS_bebas_pustaka, start_date, end_date
