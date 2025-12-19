@@ -12,7 +12,8 @@ import {
     IconChevronDown,
     IconMenu2,
     IconUsers,
-    IconHistory
+    IconHistory,
+    IconFileDescription
 } from "@tabler/icons-react";
 import { useState, useEffect } from 'react';
 
@@ -134,11 +135,26 @@ export default function KeteranganSA() {
                             <div className="w-full border-b border-gray-200"></div>
                         </div>
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard </a>
-                            <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-                            <a href="/ApprovalSA" className={getSidebarItemClass(true)}><IconBell size={20} /> Konfirmasi Data</a>
-                            <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
-                            <a href="/historySA" className={getSidebarItemClass()}><IconHistory size={20} /> History</a>
+                            <a href="/dashboardSA" className={getSidebarItemClass()}>
+                                <IconHome size={20} />
+                                Dashboard
+                            </a>
+                            <a href="/analyticSA" className={getSidebarItemClass()}>
+                                <IconChartBar size={20} />
+                                Data Analitik
+                            </a>
+                            <a href="/ApprovalSA" className={getSidebarItemClass(true)}>
+                                <IconFileDescription size={20} />
+                                Konfirmasi Data
+                            </a>
+                            <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                                <IconUsers size={20} />
+                                Kontrol Pengguna
+                            </a>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                                <IconHistory size={20} />
+                                Riwayat
+                            </a>
                         </nav>
                     </div>
                 </aside>
@@ -218,12 +234,12 @@ export default function KeteranganSA() {
                                                 <div className="w-20 h-20 rounded-full flex items-center justify-center border border-gray-300 mb-3">
                                                     <IconUser size={40} className="text-gray-500" />
                                                 </div>
-                                                <p className="font-semibold text-base">{mhs.nama}</p>
+                                                <p className="font-semibold text-sm">{mhs.nama}</p>
                                                 {/* <p className="font-medium text-gray-500 text-sm">{mhs.nim}</p> */}
                                             </div>
 
                                             <div className="bg-white w-full p-6 flex flex-col rounded-xl border border-[#EDEDED]">
-                                                <p className="font-medium text-xl mb-4 text-left">Rincian Informasi</p>
+                                                <p className="font-semibold text-base mb-4 text-left">Rincian Informasi</p>
                                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-left">
                                                     <div className='ml-5 mt-7'>
                                                         <p className="text-base font-medium">Nama</p>
@@ -244,8 +260,8 @@ export default function KeteranganSA() {
                                         </div>
 
                                         {/* Tabel Keterangan */}
-                                        <div className="mx-auto bg-white rounded-lg w-full mt-7 border border-[#EDEDED] p-4 flex flex-col">
-                                            <p className="text-lg font-medium mb-4 text-left">Keterangan</p>
+                                        <div className="mx-auto bg-white rounded-lg w-full mt-1 border border-[#EDEDED] p-4 flex flex-col">
+                                            <p className="font-semibold text-base mb-4 text-left">Keterangan</p>
                                             <div className="w-full overflow-x-auto">
                                                 {history.length > 0 ? (
                                                     <table className="w-full border-collapse">

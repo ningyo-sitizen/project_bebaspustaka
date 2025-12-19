@@ -36,9 +36,9 @@ export default function Notif({ type, message, onClose }) {
           <div className="flex gap-3">
             {isSuccess ? (
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28">
-                <circle cx="12" cy="12" r="10" fill="#4ABC4C" />
+                <circle cx="14" cy="14" r="12" fill="#4ABC4C" />
                 <path
-                  d="M9 12l2 2l4-4"
+                  d="M9 14 l3.5 3.5 l7 -7"
                   stroke="white"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -48,9 +48,9 @@ export default function Notif({ type, message, onClose }) {
               </svg>
             ) : (
               <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28">
-                <circle cx="12" cy="12" r="10" fill="#FF3B30" />
+                <circle cx="14" cy="14" r="12" fill="#FF3B30" />
                 <path
-                  d="M9 9l6 6M15 9l-6 6"
+                  d="M9 14 l3.5 3.5 l7 -7"
                   stroke="white"
                   strokeWidth="2"
                   strokeLinecap="round"
@@ -59,7 +59,7 @@ export default function Notif({ type, message, onClose }) {
             )}
 
             <div>
-              <p className="font-semibold text-black text-sm">
+              <p className="font-semibold text-black text-sm mb-0.5">
                 {isSuccess ? "Berhasil!" : "Gagal!"}
               </p>
               <p className="text-xs text-[#9A9A9A]">{message}</p>

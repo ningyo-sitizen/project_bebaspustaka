@@ -127,7 +127,7 @@ function InfoCards() {
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       {/* Card 1: Kunjungan Hari Ini */}
-      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
+      <div className="bg-white p-5 shadow hover:shadow-lg transition-shadow">
         <div className="flex mb-4">
           <div className="bg-[#EDF1F3] p-1 rounded-xl">
 
@@ -163,7 +163,7 @@ function InfoCards() {
       </div>
 
       {/* Card 2: Kunjungan Mingguan (dengan perbandingan) */}
-      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
+      <div className="bg-white p-5 shadow hover:shadow-lg transition-shadow">
         <div className="flex mb-4">
           <div className="bg-[#D9CFED] p-1 rounded-xl">
             <svg xmlns="http://www.w3.org/2000/svg"
@@ -205,7 +205,7 @@ function InfoCards() {
             </div>
           )}</div>
         </div>
-        <p className="text-xs text-gray-500 text-left">
+        <p className="text-xs text-gray-500 text-left mt-2">
           Data ini menunjukkan bahwa jumlah pengunjung perpustakaan pada minggu ini
         </p>
 
@@ -213,9 +213,9 @@ function InfoCards() {
       </div>
 
       {/* Card 3: Buku yang Dipinjam */}
-      <div className="bg-white p-6 shadow hover:shadow-lg transition-shadow">
+      <div className="bg-white p-5 shadow hover:shadow-lg transition-shadow">
         <div className="flex mb-4">
-          <div className="bg-orange-50 p-2 rounded-2xl">
+          <div className="bg-orange-50 p-1.5 rounded-2xl">
             <svg xmlns="http://www.w3.org/2000/svg"
               width="28"
               height="28"
@@ -234,7 +234,7 @@ function InfoCards() {
               <path d="M21 6l0 13" />
             </svg>
           </div>
-          <h3 className="text-black font-semibold text-left mt-3 ml-4">Buku Dipinjam</h3>
+          <h3 className="text-black font-semibold text-left mt-2 ml-4">Buku Dipinjam</h3>
 
 
         </div>

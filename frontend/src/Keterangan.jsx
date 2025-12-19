@@ -238,7 +238,7 @@ export default function Keterangan() {
                                         </div>
 
                                         {/* Tabel Keterangan */}
-                                        <div className="mx-auto bg-white rounded-lg w-full mt-7 border border-[#EDEDED] p-4 flex flex-col">
+                                        <div className="mx-auto bg-white rounded-lg w-full mt-1 border border-[#EDEDED] p-4 flex flex-col">
                                             <p className="text-lg font-medium mb-4 text-left">Keterangan</p>
                                             <div className="w-full overflow-x-auto">
                                                 {history.length > 0 ? (

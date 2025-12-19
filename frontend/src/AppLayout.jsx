@@ -8,11 +8,7 @@ import {
     IconBrandInstagram,
     IconWorld,
     IconBrandYoutube,
-    
-    // Ikon-ikon Navbar/Sidebar (tidak digunakan)
-    IconChevronDown,
-    IconUserCircle,
-    IconLogout,
+    IconBrandTiktok,
 } from '@tabler/icons-react';
 
 
@@ -37,7 +33,7 @@ const AppLayout = () => {
                         <h3 className="text-base font-semibold mb-3 text-[#023048] text-left">
                             BEBAS PUSTAKA PNJ
                         </h3>
-                        <p className="text-sm mb-4 leading-relaxed text-[#4A4848] text-left">
+                        <p className="text-xs mb-4 leading-relaxed text-[#4A4848] text-left">
                             Platform online untuk pengecekan status dan persetujuan data Bebas Pustaka mahasiswa Politeknik Negeri Jakarta.
                         </p>
                         <div className="flex space-x-3 mt-4">
@@ -53,11 +49,17 @@ const AppLayout = () => {
                                 className="w-7 h-7 border border-gray-400 rounded-full flex items-center justify-center transition-colors hover:border-blue-500">
                                 <IconWorld className="w-4 h-4 text-gray-700" stroke={1.5} />
                             </a>
-                            <a href="https://youtu.be/FknJL57ljUg?si=H8lC3rp0qqdmtSp0"
+                            <a href="https://youtube.com/@perpustakaanpnj3567?si=oZUHDzj9r_SHK2Cv"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="w-7 h-7 border border-gray-400 rounded-full flex items-center justify-center transition-colors hover:border-blue-500">
                                 <IconBrandYoutube className="w-4 h-4 text-gray-700" stroke={1.5} />
+                            </a>
+                             <a href="https://www.tiktok.com/@perpustakaanpnj?_r=1&_t=ZS-92Lz0hoOnaO"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="w-7 h-7 border border-gray-400 rounded-full flex items-center justify-center transition-colors hover:border-blue-500">
+                                <IconBrandTiktok className="w-4 h-4 text-gray-700" stroke={1.5}/>
                             </a>
                         </div>
                     </div>
@@ -67,7 +69,7 @@ const AppLayout = () => {
                         <h4 className="flex items-center font-normal mb-3 text-sm text-[#4A4848] text-left">
                             <IconMapPin className="w-5 h-5 mr-2 text-[#667790]" stroke={1.5} /> Alamat
                         </h4>
-                        <p className="text-sm leading-relaxed text-[#4A4848] text-left">
+                        <p className="text-xs leading-relaxed text-[#4A4848] text-left">
                             Universitas Indonesia, Gedung Perpustakaan, Politeknik Negeri Jakarta, Kukusan, Kecamatan Beji, Kota Depok, Jawa Barat 16425
                         </p>
                     </div>
@@ -77,7 +79,7 @@ const AppLayout = () => {
                         <h4 className="flex items-center font-normal mb-3 text-sm text-[#4A4848] text-left">
                             <IconPhone className="w-5 h-5 mr-2 text-[#667790]" stroke={1.5} /> Telepon
                         </h4>
-                        <p className="text-sm leading-relaxed text-[#4A4848] text-left">
+                        <p className="text-xs leading-relaxed text-[#4A4848] text-left">
                             021-7270036 ext.303
                             <br />
                             087886168799
@@ -89,7 +91,7 @@ const AppLayout = () => {
                          <h4 className="flex items-center font-normal mb-3 text-sm text-[#4A4848] text-left">
                             <IconMail className="w-5 h-5 mr-2 text-[#667790]" stroke={1.5} /> Email
                         </h4>
-                        <a className="block text-sm leading-relaxed text-[#4A4848] text-left hover:underline"
+                        <a className="block text-xs leading-relaxed text-[#4A4848] text-left hover:underline"
                         href="mailto:humas@pnj.ac.id">
                         humas@pnj.ac.id
                         </a>

@@ -8,7 +8,8 @@ import {
   IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar,
   IconCheckupList,
   IconEye,
-  IconTrash
+  IconTrash,
+  IconFileDescription
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 import AppLayout from "./AppLayout";
@@ -523,12 +524,26 @@ const HistoryApprovalSA = () => {
             </div>
 
             <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-              <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
-              <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-              <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
-              <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
-              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
-              
+              <a href="/dashboardSA" className={getSidebarItemClass()}>
+                <IconHome size={20} />
+                Dashboard
+              </a>
+              <a href="/analyticSA" className={getSidebarItemClass()}>
+                <IconChartBar size={20} />
+                Data Analitik
+              </a>
+              <a href="/ApprovalSA" className={getSidebarItemClass()}>
+                <IconFileDescription size={20} />
+                Konfirmasi Data
+              </a>
+              <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                <IconUsers size={20} />
+                Kontrol Pengguna
+              </a>
+              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}>
+                <IconHistory size={20} />
+                Riwayat
+              </a>
             </nav>
           </div>
         </aside>
