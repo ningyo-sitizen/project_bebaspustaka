@@ -2,6 +2,12 @@ const { opac, bebaspustaka } = require('../config');
 const PDFDocument = require('pdfkit');
 const ExcelJS = require('exceljs');
 
+function todayDate() {
+  const d = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 let GENERATING = false;
 
@@ -76,6 +82,48 @@ async function generateBebasPustakaData({ forceRefresh = false } = {}) {
       AND YEAR(register_date) BETWEEN ? AND ?
     `, [sixYearsAgo, year]);
 
+    /*
+    console.log("LOGIKA SAVING DATA APPROVER TERTRIGGER")
+    const sql_tanggal_history_approval = `
+    select start_date,end_date from bebas_pustaka_time_range
+    `
+    
+    const sql_get_id_count = `
+    SELECT COUNT(*) 
+    FROM approval_history_list 
+    WHERE 1 = 1;
+    `
+    const today = todayDate()
+
+
+    const id_now = bebaspustaka.query(sql_get_id_count)
+    const id_now_plus_1 = id_now + 1;
+    const nama_table = `approval_history_${id_now_plus_1}`
+
+    const [rows_date] = await bebaspustaka.query(`
+    SELECT STATUS_bebas_pustaka, start_date, end_date
+    FROM bebas_pustaka_time_range LIMIT 1
+  `);
+    const end_date = new Date(rows_date[0].end_date);
+    const start_date = new Date(rows_date[0].start_date);
+
+    const sql_inset_to_list_history_approval = `
+    insert into bebaspustaka.approval_history_list (nama,start_date,end_date,input_date) values
+    (?,?,?,?)
+    `
+    const rows_inser_list_history_approval = bebaspustaka.query(sql_inset_to_list_history_approval,[nama_table,start_date,end_date,today])
+
+    const sql_create_table_history = `
+    create table ${nama_table} (
+    id int AUTO_INCREMENT PRIMARY KEY,
+    nim varchar(50)
+    nama_mahasiswa varhcar(255),
+    institusi varchar(255),
+    program_studi varchar(255)
+    STATUS_PINJAMAN IN
+    )
+    `
+*/
     await bebaspustaka.query(`TRUNCATE TABLE bebas_pustaka`);
     await bebaspustaka.query(`ALTER TABLE bebas_pustaka AUTO_INCREMENT = 1`);
 

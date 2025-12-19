@@ -1,8 +1,12 @@
 const { bebaspustaka, opac } = require('../config');
 
 function todayDate() {
-  return new Date().toISOString().slice(0, 10);
+  const d = new Date();
+  const pad = n => n.toString().padStart(2, '0');
+
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
+
 
 function formatDateToMySQL(date) {
   const pad = n => n.toString().padStart(2, '0');
@@ -37,15 +41,62 @@ exports.getStatusPustaka = async (req, res) => {
        LIMIT 1`,
       [nim]
     );
+    const sql_borrow = `
+
+
+
+            SELECT 
+
+
+                loan.member_id,
+
+
+                loan.item_code,
+
+
+                biblio.title,
+
+
+                loan.loan_date,
+
+
+                loan.due_date
+
+
+            FROM loan
+
+
+            LEFT JOIN item ON loan.item_code = item.item_code
+
+
+            LEFT JOIN biblio ON item.biblio_id = biblio.biblio_id
+
+
+            WHERE loan.member_id = ?
+
+
+            ORDER BY 
+
+
+                (loan.is_return = 0 AND loan.return_date IS NULL) DESC,
+
+
+                loan.is_return ASC
+
+
+        `;
+
+        const [rowsLoan]   = await opac.query(sql_borrow, [nim]);
 
     if (!fastRows.length) {
       console.log("❌ Data bebas_pustaka tidak ditemukan");
       return res.status(404).json({ success: false, message: "Data tidak ditemukan" });
     }
-
+      const mysqlDate = formatDateToMySQL(new Date());
     console.log("🧾 FAST PATH DATA:");
     console.log("   tanggal_terakhir DB :", fastRows[0].tanggal_terakhir);
     console.log("   status              :", fastRows[0].STATUS_bebas_pustaka);
+    console.log(mysqlDate)
 
     if (fastRows[0].tanggal_terakhir === today) {
       console.log("⚡ FAST PATH → SKIP INSERT (sudah hari ini)");
@@ -53,7 +104,8 @@ exports.getStatusPustaka = async (req, res) => {
       return res.json({
         success: true,
         nim,
-        status: fastRows[0].STATUS_bebas_pustaka || "pending",
+        loans: rowsLoan,
+        status: fastRows[0].STATUS_bebas_pustaka,
         visitor_inserted_today: false
       });
     }
@@ -84,12 +136,14 @@ exports.getStatusPustaka = async (req, res) => {
       );
 
       const mhs = rows[0];
+      const mysqlDate = formatDateToMySQL(new Date());
 
       console.log("🔎 AFTER LOCK CHECK:");
       console.log("   DB tanggal_terakhir:", mhs.tanggal_terakhir);
       console.log("   Today              :", today);
+      console.log(mysqlDate)
 
-    const mysqlDate = formatDateToMySQL(new Date());
+    
 
       // 🔒 DOUBLE CHECK SETELAH LOCK
       if (!mhs.tanggal_terakhir || mhs.tanggal_terakhir < today) {
@@ -132,6 +186,7 @@ exports.getStatusPustaka = async (req, res) => {
     return res.json({
       success: true,
       nim,
+      loans: rowsLoan,
       status: fastRows[0].STATUS_bebas_pustaka || "pending",
       visitor_inserted_today: insertedToday
     });
