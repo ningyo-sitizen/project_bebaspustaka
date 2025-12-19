@@ -100,7 +100,6 @@ function ApprovalSA() {
                 name: d.nama_mahasiswa || '',
                 nim: d.nim ? String(d.nim) : '',
                 status_peminjaman: d.STATUS_peminjaman || 0,
-                status_denda: d.STATUS_denda || 0,
                 status_bepus: d.STATUS_bebas_pustaka,
                 institusi: d.institusi || '',
                 program_studi: d.program_studi || ''
@@ -214,11 +213,10 @@ function ApprovalSA() {
 
         allData.forEach(item => {
             const peminjaman = item.STATUS_peminjaman ?? item.status_peminjaman;
-            const denda = item.STATUS_denda ?? item.status_denda;
             const statusBepus = item.STATUS_bebas_pustaka ?? item.status_bepus;
 
             // ❗ hanya centang yang memenuhi syarat
-            if (peminjaman === 1 && denda === 1 && statusBepus === "pending") {
+            if (peminjaman === 1 && statusBepus === "pending") {
                 newChecked[item.id] = newValue;
             }
         });
@@ -323,7 +321,6 @@ function ApprovalSA() {
                     institusi: item.institusi,
                     program_studi: item.program_studi,
                     status_peminjaman: item.status_peminjaman,
-                    status_denda: item.status_denda,
                     username
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -992,13 +989,12 @@ function ApprovalSA() {
                                                                 type="checkbox"
                                                                 checked={checkedItems[item.id] || false}
                                                                 onChange={() => {
-                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                    if (item.status_peminjaman === 1) {
                                                                         handleSingleCheck(item.id);
                                                                     }
                                                                 }}
                                                                 disabled={!(
                                                                     item.status_peminjaman === 1 &&
-                                                                    item.status_denda === 1 &&
                                                                     item.status_bepus === "pending"
                                                                 )}
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
@@ -1039,11 +1035,10 @@ function ApprovalSA() {
                                                     </td>
 
 
-                                                    {/* Status - Kombinasi peminjaman & denda */}
                                                     <td className={`py-2 px-4 whitespace-nowrap overflow-x-auto `}>
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "bg-[#D9FBD9] text-[#4ABC4C]" : "bg-[#FFE1E1] text-[#FF1515]"}`}
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${(item.status_peminjaman === 1) ? "bg-[#D9FBD9] text-[#4ABC4C]" : "bg-[#FFE1E1] text-[#FF1515]"}`}
                                                         >
-                                                            {item.status_denda === 1 && item.status_peminjaman === 1
+                                                            {item.status_peminjaman === 1
                                                                 ? "Memenuhi syarat"
                                                                 : "Belum Memenuhi Syarat"}
                                                         </span>
@@ -1056,15 +1051,15 @@ function ApprovalSA() {
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                    if (item.status_peminjaman === 1) {
                                                                         setSelectedItem(item);
                                                                         openAlertBepus();
                                                                     }
                                                                 }}
 
-                                                                disabled={!(item.status_peminjaman === 1 && item.status_denda === 1)}
+                                                                disabled={!(item.status_peminjaman === 1)}
                                                                 className={`px-2 py-1 text-xs rounded-md border transition 
-                                                                  ${item.status_peminjaman === 1 && item.status_denda === 1
+                                                                  ${item.status_peminjaman === 1
                                                                         ? "cursor-pointer bg-[#023048] border-[#023048] text-white active:scale-90"
                                                                         : "cursor-not-allowed bg-gray-200 border-gray-300 text-gray-400"
                                                                     }`}
