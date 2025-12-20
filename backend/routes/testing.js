@@ -7,7 +7,6 @@ const {setDateRangeAndGenerate,getDate,getMahasiswaTI,getAllMahasiswaTI,approve,
 router.post('/seTanggal', verifyToken,setDateRangeAndGenerate);
 router.get('/dataMahasiswa', verifyToken,getMahasiswaTI);
 router.get("/kompenDate",verifyToken,getDate);
-router.get('/dataMahasiswaAll', verifyToken,getAllMahasiswaTI);
 router.post('/approve', verifyToken,approve);
 router.get('/getmahasiswaITAll', verifyToken,getMahasiswaTI_AllFull);
 router.post('/approveAll', verifyToken,approveAll);

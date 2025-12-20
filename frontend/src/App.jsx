@@ -19,6 +19,7 @@ import Logout from "./logout.jsx";
 import LogoutAlert from "./logoutConfirm.jsx";
 import Keterangan from "./Keterangan.jsx";
 import KeteranganSA from "./KeteranganSA.jsx";
+import HistoryApprovalDetail from "./HistoryApprovalDetail.jsx";
 import { NotificationProvider } from "./NotificationContext.jsx";
 
 export default function App() {
@@ -44,6 +45,8 @@ export default function App() {
         <Route path="/logout" element={<Logout />} />
         <Route path="/logoutConfirm" element={<LogoutAlert />} />
         <Route path="/KeteranganSA/:nim" element={<KeteranganSA />} />
+        <Route path="/history/:batch_id"element={<HistoryApprovalDetail />}
+        />
       </Routes>
     </NotificationProvider>
   );

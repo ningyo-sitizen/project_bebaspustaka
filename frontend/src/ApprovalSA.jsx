@@ -310,7 +310,7 @@ function ApprovalSA() {
         try {
             const token = localStorage.getItem("token");
             const user = JSON.parse(localStorage.getItem('user'))
-            const username = user.username;
+            const username = user.name;
 
             const res = await axios.post(
                 "http://localhost:8080/api/bebaspustaka/approve",
