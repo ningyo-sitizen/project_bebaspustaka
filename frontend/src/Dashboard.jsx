@@ -328,7 +328,7 @@ export default function Dashboard() {
                                                                     'mencatat jumlah dan frekuensi kehadiran mereka.'
                                                                 ],
                                                                 color: '#616161',
-                                                                font: { family: '"Plus Jakarta Sans", sans-serif', size: 12, weight: '300' },
+                                                                font: { family: '"Plus Jakarta Sans", sans-serif', size: 11, weight: '300' },
                                                                 padding: { top: 10, bottom: 20 },
                                                                 align: 'center',
                                                             },

@@ -34,6 +34,7 @@ import {
     IconChevronDown,
     IconAdjustmentsHorizontal,
     IconCheckupList,
+    IconFileDescription,
 } from "@tabler/icons-react";
 ChartJS.register(
     CategoryScale,
@@ -668,21 +669,21 @@ export default function AnalyticSA() {
             return Object.keys(data.data).map((year) =>
                 data.data[year].map((item, i) => (
                     <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                        <td className="p-3 font-regular text-sm">{year}</td>
+                        <td className="p-3 font-regular text-xs">{year}</td>
 
                         {selectedType === "weekly" ? (
                             <>
-                                <td className="p-3 font-regular text-sm">{item.label}</td>
-                                <td className="p-3 font-regular text-sm">{item.start_date}</td>
-                                <td className="p-3 font-regular text-sm">{item.end_date}</td>
-                                <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
+                                <td className="p-3 font-regular text-xs">{item.label}</td>
+                                <td className="p-3 font-regular text-xs">{item.start_date}</td>
+                                <td className="p-3 font-regular text-xs">{item.end_date}</td>
+                                <td className="p-3 font-regular text-xs">{item.total_visitor.toLocaleString()}</td>
                             </>
                         ) : selectedType === "yearly" ? (
                             <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
                         ) : (
                             <>
-                                <td className="p-3 font-regular text-sm">{item.label}</td>
-                                <td className="p-3 font-regular text-sm">{item.total_visitor.toLocaleString()}</td>
+                                <td className="p-3 font-regular text-xs">{item.label}</td>
+                                <td className="p-3 font-regular text-xs">{item.total_visitor.toLocaleString()}</td>
                             </>
                         )}
                     </tr>
@@ -794,8 +795,8 @@ export default function AnalyticSA() {
 
                     return (
                         <tr key={year} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-regular text-sm">{year}</td>
-                            <td className="p-3 font-regular text-sm">{data.data[year][0].total.toLocaleString()}</td>
+                            <td className="p-3 font-regular text-xs">{year}</td>
+                            <td className="p-3 font-regular text-xs">{data.data[year][0].total.toLocaleString()}</td>
                         </tr>
                     );
                 }).filter(Boolean);
@@ -807,9 +808,9 @@ export default function AnalyticSA() {
 
                     return data.data[year].map((item, i) => (
                         <tr key={`${year}-${i}`} className="border-b hover:bg-gray-50">
-                            <td className="p-3 font-regular text-sm">{year}</td>
-                            <td className="p-3 font-regular text-sm">{item.lembaga || '-'}</td>
-                            <td className="p-3 font-regular text-sm">{(item.total || 0).toLocaleString()}</td>
+                            <td className="p-3 font-regular text-xs">{year}</td>
+                            <td className="p-3 font-regular text-xs">{item.lembaga || '-'}</td>
+                            <td className="p-3 font-regular text-xs">{(item.total || 0).toLocaleString()}</td>
                         </tr>
                     ));
                 });
@@ -1373,16 +1374,16 @@ export default function AnalyticSA() {
                                 Data Analitik
                             </a>
                             <a href="/ApprovalSA" className={getSidebarItemClass()}>
-                                <IconBell size={20} />
+                                <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
                             <a href="/usercontrolSA" className={getSidebarItemClass()}>
                                 <IconUsers size={20} />
-                                User Control
+                                Kontrol Pengguna
                             </a>
                             <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
-                                History
+                                Riwayat
                             </a>
                         </nav>
                     </div>
@@ -1921,14 +1922,14 @@ export default function AnalyticSA() {
                                                 ) : (
                                                     loanHistory.map((item, index) => (
                                                         <tr key={item.loan_id} className="border-b hover:bg-gray-50">
-                                                            <td className="p-3 text-sm">{index + 1}</td>
-                                                            <td className="p-3 text-sm">{item.loan_id}</td>
-                                                            <td className="p-3 text-sm">{item.member_id}</td>
-                                                            <td className="p-3 text-sm">{item.item_code}</td>
-                                                            <td className="p-3 text-sm">{item.loan_date || "-"}</td>
-                                                            <td className="p-3 text-sm">{item.due_date || "-"}</td>
-                                                            <td className="p-3 text-sm">{item.return_date || "-"}</td>
-                                                            <td className={`p-3 font-semibold text-sm ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
+                                                            <td className="p-3 text-xs">{index + 1}</td>
+                                                            <td className="p-3 text-xs">{item.loan_id}</td>
+                                                            <td className="p-3 text-xs">{item.member_id}</td>
+                                                            <td className="p-3 text-xs">{item.item_code}</td>
+                                                            <td className="p-3 text-xs">{item.loan_date || "-"}</td>
+                                                            <td className="p-3 text-xs">{item.due_date || "-"}</td>
+                                                            <td className="p-3 text-xs">{item.return_date || "-"}</td>
+                                                            <td className={`p-3 font-semibold text-xs ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
                                                                 {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
                                                             </td>
                                                         </tr>
@@ -1938,11 +1939,11 @@ export default function AnalyticSA() {
 
 
                                         </table>
-                                        <div className="flex gap-3 mt-12 justify-center text-sm">
+                                        <div className="flex gap-1 mt-7 justify-center text-sm">
 
                                             {/* Prev */}
                                             <button
-                                                className="flex gap-3 px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                className="flex gap-2 mt-1 px-2 py-1 text-[#757575] text-xs rounded disabled:opacity-70"
                                                 disabled={currentPage <= 1}
                                                 onClick={() => fetchLoanHistory(currentPage - 1)}
                                             >
@@ -1958,7 +1959,7 @@ export default function AnalyticSA() {
                                                     className={`px-3 py-1 rounded-md transition-all duration-150
                                                             ${currentPage === num
                                                             ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
-                                                            : 'text-[#023048]  hover:bg-[#F3F6F9]'
+                                                            : 'text-[#023048] text-xs  hover:bg-[#F3F6F9]'
                                                         }`}
                                                 >
                                                     {num}
@@ -1967,7 +1968,7 @@ export default function AnalyticSA() {
 
                                             {/* Next */}
                                             <button
-                                                className="px-4 py-2 text-[#757575] rounded disabled:opacity-70"
+                                                className="px-4 py-2 text-[#757575] text-xs rounded disabled:opacity-70"
                                                 disabled={currentPage >= totalPages}
                                                 onClick={() => fetchLoanHistory(currentPage + 1)}
                                             >

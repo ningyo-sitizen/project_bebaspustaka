@@ -8,7 +8,8 @@ import LogoutAlert from "./logoutConfirm";
 import {
     IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconCheckupList, IconSortDescendingLetters,
-    IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar
+    IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar,
+    IconFileDescription
 } from "@tabler/icons-react";
 
 // URL Foto Dummy yang digunakan di Navbar dan Timeline
@@ -540,11 +541,26 @@ const History = () => {
                         </div>
 
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
-                            <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
-                            <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
-                            <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
-                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}><IconHistory size={20} /> History</a>
+                            <a href="/dashboardSA" className={getSidebarItemClass(true)}>
+                                <IconHome size={20} />
+                                Dashboard
+                            </a>
+                            <a href="/analyticSA" className={getSidebarItemClass()}>
+                                <IconChartBar size={20} />
+                                Data Analitik
+                            </a>
+                            <a href="/ApprovalSA" className={getSidebarItemClass()}>
+                                <IconFileDescription size={20} />
+                                Konfirmasi Data
+                            </a>
+                            <a href="/usercontrolSA" className={getSidebarItemClass()}>
+                                <IconUsers size={20} />
+                                Kontrol Pengguna
+                            </a>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                                <IconHistory size={20} />
+                                Riwayat
+                            </a>
                         </nav>
                     </div>
                 </aside>
@@ -615,7 +631,7 @@ const History = () => {
 
                         <div className="flex flex-col md:flex-row md:justify-between md:items-center my-3  ml-5">
                             <div className="mb-4 md:mb-0">
-                                <h1 className="text-xl font-semibold text-left">History</h1>
+                                <h1 className="text-xl font-semibold text-left">Rekaman Aktivitas</h1>
                                 <p className="text-sm text-[#9A9A9A] mt-1 text-left">
                                     Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
                                 </p>
@@ -643,18 +659,18 @@ const History = () => {
                                             {group.items
                                                 .sort((a, b) => a.waktu.localeCompare(b.waktu))
                                                 .map(item => (
-                                                    <div key={item.id} className="flex items-start mt-4 relative space-y-3">
+                                                    <div key={item.id} className="flex items-start mt-2 relative space-y-3">
 
                                                         {/* Waktu */}
-                                                        <p className="text-xs text-[#9A9A9A] w-16 shrink-0 mt-1">
+                                                        <p className="text-xs text-[#9A9A9A] w-16 shrink-0 mt-3">
                                                             {item.waktu} WIB
                                                         </p>
 
                                                         {/* Card */}
-                                                        <div className="relative flex bg-white min-w-[600px] border border-gray-200 rounded-md mx-5 w-full">
+                                                        <div className="relative flex bg-white min-w-[600px] border border-gray-200 rounded-xs mx-5 w-full">
 
                                                             {/* Garis kiri */}
-                                                            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#4ABC4C] rounded-l-md" />
+                                                            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#4ABC4C] rounded-l-xs" />
 
                                                             {/* Konten */}
                                                             <div className="flex flex-col gap-1 pl-6 pr-4 py-3 w-full">
@@ -679,7 +695,7 @@ const History = () => {
                                                                 </div>
 
                                                                 {/* Activity */}
-                                                                <p className="text-sm text-gray-700 text-left">
+                                                                <p className="text-xs text-gray-700 text-left">
                                                                     {item.activity}
                                                                 </p>
 

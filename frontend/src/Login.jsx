@@ -141,21 +141,21 @@ function Login() {
 
           <form
             onSubmit={handleLogin}
-            className="w-full max-w-sm lg:max-w-md space-y-8 bg-white"
+            className="w-full max-w-sm lg:max-w-md bg-white"
           >
-            <div className="flex justify-center">
+            <div className="flex justify-center mb-4">
               <div className="w-24 h-24 bg-[url('https://cdn.designfast.io/image/2025-10-19/9f6cb104-d72a-4896-9da2-cb9a9213df42.png')] bg-cover bg-center"></div>
             </div>
 
             <div className="text-center">
               <h2 className="text-xl font-semibold text-[#023048]">LOGIN ADMIN</h2>
-              <p className="text-base font-normal text-[#9A9A9A] mt-2">
+              <p className="text-base font-normal text-[#9A9A9A] mt-2 mb-8">
                 Silakan login untuk mengakses akun Anda!
               </p>
             </div>
 
             {/* Username */}
-            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048]">
+            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048] mb-6">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="text-gray-400 mr-2"
@@ -185,7 +185,7 @@ function Login() {
             </div>
 
             {/* Password */}
-            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048]">
+            <div className="flex text-sm items-center border border-gray-300 rounded-lg p-3 w-full focus-within:ring-2 focus-within:ring-[#023048] mb-3">
               <svg xmlns="http://www.w3.org/2000/svg"
                 width="20"
                 height="20"
@@ -216,7 +216,7 @@ function Login() {
             </div>
 
             {/* Remember */}
-            <div className="flex justify-between items-center w-full text-sm text-[#023048] mt-3">
+            <div className="flex justify-between items-center w-full text-sm text-[#023048] my-5">
               <label className="flex items-center space-x-2">
                 <input type="checkbox" className="accent-[#023048]"
                   checked={rememberMe}
@@ -234,7 +234,7 @@ function Login() {
               LOGIN
             </button>
 
-            <div className={`relative w-full text-left text-[#FF1515] ${failedLogin ? "" : "hidden"}`}>
+            <div className={`relative w-full text-left text-[#FF1515] text-xs mt-4  ${failedLogin ? "" : "hidden"}`}>
               {failedLogin}
             </div>
           </form>

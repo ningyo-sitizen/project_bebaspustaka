@@ -22,6 +22,7 @@ import {
     IconEye,
     IconEyeOff,
     IconCheck,
+    IconFileDescription,
 } from "@tabler/icons-react";
 import {
     Chart as ChartJS,
@@ -174,9 +175,9 @@ export default function DashboardSA() {
     };
 
     return (
-        <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
+        <main className="font-jakarta bg-[#F9FAFB] min-h-screen overflow-hidden">
+            <div className="flex h-full">
 
-            <div className="flex">
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
@@ -202,16 +203,16 @@ export default function DashboardSA() {
                                 Data Analitik
                             </a>
                             <a href="/ApprovalSA" className={getSidebarItemClass()}>
-                                <IconBell size={20} />
+                                <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
                             <a href="/usercontrolSA" className={getSidebarItemClass()}>
                                 <IconUsers size={20} />
-                                User Control
+                                Kontrol Pengguna
                             </a>
                             <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
-                                History
+                                Riwayat
                             </a>
                         </nav>
                     </div>
@@ -224,7 +225,7 @@ export default function DashboardSA() {
                     ></div>
                 )}
 
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex-1 flex flex-col h-screen">
 
                     {/* NAVBAR */}
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
@@ -318,7 +319,7 @@ export default function DashboardSA() {
                                         </p>
                                     </div>
 
-                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
+                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto ">
                                         {chartData.lineChart && (
                                             <div className="w-full min-w-[500px]" style={{ height: '300px', maxWidth: '100%' }}>
                                                 <Line
@@ -340,7 +341,7 @@ export default function DashboardSA() {
                                                                     'mencatat jumlah dan frekuensi kehadiran mereka.'
                                                                 ],
                                                                 color: '#616161',
-                                                                font: { family: '"Plus Jakarta Sans", sans-serif', size: 12, weight: '300' },
+                                                                font: { family: '"Plus Jakarta Sans", sans-serif', size: 11, weight: '300' },
                                                                 padding: { top: 10, bottom: 20 },
                                                                 align: 'center',
                                                             },
@@ -521,18 +522,17 @@ export default function DashboardSA() {
 
                             </div>
                         </div>
-
-
-
-
+                        <div className="sticky w-full z-50">
+                            <AppLayout></AppLayout>
+                        </div>
                     </div>
+                    {/* batas ambang bawah */}
+
                 </div>
 
             </div>
 
-            <div className="sticky w-full z-50">
-                <AppLayout></AppLayout>
-            </div>
+
         </main>
     );
 }

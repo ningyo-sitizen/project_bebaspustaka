@@ -22,6 +22,7 @@ import {
     IconEyeOff,
     IconCheck,
     IconCheckupList,
+    IconFileDescription,
 } from "@tabler/icons-react";
 
 // Counter ID untuk simulasi penambahan user baru
@@ -561,27 +562,27 @@ export default function UserControl() {
                     </div>
 
                     <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                        <a href="/dashboardSA" className={getSidebarItemClass()}>
-                            <IconHome size={20} />
-                            Dashboard
-                        </a>
-                        <a href="/analyticSA" className={getSidebarItemClass()}>
-                            <IconChartBar size={20} />
-                            Data Analitik
-                        </a>
-                        <a href="/approvalSA" className={getSidebarItemClass()}>
-                            <IconBell size={20} />
-                            Konfirmasi Data
-                        </a>
-                        <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
-                            <IconUsers size={20} />
-                            User Control
-                        </a>
-                        <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
-                            <IconHistory size={20} />
-                            History
-                        </a>
-                    </nav>
+                            <a href="/dashboardSA" className={getSidebarItemClass()}>
+                                <IconHome size={20} />
+                                Dashboard
+                            </a>
+                            <a href="/analyticSA" className={getSidebarItemClass()}>
+                                <IconChartBar size={20} />
+                                Data Analitik
+                            </a>
+                            <a href="/ApprovalSA" className={getSidebarItemClass()}>
+                                <IconFileDescription size={20} />
+                                Konfirmasi Data
+                            </a>
+                            <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
+                                <IconUsers size={20} />
+                                Kontrol Pengguna
+                            </a>
+                            <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
+                                <IconHistory size={20} />
+                                Riwayat
+                            </a>
+                        </nav>
                 </div>
             </aside>
 
@@ -660,7 +661,7 @@ export default function UserControl() {
                         <div>
                             <h1 className="text-xl font-semibold text-[#023048] text-left">Kontrol Pengguna</h1>
                             <p className="text-sm text-gray-600 mt-1">
-                                Fitur User Control memungkinkan admin menambah dan menghapus akun pengguna sesuai kebutuhan sistem.
+                                Fitur kontrol pengguna memungkinkan admin menambah dan menghapus akun pengguna sesuai kebutuhan sistem.
                             </p>
                         </div>
 

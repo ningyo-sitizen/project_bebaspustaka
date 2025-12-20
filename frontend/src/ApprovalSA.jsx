@@ -16,7 +16,8 @@ import {
     IconChevronDown,
     IconSelector,
     IconFile,
-    IconCheckupList
+    IconCheckupList,
+    IconFileDescription
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 import "./App.css";
@@ -531,18 +532,17 @@ function ApprovalSA() {
                                 Data Analitik
                             </a>
                             <a href="/ApprovalSA" className={getSidebarItemClass(true)}>
-                                <IconBell size={20} />
+                                <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
                             <a href="/usercontrolSA" className={getSidebarItemClass()}>
                                 <IconUsers size={20} />
-                                User Control
+                                Kontrol Pengguna
                             </a>
                             <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                                 <IconHistory size={20} />
-                                History
+                                Riwayat
                             </a>
-
                         </nav>
                     </div>
                 </aside>
