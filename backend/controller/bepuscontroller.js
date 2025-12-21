@@ -575,15 +575,14 @@ exports.getMahasiswaTI = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const offset = (page - 1) * limit;
     const search = req.query.search ? `%${req.query.search.toLowerCase()}%` : '%%';
+    const statusFilter = req.query.statusFilter || 'pending'; // 'pending', 'approved', 'all'
 
     const sortBy = req.query.sortBy || 'priority';
     const sortOrder = req.query.sortOrder === 'desc' ? 'DESC' : 'ASC';
 
-    // Tentukan ORDER BY berdasarkan sortBy
     let orderClause = '';
     switch (sortBy) {
       case 'priority':
-        // Priority: Status Bermasalah dulu (peminjaman=0 OR denda=0)
         orderClause = `
           CASE 
             WHEN STATUS_peminjaman = 0 THEN 0 
@@ -608,7 +607,21 @@ exports.getMahasiswaTI = async (req, res) => {
         orderClause = `waktu_bebaspustaka DESC`;
     }
 
-    // ========== QUERY AMBIL DATA ==========
+    let statusCondition = '';
+    switch (statusFilter) {
+      case 'pending':
+        statusCondition = `AND STATUS_bebas_pustaka = 'pending'`;
+        break;
+      case 'approved':
+        statusCondition = `AND STATUS_bebas_pustaka = 'approved'`;
+        break;
+      case 'all':
+        statusCondition = ''; 
+        break;
+      default:
+        statusCondition = `AND STATUS_bebas_pustaka = 'pending'`;
+    }
+
     const query = `
       SELECT 
         id,
@@ -621,23 +634,48 @@ exports.getMahasiswaTI = async (req, res) => {
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
       WHERE 
-        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?) AND STATUS_bebas_pustaka = "pending"
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        ${statusCondition}
       ORDER BY ${orderClause}
       LIMIT ? OFFSET ?
     `;
 
     const [rows] = await bebaspustaka.query(query, [search, search, limit, offset]);
 
-    // ========== QUERY TOTAL COUNT ==========
     const countQuery = `
       SELECT COUNT(*) AS total
       FROM bebas_pustaka
       WHERE 
         (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        ${statusCondition}
     `;
 
     const [totalData] = await bebaspustaka.query(countQuery, [search, search]);
     const total = totalData[0].total;
+
+
+    const [pendingCount] = await bebaspustaka.query(`
+      SELECT COUNT(*) AS total
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        AND STATUS_bebas_pustaka = 'pending'
+    `, [search, search]);
+
+    const [approvedCount] = await bebaspustaka.query(`
+      SELECT COUNT(*) AS total
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+        AND STATUS_bebas_pustaka = 'approved'
+    `, [search, search]);
+
+    const [allCount] = await bebaspustaka.query(`
+      SELECT COUNT(*) AS total
+      FROM bebas_pustaka
+      WHERE 
+        (LOWER(nama_mahasiswa) LIKE ? OR LOWER(nim) LIKE ?)
+    `, [search, search]);
 
     // ========== FORMAT DATA SESUAI FRONTEND ==========
     const data = rows.map(r => ({
@@ -647,9 +685,9 @@ exports.getMahasiswaTI = async (req, res) => {
       nama_mahasiswa: r.nama_mahasiswa,
       institusi: r.institusi,
       program_studi: r.program_studi,
-      status_peminjaman: r.STATUS_peminjaman, // 1 = Sudah Dikembalikan, 0 = Belum
+      status_peminjaman: r.STATUS_peminjaman,
       STATUS_peminjaman: r.STATUS_peminjaman,
-      status_bepus: r.STATUS_bebas_pustaka, // 'Pending', 'Disetujui', dll
+      status_bepus: r.STATUS_bebas_pustaka,
       STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
       waktu_bebaspustaka: r.waktu_bebaspustaka
     }));
@@ -661,6 +699,9 @@ exports.getMahasiswaTI = async (req, res) => {
       page: page,
       limit: limit,
       totalPages: Math.ceil(total / limit),
+      pendingCount: pendingCount[0].total,
+      approvedCount: approvedCount[0].total,
+      totalCount: allCount[0].total,
       data: data
     });
 

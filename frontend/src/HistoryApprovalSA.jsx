@@ -432,18 +432,18 @@ const HistoryApprovalSA = () => {
     setIsSortOpen(false);
   };
 
-const handleDelete = async (id) => {
+const handleDelete = async (id, batch_id) => {
   if (!window.confirm("Yakin ingin menghapus history ini?")) return;
 
   try {
     const token = localStorage.getItem("token");
 
     await axios.delete(
-      `http://localhost:8080/api/history/${id}`,
+      `http://localhost:8080/api/history/${id}?batch_id=${batch_id}`,
       {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       }
     );
 
@@ -454,6 +454,7 @@ const handleDelete = async (id) => {
     alert("Gagal menghapus data history");
   }
 };
+
 
 
   const toggleSort = () => {
@@ -667,7 +668,7 @@ const handleDelete = async (id) => {
                                   </div>
                                   <div className="relative group inline-block">
                                     <button className="bg-[#FF1515] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#FF1515]/90"
-                                      onClick={() => handleDelete(item.id)}>
+                                      onClick={() => handleDelete(item.id, item.batch_id)}>
                                       <IconTrash size={20}>
                                       </IconTrash>
                                     </button>
