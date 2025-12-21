@@ -1,18 +1,15 @@
-import React, { useState, useEffect } from "react"; // ⭐️ Import useEffect
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; // ⭐️ Import axios
+import axios from "axios";
 import authCheckSA from "./authCheckSA";
 import {
-  IconUsers,
-  IconHistory,
   IconHome,
   IconChartBar,
-  IconBell,
+  IconFileDescription,
   IconLogout,
   IconUser,
   IconChevronDown,
-  IconMenu2,
-  IconCheckupList
+  IconMenu2
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 
@@ -21,9 +18,9 @@ export default function Profile() {
   const [showLogout, setShowLogout] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // ⭐️ State untuk loading
+  const [loading, setLoading] = useState(true);
 
-  // ⭐️ STATE BARU untuk menyimpan data profil dari backend
+ 
   const [profileData, setProfileData] = useState({
     name: "Loading...",
     username: "Loading...",
@@ -121,7 +118,7 @@ export default function Profile() {
               Data Analitik
             </a>
             <a href="/approval" className={getSidebarItemClass()}>
-              <IconBell size={20} />
+              <IconFileDescription size={20} />
               Konfirmasi Data
             </a>
           </nav>

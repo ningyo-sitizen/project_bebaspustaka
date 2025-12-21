@@ -16,7 +16,9 @@ import {
     IconChevronDown,
     IconSelector,
     IconFile,
-    IconCheckupList
+    IconBellRinging,
+    IconFileDescription,
+    IconCalendarWeek
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 import "./App.css";
@@ -25,6 +27,12 @@ import axios from "axios";
 
 function Approval() {
     authCheckSA();
+    const [activeTab, setActiveTab] = useState('pending');
+    const [tabCounts, setTabCounts] = useState({
+        pending: 0,
+        approved: 0,
+        all: 0
+    });
     const [showLogout, setShowLogout] = useState(false);
     const [statusRange, setStatusRange] = useState();
     const [data, setData] = useState([]);
@@ -88,7 +96,8 @@ function Approval() {
                     page: currentPage,
                     limit: rowsPerPage,
                     sortBy,
-                    sortOrder
+                    sortOrder,
+                    statusFilter: activeTab // Tambahkan parameter ini
                 }
             });
 
@@ -99,7 +108,6 @@ function Approval() {
                 name: d.nama_mahasiswa || '',
                 nim: d.nim ? String(d.nim) : '',
                 status_peminjaman: d.STATUS_peminjaman || 0,
-                status_denda: d.STATUS_denda || 0,
                 status_bepus: d.STATUS_bebas_pustaka,
                 institusi: d.institusi || '',
                 program_studi: d.program_studi || ''
@@ -108,13 +116,28 @@ function Approval() {
             setTotal(res.data.total || 0);
             setData(formatted);
 
+            // Update tab counts
+            setTabCounts({
+                pending: res.data.pendingCount || 0,
+                approved: res.data.approvedCount || 0,
+                all: res.data.totalCount || 0
+            });
+
         } catch (err) {
             console.error("Error fetchData:", err);
             alert("Gagal mengambil data: " + (err.response?.data?.message || err.message));
         } finally {
             setLoading(false);
         }
-    }, [search, currentPage, rowsPerPage, sortBy, sortOrder]);
+    }, [search, currentPage, rowsPerPage, sortBy, sortOrder, activeTab]);
+
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+        setCheckedItems({}); // Clear checkbox selection
+        setApprovedAll(false);
+    };
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -213,11 +236,10 @@ function Approval() {
 
         allData.forEach(item => {
             const peminjaman = item.STATUS_peminjaman ?? item.status_peminjaman;
-            const denda = item.STATUS_denda ?? item.status_denda;
             const statusBepus = item.STATUS_bebas_pustaka ?? item.status_bepus;
 
             // ❗ hanya centang yang memenuhi syarat
-            if (peminjaman === 1 && denda === 1 && statusBepus === "pending") {
+            if (peminjaman === 1 && statusBepus === "pending") {
                 newChecked[item.id] = newValue;
             }
         });
@@ -322,7 +344,6 @@ function Approval() {
                     institusi: item.institusi,
                     program_studi: item.program_studi,
                     status_peminjaman: item.status_peminjaman,
-                    status_denda: item.status_denda,
                     username
                 },
                 { headers: { Authorization: `Bearer ${token}` } }
@@ -505,14 +526,11 @@ function Approval() {
     }, []);
 
     return (
-
-        <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
-
-            <div className="flex">
+        <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
+            <div className="flex h-full">
                 <aside
-                    className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
-                ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
-                lg:translate-x-0 lg:static`}
+                    className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+                        } lg:static lg:h-auto`}
                 >
                     <div className="flex flex-col h-full">
                         <div className="flex flex-col items-center p-6">
@@ -534,11 +552,10 @@ function Approval() {
                                 Data Analitik
                             </a>
                             <a href="/Approval" className={getSidebarItemClass(true)}>
-                                <IconBell size={20} />
+                                <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
-
-                        </nav>
+                           </nav>
                     </div>
                 </aside>
                 {isSidebarOpen && (
@@ -548,9 +565,7 @@ function Approval() {
                     ></div>
                 )}
 
-
-                <div className="flex-1 flex flex-col min-h-screen">
-                    {/* NAVBAR */}
+                <div className="flex-1 flex flex-col h-screen">
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
@@ -559,17 +574,19 @@ function Approval() {
                         >
                             <IconMenu2 size={24} />
                         </button>
+
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
-                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
-                            </p>
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
+                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                                Hai, {profileData.name}
+                            </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
+
                         </div>
                         {isDropdownOpen && (
                             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
@@ -606,10 +623,10 @@ function Approval() {
                     {showLogout && (
                         <LogoutAlert onClose={() => setShowLogout(false)} />
                     )}
-                    <div className="p-1">
-                        {/* TABLE APPROVAL */}
-                        <div className="ml-0 flex-1 p-4 md:p-8 ">
 
+                    {/* isi konten */}
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-4 md:p-8">
                             <p className="font-semibold text-2xl text-black mb-2 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
                             <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg"
@@ -633,8 +650,6 @@ function Approval() {
                                     <p className="text-base mb-6">permohonan bebas pustaka</p>
                                 </div>
                             </div>
-
-
 
                             <div className="flex flex-wrap gap-2 items-center justify-between mt-4">
                                 <div className="flex items-center text-[#616161] text-sm font-semibold">
@@ -890,40 +905,61 @@ function Approval() {
 
                             <div className='grid grid-cols-1 mt-9 overflow-x-auto'>
                                 <div className="flex">
-                                    <div onClick={() => setChangeTabColor("#D8DFEC")}
-                                        className="w-40 h-12 bg-[#D8DFEC] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                    {/* Tab Menunggu (Pending) */}
+                                    <div
+                                        onClick={() => handleTabChange('pending')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'pending' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Menunggu</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Menunggu</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.pending}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div onClick={() => setChangeTabColor("#E7ECF5")}
-                                        className="w-40 h-12 bg-[#E7ECF5] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+
+                                    {/* Tab Disetujui (Approved) */}
+                                    <div
+                                        onClick={() => handleTabChange('approved')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'approved' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Disetujui</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Disetujui</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.approved}
+                                            </div>
                                         </div>
                                     </div>
-                                    <div onClick={() => setChangeTabColor("#EEF3FB")}
-                                        className="w-40 h-12 bg-[#EEF3FB] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+
+                                    {/* Tab Semua (All) */}
+                                    <div
+                                        onClick={() => handleTabChange('all')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'all' ? 'bg-[#D8DFEC]' : 'bg-[#EEF3FB]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Semua</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Semua</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.all}
+                                            </div>
                                         </div>
                                     </div>
+
                                     <p className="ml-auto mt-4 text-xs text-[#9A9A9A]">
                                         Range aktif: {startDate} — {endDate}
                                     </p>
                                 </div>
 
-                                <div className="overflow-x-auto w-full">
+                                <div className="w-full border border-gray-200 rounded-b-lg shadow-sm overflow-x-auto">
                                     <table className="min-w-full border-collapse">
                                         <thead>
                                             <tr style={{ backgroundColor: changeTabColor }}>
-                                                <th className="text-left p-4 font-normal text-gray-600">
+                                                <th className="text-left p-4 w-10 font-normal text-gray-600 overflow-x-auto">
                                                     <label className="flex items-center cursor-pointer">
                                                         <input
                                                             type="checkbox"
@@ -956,14 +992,14 @@ function Approval() {
                                                         </div>
                                                     </label>
                                                 </th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">Nama</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">NIM</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">institusi</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">program studi</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">Status Peminjaman</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">Status</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">Tindakan</th>
-                                                <th className="p-2 font-normal text-[#333333] text-sm">Keterangan</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">Nama</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">NIM</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">institusi</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">program studi</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">Status Peminjaman</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">Status</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">Tindakan</th>
+                                                <th className="p-2 font-normal text-[#333333] text-sm overflow-x-auto">Keterangan</th>
                                             </tr>
                                         </thead>
 
@@ -975,18 +1011,17 @@ function Approval() {
                                                     className={index % 2 === 0 ? 'bg-white' : 'bg-[#F5F5F5]'}
                                                 >
                                                     <td className="p-2">
-                                                        <label className="flex items-center cursor-pointer">
+                                                        <label className="relative items-center cursor-pointer">
                                                             <input
                                                                 type="checkbox"
                                                                 checked={checkedItems[item.id] || false}
                                                                 onChange={() => {
-                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                    if (item.status_peminjaman === 1) {
                                                                         handleSingleCheck(item.id);
                                                                     }
                                                                 }}
                                                                 disabled={!(
                                                                     item.status_peminjaman === 1 &&
-                                                                    item.status_denda === 1 &&
                                                                     item.status_bepus === "pending"
                                                                 )}
                                                                 className="absolute w-4 h-4 opacity-0 cursor-pointer"
@@ -1006,10 +1041,10 @@ function Approval() {
                                                             </div>
                                                         </label>
                                                     </td>
-                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.name || 'N/A'}</td>
-                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.nim || 'N/A'}</td>
-                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.institusi || 'N/A'}</td>
-                                                    <td className="py-2 px-4 whitespace-nowrap text-sm text-[#616161] overflow-x-auto truncate">{item.program_studi || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto text-sm text-[#616161] truncate">{item.name || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto text-sm text-[#616161] truncate">{item.nim || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto text-sm text-[#616161] truncate">{item.institusi || 'N/A'}</td>
+                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto text-sm text-[#616161] truncate">{item.program_studi || 'N/A'}</td>
 
                                                     {/* Status Peminjaman */}
                                                     <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
@@ -1027,11 +1062,10 @@ function Approval() {
                                                     </td>
 
 
-                                                    {/* Status - Kombinasi peminjaman & denda */}
-                                                    <td className={`py-2 px-4 whitespace-nowrap overflow-x-auto `}>
-                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${(item.status_peminjaman === 1 && item.status_denda === 1) ? "bg-[#D9FBD9] text-[#4ABC4C]" : "bg-[#FFE1E1] text-[#FF1515]"}`}
+                                                    <td className={`py-2 px-4 whitespace-nowrap overflow-x-auto`}>
+                                                        <span className={`px-2 py-1 text-xs font-medium rounded-full inline-block ${(item.status_peminjaman === 1) ? "bg-[#D9FBD9] text-[#4ABC4C]" : "bg-[#FFE1E1] text-[#FF1515]"}`}
                                                         >
-                                                            {item.status_denda === 1 && item.status_peminjaman === 1
+                                                            {item.status_peminjaman === 1
                                                                 ? "Memenuhi syarat"
                                                                 : "Belum Memenuhi Syarat"}
                                                         </span>
@@ -1039,20 +1073,20 @@ function Approval() {
 
                                                     </td>
 
-                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
+                                                    <td className="py-2 px-4 overflow-x-auto">
                                                         {item.status_bepus === "pending" ? (
                                                             <button
                                                                 type="button"
                                                                 onClick={() => {
-                                                                    if (item.status_peminjaman === 1 && item.status_denda === 1) {
+                                                                    if (item.status_peminjaman === 1) {
                                                                         setSelectedItem(item);
                                                                         openAlertBepus();
                                                                     }
                                                                 }}
 
-                                                                disabled={!(item.status_peminjaman === 1 && item.status_denda === 1)}
+                                                                disabled={!(item.status_peminjaman === 1)}
                                                                 className={`px-2 py-1 text-xs rounded-md border transition 
-                                                                  ${item.status_peminjaman === 1 && item.status_denda === 1
+                                                                  ${item.status_peminjaman === 1
                                                                         ? "cursor-pointer bg-[#023048] border-[#023048] text-white active:scale-90"
                                                                         : "cursor-not-allowed bg-gray-200 border-gray-300 text-gray-400"
                                                                     }`}
@@ -1066,7 +1100,7 @@ function Approval() {
                                                     </td>
 
                                                     {/* Keterangan */}
-                                                    <td className="py-2 px-4 whitespace-nowrap overflow-x-auto">
+                                                    <td className="py-2 px-2 items-center justify-center overflow-hidden">
                                                         <div className="relative group inline-block">
                                                             <button
                                                                 className="cursor-pointer relative flex items-center gap-2 text-[#667790] px-3 py-1 left-[15px] rounded 
@@ -1096,7 +1130,7 @@ function Approval() {
                             </div>
 
                             {/* pagination dan export */}
-                            <div className="flex ml-60">
+                            <div className="flex ml-60 justify-between">
                                 <div className="flex flex-wrap gap-2 justify-center mt-8 items-center">
                                     {/* Prev */}
                                     <button
@@ -1138,8 +1172,12 @@ function Approval() {
                                     Cetak ke PDF
                                 </button>
                             </div>
+
                         </div>
 
+                        <div className="sticky w-full z-90">
+                            <AppLayout></AppLayout>
+                        </div>
                         {alertBebasPustaka && (
                             <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
                                 <div className="relative w-80 h-80 overflow-hidden">
@@ -1237,15 +1275,66 @@ function Approval() {
                                 </div>
                             </div>
                         )}
+
+                        {/* out of date */}
+                        {/* <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
+                            <div className="relative w-80 h-80 overflow-hidden">
+
+                                <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
+                                    <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                        <IconCalendarWeek stroke="#023048" size={30} />
+                                    </div>
+
+                                    <p className="text-xl mt-5">Masa Telah Usai</p>
+                                    <p className="text-xs font-extralight mt-4 px-2">
+                                        Silahkan perbaharui tanggal lagi agar data yang tersedia dapat ditampilkan dengan lengkap
+                                    </p>
+
+                                    <div className="w-full mt-8">
+                                        <button
+                                            type="button"
+                                            onClick={""}
+                                            className="w-full py-2.5 rounded-lg bg-[#023048] text-white font-medium text-sm
+                               hover:bg-[#034161] active:scale-95 transition-all duration-150 shadow-md"
+                                        >
+                                            Oke, Mengerti
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> */}
+
+                        {/* pick tanggal */}
+                        {/* <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
+                            <div className="relative w-80 h-80 overflow-hidden">
+
+                                <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
+                                    <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                        <IconCalendarWeek stroke="#023048" size={30} />
+                                    </div>
+
+                                    <p className="text-xl mt-5">Pilih Tanggal Terlebih Dahulu!</p>
+                                    <p className="text-xs font-extralight mt-4 px-2">
+Silakan pilih tanggal terlebih dahulu agar data yang tersedia dapat ditampilkan dengan lengkap.                                    </p>
+
+                                    <div className="w-full mt-8">
+                                        <button
+                                            type="button"
+                                            onClick={""}
+                                            className="w-full py-2.5 rounded-lg bg-[#023048] text-white font-medium text-sm
+                               hover:bg-[#034161] active:scale-95 transition-all duration-150 shadow-md"
+                                        >
+                                            Oke, Mengerti
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> */}
                     </div>
+                </div>
 
-                </div >
             </div>
-
-            <div className="sticky w-full z-90">
-                <AppLayout></AppLayout>
-            </div>
-        </main >
+        </div>
     );
 }
 

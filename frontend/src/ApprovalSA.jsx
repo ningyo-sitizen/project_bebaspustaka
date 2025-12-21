@@ -609,7 +609,7 @@ function ApprovalSA() {
                                         <p className="font-semibold text-sm text-[#023048] text-left">
                                             {profileData.name}
                                         </p>
-                                        <p className="text-xs text-gray-500">{profileData.role}</p>
+                                        <p className="text-xs text-gray-500 text-left">{profileData.role}</p>
                                     </div>
                                 </div>
                                 <div className="p-2 space-y-1">

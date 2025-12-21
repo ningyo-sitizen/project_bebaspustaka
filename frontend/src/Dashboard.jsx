@@ -12,7 +12,7 @@ import {
     IconUser,
     IconChevronDown,
     IconMenu2,
-    IconCheckupList,
+    IconBellRinging,
     IconUsers,
     IconHistory,
     IconPlus,
@@ -22,6 +22,7 @@ import {
     IconEye,
     IconEyeOff,
     IconCheck,
+    IconFileDescription,
 } from "@tabler/icons-react";
 import {
     Chart as ChartJS,
@@ -174,9 +175,9 @@ export default function Dashboard() {
     };
 
     return (
-        <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
-
-            <div className="flex">
+        <main className="font-jakarta bg-[#F9FAFB] min-h-screen overflow-hidden">
+            
+            <div className="flex h-full">
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
@@ -202,7 +203,7 @@ export default function Dashboard() {
                                 Data Analitik
                             </a>
                             <a href="/Approval" className={getSidebarItemClass()}>
-                                <IconBell size={20} />
+                                <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
                         </nav>
@@ -216,9 +217,8 @@ export default function Dashboard() {
                     ></div>
                 )}
 
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex-1 flex flex-col h-screen">
 
-                    {/* NAVBAR */}
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
@@ -227,17 +227,19 @@ export default function Dashboard() {
                         >
                             <IconMenu2 size={24} />
                         </button>
+                        
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleDropdown}
                         >
-                            <IconChevronDown size={18} className="text-gray-600" />
-                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
-                                Hai, {profileData.name.split(" ")[0]}
-                            </p>
                             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border border-gray-300 overflow-hidden">
                                 <IconUser size={24} className="text-gray-500" />
                             </div>
+                            <p className="font-semibold text-sm text-[#023048] select-none hidden sm:block">
+                                Hai, {profileData.name}
+                            </p>
+                            <IconChevronDown size={18} className="text-gray-600" />
+
                         </div>
                         {isDropdownOpen && (
                             <div className="absolute right-4 top-full mt-2 w-64 bg-white rounded-md shadow-lg border z-30">
@@ -267,6 +269,7 @@ export default function Dashboard() {
                         <LogoutAlert onClose={() => setShowLogout(false)} />
                     )}
 
+                    {/* isiannya */}
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-8">
                             <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
@@ -301,12 +304,12 @@ export default function Dashboard() {
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                         <h3 className="font-semibold text-base mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
                                         <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                            onClick={() => goto('/analyticSA')}>
+                                            onClick={() => goto('/analytic')}>
                                             Lihat data &gt;
                                         </p>
                                     </div>
 
-                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto">
+                                    <div className="shadow-sm border border-[#EDEDED] bg-white p-2 w-full h-full overflow-x-auto ">
                                         {chartData.lineChart && (
                                             <div className="w-full min-w-[500px]" style={{ height: '300px', maxWidth: '100%' }}>
                                                 <Line
@@ -352,7 +355,7 @@ export default function Dashboard() {
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                         <h3 className="font-semibold text-base mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
                                         <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                            onClick={() => goto('/approvalSA')}
+                                            onClick={() => goto('/approval')}
                                         >
                                             Lihat data &gt;
                                         </p>
@@ -419,8 +422,8 @@ export default function Dashboard() {
                                 </div>
                             </div>
                         </div>
-                        {/* //tutor bepus */}
 
+                        {/* //tutor bepus */}
                         <div className='bg-white w-full max-h-screen flex justify-center p-9 pb-16 mx-none mt-9'>
                             <div className='text-center mx-auto w-full max-w-5xl'>
 
@@ -509,18 +512,17 @@ export default function Dashboard() {
 
                             </div>
                         </div>
-
-
-
-
+                        <div className="sticky w-full z-50">
+                            <AppLayout></AppLayout>
+                        </div>
                     </div>
+                    {/* batas ambang bawah */}
+
                 </div>
 
             </div>
 
-            <div className="sticky w-full z-50">
-                <AppLayout></AppLayout>
-            </div>
+
         </main>
     );
 }
