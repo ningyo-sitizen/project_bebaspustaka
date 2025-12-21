@@ -8,8 +8,7 @@ import {
   IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar,
   IconCheckupList,
   IconEye,
-  IconTrash,
-  IconFileDescription
+  IconTrash
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 import AppLayout from "./AppLayout";
@@ -378,77 +377,37 @@ const HistoryApprovalSA = () => {
 
   useEffect(() => {
     let isMounted = true;
-    const fetchLogs = async () => {
+
+    const fetchHistoryApproval = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('token') || '';
+        const token = localStorage.getItem("token");
 
-        const params = new URLSearchParams();
-        params.append("page", currentPage);
-        params.append("limit", pagination.limit);
-
-        if (debouncedSearch) params.append("search", debouncedSearch);
-        let sortBy = "time";
-        let sortOrder = "DESC";
-        if (selectedSort === "Terbaru") {
-          sortBy = "time"; sortOrder = "DESC";
-        } else if (selectedSort === "Terlama") {
-          sortBy = "time"; sortOrder = "ASC";
-        } else if (selectedSort === "A > Z") {
-          sortBy = "user"; sortOrder = "ASC";
-        } else if (selectedSort === "Z > A") {
-          sortBy = "user"; sortOrder = "DESC";
-        }
-        params.append("sortBy", sortBy);
-        params.append("sortOrder", sortOrder);
-
-        if (dateFilter.start && dateFilter.end) {
-          params.append("startDate", formatDateISO(dateFilter.start));
-          params.append("endDate", formatDateISO(dateFilter.end));
-        }
-
-        const url = `http://localhost:8080/api/logger/logging?${params.toString()}`;
-        const res = await fetch(url, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
+        const res = await axios.get(
+          "http://localhost:8080/api/history",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`
+            }
           }
-        });
-
-        if (!res.ok) {
-          const errText = await res.text();
-          throw new Error(`HTTP ${res.status}: ${errText}`);
-        }
-
-        const result = await res.json();
-
-        const rows = result.data || result.rows || [];
-        const paginationFromServer = result.pagination || {
-          currentPage: currentPage,
-          totalPages: 1,
-          totalRecords: rows.length,
-          limit: pagination.limit,
-          hasNextPage: false,
-          hasPrevPage: false
-        };
+        );
 
         if (isMounted) {
-          const transformedData = rows.map((item, idx) => ({
-            id: item.id || idx + 1 + ((paginationFromServer.currentPage - 1) * paginationFromServer.limit || 0),
-            name: item.user || item.name || '-',
-            role: item.role ? item.role.toLowerCase() : 'sistem',  // backend role
-            timestamp: item.time || item.timestamp || new Date().toISOString(),
-            activity: item.user_action || item.activity || '',
-            photo: item.photo || null
+          const rows = res.data.data || [];
+
+          const mapped = rows.map((item) => ({
+            id: item.id,
+            batch_id: item.batch_id,
+            start_date: item.start_date,
+            end_date: item.end_date,
+            input_date: item.input_date
           }));
 
-          setHistoryList(transformedData);
-          setPagination(prev => ({ ...prev, ...paginationFromServer }));
+          setHistoryList(mapped);
           setIsLoading(false);
         }
       } catch (err) {
-        console.error("Error fetching log data:", err);
+        console.error("Gagal fetch history approval:", err);
         if (isMounted) {
           setHistoryList([]);
           setIsLoading(false);
@@ -456,10 +415,13 @@ const HistoryApprovalSA = () => {
       }
     };
 
-    fetchLogs();
+    fetchHistoryApproval();
 
-    return () => { isMounted = false; };
-  }, [currentPage, debouncedSearch, selectedSort, dateFilter]);
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
 
 
   const toggleProfileDropdown = () => setIsDropdownOpen(!isDropdownOpen);
@@ -469,6 +431,30 @@ const HistoryApprovalSA = () => {
     setIsFilterOpen(!isFilterOpen);
     setIsSortOpen(false);
   };
+
+const handleDelete = async (id) => {
+  if (!window.confirm("Yakin ingin menghapus history ini?")) return;
+
+  try {
+    const token = localStorage.getItem("token");
+
+    await axios.delete(
+      `http://localhost:8080/api/history/${id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    );
+
+    setHistoryList(prev => prev.filter(item => item.id !== id));
+
+  } catch (err) {
+    console.error("Gagal menghapus history:", err);
+    alert("Gagal menghapus data history");
+  }
+};
+
 
   const toggleSort = () => {
     setIsSortOpen(!isSortOpen);
@@ -524,26 +510,12 @@ const HistoryApprovalSA = () => {
             </div>
 
             <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-              <a href="/dashboardSA" className={getSidebarItemClass()}>
-                <IconHome size={20} />
-                Dashboard
-              </a>
-              <a href="/analyticSA" className={getSidebarItemClass()}>
-                <IconChartBar size={20} />
-                Data Analitik
-              </a>
-              <a href="/ApprovalSA" className={getSidebarItemClass()}>
-                <IconFileDescription size={20} />
-                Konfirmasi Data
-              </a>
-              <a href="/usercontrolSA" className={getSidebarItemClass()}>
-                <IconUsers size={20} />
-                Kontrol Pengguna
-              </a>
-              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}>
-                <IconHistory size={20} />
-                Riwayat
-              </a>
+              <a href="/dashboardSA" className={getSidebarItemClass()}><IconHome size={20} /> Dashboard</a>
+              <a href="/analyticSA" className={getSidebarItemClass()}><IconChartBar size={20} /> Data Analitik</a>
+              <a href="/approvalSA" className={getSidebarItemClass()}><IconBell size={20} /> Konfirmasi Data</a>
+              <a href="/usercontrolSA" className={getSidebarItemClass()}><IconUsers size={20} /> User Control</a>
+              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}><IconHistory size={20} /> History</a>
+
             </nav>
           </div>
         </aside>
@@ -667,8 +639,16 @@ const HistoryApprovalSA = () => {
                               <div className="flex justify-between">
                                 <div className="flex items-center gap-2 p-2">
                                   <p className="text-sm text-[#023048]">
-                                    Permohonan ini telah mendapatkan persetujuan pada tanggal a sampai b.
+                                    Permohonan approval batch <b>{item.batch_id}</b> telah mendapatkan persetujuan
+                                    pada tanggal{" "}
+                                    <b>{formatDisplayDate(new Date(item.start_date))}</b> sampai{" "}
+                                    <b>{formatDisplayDate(new Date(item.end_date))}</b>.
                                   </p>
+
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Diinput pada: {formatDisplayTimestamp(item.input_date)}
+                                  </p>
+
 
                                 </div>
 
@@ -676,7 +656,7 @@ const HistoryApprovalSA = () => {
 
                                   <div className="relative group inline-block">
                                     <button className="bg-[#023048] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#023048]/90"
-                                      onClick={""}>
+                                      onClick={() => navigate(`/history/${item.batch_id}`)}>
                                       <IconEye size={20}></IconEye>
                                     </button>
                                     <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
@@ -687,7 +667,7 @@ const HistoryApprovalSA = () => {
                                   </div>
                                   <div className="relative group inline-block">
                                     <button className="bg-[#FF1515] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#FF1515]/90"
-                                      onClick={""}>
+                                      onClick={() => handleDelete(item.id)}>
                                       <IconTrash size={20}>
                                       </IconTrash>
                                     </button>

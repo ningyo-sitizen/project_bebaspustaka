@@ -28,6 +28,7 @@ function formatDateToMySQL(date) {
 
 
 async function updateStatusesJoin() {
+
   console.log("[STATUS] Updating STATUS_peminjaman & STATUS_denda...");
 
   const sql = `
@@ -45,8 +46,7 @@ async function updateStatusesJoin() {
       GROUP BY member_id
     ) fin ON fin.member_id = bp.nim
     SET 
-      bp.STATUS_peminjaman = CASE WHEN loan.member_id IS NULL THEN 1 ELSE 0 END,
-      bp.STATUS_denda = CASE WHEN fin.member_id IS NULL THEN 1 ELSE 0 END
+      bp.STATUS_peminjaman = CASE WHEN loan.member_id IS NULL THEN 1 ELSE 0 END
   `;
 
   await bebaspustaka.query(sql);
@@ -55,6 +55,54 @@ async function updateStatusesJoin() {
 
 
 async function generateBebasPustakaData({ forceRefresh = false } = {}) {
+  const [rows] = await bebaspustaka.query(
+    `SELECT COUNT(*) AS cnt from bebaspustaka.bebas_pustaka`
+  )
+  console.log('tanggal ${rows[0].cnt}')
+  if (rows[0].cnt > 0 ) {
+    console.log("[SAVING DATA]...")
+    console.log("saving data approval...")
+
+    const [[{ batch_id }]] = await bebaspustaka.query(`
+      SELECT IFNULL(MAX(batch_id), 0) + 1 AS batch_id
+      FROM approval_history_list
+`   );
+
+    const [rows] = await bebaspustaka.query(`
+    SELECT STATUS_bebas_pustaka, start_date, end_date
+    FROM bebas_pustaka_time_range LIMIT 1
+  `);
+
+    const today = todayDate();
+    const end_date = new Date(rows[0].end_date);
+    const start_date = new Date(rows[0].start_date);
+
+
+    await bebaspustaka.query(`
+  INSERT INTO approval_history_list (batch_id, start_date, end_date, input_date)
+  VALUES (?, ?, ?, ?)
+`, [batch_id, start_date, end_date, today]);
+
+    await bebaspustaka.query(`
+  INSERT INTO approval_history
+  (batch_id, start_date, end_date, nim, nama_mahasiswa, institusi,
+   program_studi, STATUS_PINJAMAN, STATUS_bebas_pustaka,
+   waktu_bebaspustaka, petugas_approve)
+  SELECT
+    ?, ?, ?, nim, nama_mahasiswa, institusi,
+    program_studi, STATUS_peminjaman, STATUS_bebas_pustaka,
+    waktu_bebaspustaka, petugas_approve
+  FROM bebas_pustaka
+`, [batch_id, start_date, end_date]);
+  } else {
+    console.log("saving data belum bisa ke trigger")
+  }
+
+  if (!forceRefresh) {
+    console.log("[NO REFRESH] generate dipanggil tanpa forceRefresh");
+    return { refreshed: false };
+  }
+
   if (GENERATING) {
     console.log("[SKIP] Generate sudah berjalan");
     return { skipped: true };
@@ -82,48 +130,6 @@ async function generateBebasPustakaData({ forceRefresh = false } = {}) {
       AND YEAR(register_date) BETWEEN ? AND ?
     `, [sixYearsAgo, year]);
 
-    /*
-    console.log("LOGIKA SAVING DATA APPROVER TERTRIGGER")
-    const sql_tanggal_history_approval = `
-    select start_date,end_date from bebas_pustaka_time_range
-    `
-    
-    const sql_get_id_count = `
-    SELECT COUNT(*) 
-    FROM approval_history_list 
-    WHERE 1 = 1;
-    `
-    const today = todayDate()
-
-
-    const id_now = bebaspustaka.query(sql_get_id_count)
-    const id_now_plus_1 = id_now + 1;
-    const nama_table = `approval_history_${id_now_plus_1}`
-
-    const [rows_date] = await bebaspustaka.query(`
-    SELECT STATUS_bebas_pustaka, start_date, end_date
-    FROM bebas_pustaka_time_range LIMIT 1
-  `);
-    const end_date = new Date(rows_date[0].end_date);
-    const start_date = new Date(rows_date[0].start_date);
-
-    const sql_inset_to_list_history_approval = `
-    insert into bebaspustaka.approval_history_list (nama,start_date,end_date,input_date) values
-    (?,?,?,?)
-    `
-    const rows_inser_list_history_approval = bebaspustaka.query(sql_inset_to_list_history_approval,[nama_table,start_date,end_date,today])
-
-    const sql_create_table_history = `
-    create table ${nama_table} (
-    id int AUTO_INCREMENT PRIMARY KEY,
-    nim varchar(50)
-    nama_mahasiswa varhcar(255),
-    institusi varchar(255),
-    program_studi varchar(255)
-    STATUS_PINJAMAN IN
-    )
-    `
-*/
     await bebaspustaka.query(`TRUNCATE TABLE bebas_pustaka`);
     await bebaspustaka.query(`ALTER TABLE bebas_pustaka AUTO_INCREMENT = 1`);
 
@@ -139,7 +145,7 @@ async function generateBebasPustakaData({ forceRefresh = false } = {}) {
     const [borrowing] = await bebaspustaka.query(`
       SELECT nim, nama_mahasiswa, institusi, program_studi
       FROM bebas_pustaka
-      WHERE STATUS_peminjaman = 0 OR STATUS_denda = 0
+      WHERE STATUS_peminjaman = 0
     `);
 
     const mysqlDate = formatDateToMySQL(new Date());
@@ -205,7 +211,7 @@ exports.getMahasiswaTI_AllFull = async (req, res) => {
       case 'priority':
         orderClause = `
           CASE 
-            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
+            WHEN STATUS_peminjaman = 0 THEN 0
             ELSE 1 
           END ASC, 
           waktu_bebaspustaka DESC
@@ -240,7 +246,6 @@ exports.getMahasiswaTI_AllFull = async (req, res) => {
         institusi,
         program_studi,
         STATUS_peminjaman,
-        STATUS_denda,
         STATUS_bebas_pustaka,
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
@@ -281,7 +286,7 @@ exports.getAllMahasiswaTI = async (req, res) => {
       case 'priority':
         orderClause = `
           CASE 
-            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
+            WHEN STATUS_peminjaman = 0 THEN 0
             ELSE 1 
           END ASC, 
           waktu_bebaspustaka DESC
@@ -316,7 +321,6 @@ exports.getAllMahasiswaTI = async (req, res) => {
         institusi,
         program_studi,
         STATUS_peminjaman,
-        STATUS_denda,
         STATUS_bebas_pustaka,
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
@@ -334,7 +338,6 @@ exports.getAllMahasiswaTI = async (req, res) => {
       institusi: r.institusi,
       program_studi: r.program_studi,
       STATUS_peminjaman: r.STATUS_peminjaman,
-      STATUS_denda: r.STATUS_denda,
       STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
       waktu_bebaspustaka: r.waktu_bebaspustaka,
     }));
@@ -472,9 +475,7 @@ exports.approveAll = async (req, res) => {
       const institusi = m.institusi;
       const program_studi = m.program_studi;
       const status_peminjaman = m.STATUS_peminjaman ?? m.status_peminjaman;
-      const status_denda = m.STATUS_denda ?? m.status_denda;
-
-      if (status_peminjaman !== 1 || status_denda !== 1) {
+      if (status_peminjaman !== 1) {
         continue;
       }
 
@@ -505,10 +506,8 @@ exports.approve = async (req, res) => {
       institusi,
       program_studi,
       status_peminjaman,
-      status_denda,
-      username
     } = req.body;
-
+    const username = req.body.username;
     if (!nim) {
       return res.status(400).json({
         success: false,
@@ -517,7 +516,7 @@ exports.approve = async (req, res) => {
     }
 
 
-    if (status_peminjaman !== 1 || status_denda !== 1) {
+    if (status_peminjaman !== 1) {
       return res.status(400).json({
         success: false,
         message: "Mahasiswa belum memenuhi syarat BEPUS"
@@ -540,6 +539,7 @@ exports.approve = async (req, res) => {
     `
 
     const [updateResult] = await bebaspustaka.query(sql, [mysqlDate, username, nim]);
+    console.log(username)
     const [insertResult] = await opac.query(sql_insert_visitor, [nim, nama_mahasiswa, institusi, program_studi, mysqlDate]);
 
     if (updateResult.affectedRows === 0) {
@@ -586,7 +586,7 @@ exports.getMahasiswaTI = async (req, res) => {
         // Priority: Status Bermasalah dulu (peminjaman=0 OR denda=0)
         orderClause = `
           CASE 
-            WHEN STATUS_peminjaman = 0 OR STATUS_denda = 0 THEN 0 
+            WHEN STATUS_peminjaman = 0 THEN 0 
             ELSE 1 
           END ASC, 
           waktu_bebaspustaka DESC
@@ -617,7 +617,6 @@ exports.getMahasiswaTI = async (req, res) => {
         institusi,
         program_studi,
         STATUS_peminjaman,
-        STATUS_denda,
         STATUS_bebas_pustaka,
         DATE_FORMAT(waktu_bebaspustaka, '%Y-%m-%d %H:%i:%s') AS waktu_bebaspustaka
       FROM bebas_pustaka
@@ -650,8 +649,6 @@ exports.getMahasiswaTI = async (req, res) => {
       program_studi: r.program_studi,
       status_peminjaman: r.STATUS_peminjaman, // 1 = Sudah Dikembalikan, 0 = Belum
       STATUS_peminjaman: r.STATUS_peminjaman,
-      status_denda: r.STATUS_denda, // 1 = Bebas Denda, 0 = Memiliki Denda
-      STATUS_denda: r.STATUS_denda,
       status_bepus: r.STATUS_bebas_pustaka, // 'Pending', 'Disetujui', dll
       STATUS_bebas_pustaka: r.STATUS_bebas_pustaka,
       waktu_bebaspustaka: r.waktu_bebaspustaka
@@ -702,7 +699,7 @@ exports.getMahasiswaTIWithAll = async (req, res) => {
           institusi,
           program_studi,
           STATUS_peminjaman,
-          STATUS_denda,
+
           STATUS_bebas_pustaka,
           waktu_bebaspustaka
       FROM bebaspustaka.bebas_pustaka
@@ -766,7 +763,6 @@ exports.exportPDF = async (req, res) => {
         institusi,
         program_studi,
         STATUS_peminjaman,
-        STATUS_denda,
         STATUS_bebas_pustaka,
         waktu_bebaspustaka,
         petugas_approve

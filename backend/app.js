@@ -51,6 +51,8 @@ app.use('/api/bebaspustaka', require('./routes/testing'));
 
 app.use('/api/sikompen',require("./routes/sikompen"));
 
+app.use('/api/history',require("./routes/HistoryApprovalRoutes"));
+
 app.listen(PORT, () => {
   console.log(`✅ Server running at http://localhost:${PORT}`);
 });
