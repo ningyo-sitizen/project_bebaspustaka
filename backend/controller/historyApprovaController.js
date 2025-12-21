@@ -5,24 +5,29 @@ exports.getListBebasPustaka = async(req,res) => {
     try{
         const sql_list = `
         SELECT id,batch_id,start_date,end_date,input_date from  bebaspustaka.approval_history_list
+        ORDER BY input_date DESC
         `
         const [rows] = await bebaspustaka.query(sql_list)
 
-    const data = rows.map(r => ({
-      id : r.id,
-      batch_id : r.batch_id,
-      start_date : r.start_date,
-      end_date : r.end_date,
-      input_date : r.input_date
-    }));
+        const data = rows.map(r => ({
+          id : r.id,
+          batch_id : r.batch_id,
+          start_date : r.start_date,
+          end_date : r.end_date,
+          input_date : r.input_date
+        }));
 
-    return res.json({
-      success: true,
-      data: data
-    });
+        return res.json({
+          success: true,
+          data: data
+        });
 
     }catch(err){
         console.error("❌ Error :", err);
+        return res.status(500).json({
+          success: false,
+          message: "Gagal mengambil data history"
+        });
     }
 }
 
@@ -69,13 +74,36 @@ exports.deleteHistoryApproval = async (req, res) => {
   }
 };
 
-
 exports.getHistoryByBatch = async (req, res) => {
   try {
     const { batch_id } = req.params;
+    const { search = "", page = 1, limit = 10 } = req.query;
 
-    const [rows] = await bebaspustaka.query(
-      `
+    const offset = (parseInt(page) - 1) * parseInt(limit);
+
+    let countQuery = `
+      SELECT COUNT(*) as total
+      FROM approval_history
+      WHERE batch_id = ?
+    `;
+    
+    const countParams = [batch_id];
+
+    if (search) {
+      countQuery += ` AND (
+        nim LIKE ? OR 
+        nama_mahasiswa LIKE ? OR 
+        institusi LIKE ? OR 
+        program_studi LIKE ?
+      )`;
+      const searchPattern = `%${search}%`;
+      countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
+    }
+
+    const [countResult] = await bebaspustaka.query(countQuery, countParams);
+    const total = countResult[0].total;
+
+    let dataQuery = `
       SELECT 
         id,
         batch_id,
@@ -89,33 +117,55 @@ exports.getHistoryByBatch = async (req, res) => {
         petugas_approve
       FROM approval_history
       WHERE batch_id = ?
-      ORDER BY nama_mahasiswa ASC
-      `,
-      [batch_id]
-    );
+    `;
 
-    if (rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: "Batch tidak ditemukan"
-      });
+    const dataParams = [batch_id];
+
+    if (search) {
+      dataQuery += ` AND (
+        nim LIKE ? OR 
+        nama_mahasiswa LIKE ? OR 
+        institusi LIKE ? OR 
+        program_studi LIKE ?
+      )`;
+      const searchPattern = `%${search}%`;
+      dataParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
+
+    dataQuery += ` ORDER BY nama_mahasiswa ASC LIMIT ? OFFSET ?`;
+    dataParams.push(parseInt(limit), offset);
+
+    const [rows] = await bebaspustaka.query(dataQuery, dataParams);
 
     res.json({
       success: true,
       batch_id,
-      total: rows.length,
+      total: total,
+      page: parseInt(page),
+      limit: parseInt(limit),
       data: rows
     });
+
   } catch (err) {
     console.error("❌ getHistoryByBatch:", err);
-    res.status(500).json({ success: false, message: "Server error" });
+    res.status(500).json({ 
+      success: false, 
+      message: "Server error",
+      error: err.message 
+    });
   }
 };
 
 exports.exportHistoryBatchPDF = async (req, res) => {
   try {
     const { batch_id } = req.params;
+
+    const [batchInfo] = await bebaspustaka.query(
+      `SELECT start_date, end_date, input_date 
+       FROM approval_history_list 
+       WHERE batch_id = ?`,
+      [batch_id]
+    );
 
     const [data] = await bebaspustaka.query(
       `
@@ -142,7 +192,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
       });
     }
 
-    /* ===================== PDF INIT ===================== */
     const doc = new PDFDocument({ size: "A4", margin: 30 });
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
@@ -151,7 +200,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
     );
     doc.pipe(res);
 
-    /* ===================== JUDUL ===================== */
     doc
       .fontSize(16)
       .font("Helvetica-Bold")
@@ -163,9 +211,16 @@ exports.exportHistoryBatchPDF = async (req, res) => {
       .font("Helvetica")
       .text(`Batch ID : ${batch_id}`, { align: "center" });
 
+    if (batchInfo && batchInfo.length > 0) {
+      const batch = batchInfo[0];
+      doc
+        .fontSize(10)
+        .text(`Periode: ${batch.start_date} s/d ${batch.end_date}`, { align: "center" })
+        .text(`Tanggal Input: ${batch.input_date}`, { align: "center" });
+    }
+
     doc.moveDown(2);
 
-    /* ===================== SETUP TABLE ===================== */
     const startX = doc.x;
     let y = doc.y;
     const rowHeight = 20;
@@ -194,7 +249,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
       });
     };
 
-    /* ===================== HEADER ===================== */
     drawRow(
       y,
       ["No", "NIM", "Nama Mahasiswa", "Program Studi", "Status"],
@@ -202,7 +256,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
     );
     y += rowHeight;
 
-    /* ===================== DATA ===================== */
     data.forEach((row, i) => {
       if (y + rowHeight > doc.page.height - 40) {
         doc.addPage();
@@ -226,6 +279,12 @@ exports.exportHistoryBatchPDF = async (req, res) => {
 
       y += rowHeight;
     });
+
+    doc
+      .moveDown(2)
+      .fontSize(10)
+      .font("Helvetica")
+      .text(`Total Data: ${data.length} mahasiswa`, { align: "right" });
 
     doc.end();
   } catch (err) {
