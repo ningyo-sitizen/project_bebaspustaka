@@ -1,38 +1,78 @@
 const { opac, bebaspustaka } = require('../config');
 const PDFDocument = require("pdfkit");
 
-exports.getListBebasPustaka = async(req,res) => {
-    try{
-        const sql_list = `
-        SELECT id,batch_id,start_date,end_date,input_date from  bebaspustaka.approval_history_list
-        ORDER BY input_date DESC
-        `
-        const [rows] = await bebaspustaka.query(sql_list)
+const deleteOldData = async () => {
+  try {
+    const fiveYearsAgo = new Date();
+    fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+    const fiveYearsAgoStr = fiveYearsAgo.toISOString().split('T')[0];
 
-        const data = rows.map(r => ({
-          id : r.id,
-          batch_id : r.batch_id,
-          start_date : r.start_date,
-          end_date : r.end_date,
-          input_date : r.input_date
-        }));
+    const [oldRecords] = await bebaspustaka.query(
+      `SELECT id, batch_id FROM approval_history_list WHERE input_date < ?`,
+      [fiveYearsAgoStr]
+    );
 
-        return res.json({
-          success: true,
-          data: data
-        });
+    if (oldRecords.length > 0) {
+      console.log(`🗑️  Menghapus ${oldRecords.length} data yang lebih dari 5 tahun...`);
 
-    }catch(err){
-        console.error("❌ Error :", err);
-        return res.status(500).json({
-          success: false,
-          message: "Gagal mengambil data history"
-        });
+      const batchIds = oldRecords.map(r => r.batch_id);
+      await bebaspustaka.query(
+        `DELETE FROM approval_history WHERE batch_id IN (?)`,
+        [batchIds]
+      );
+
+      await bebaspustaka.query(
+        `DELETE FROM approval_history_list WHERE input_date < ?`,
+        [fiveYearsAgoStr]
+      );
+
+      console.log(`✅ Berhasil menghapus data lama (sebelum ${fiveYearsAgoStr})`);
     }
-}
+  } catch (err) {
+    console.error("❌ Error saat menghapus data lama:", err);
+  }
+};
+
+exports.getListBebasPustaka = async(req, res) => {
+  try {
+    await deleteOldData();
+
+    const sql_list = `
+      SELECT id, batch_id, start_date, end_date, input_date 
+      FROM bebaspustaka.approval_history_list 
+      ORDER BY input_date DESC
+    `;
+    
+    const [rows] = await bebaspustaka.query(sql_list);
+    
+    const data = rows.map(r => ({
+      id: r.id,
+      batch_id: r.batch_id,
+      start_date: r.start_date,
+      end_date: r.end_date,
+      input_date: r.input_date
+    }));
+
+    return res.json({
+      success: true,
+      data: data
+    });
+  } catch(err) {
+    console.error("❌ Error :", err);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal mengambil data history"
+    });
+  }
+};
 
 exports.deleteHistoryApproval = async (req, res) => {
+  
   const { id } = req.params;
+  const { batch_id } = req.query;
+
+  console.log(id)
+  console.log(batch_id)
 
   if (!id) {
     return res.status(400).json({
@@ -54,7 +94,11 @@ exports.deleteHistoryApproval = async (req, res) => {
       });
     }
 
-    // hapus data
+    await bebaspustaka.query(
+      `DELETE FROM approval_history WHERE batch_id = ?`,
+      [batch_id]
+    );
+
     await bebaspustaka.query(
       `DELETE FROM approval_history_list WHERE id = ?`,
       [id]
@@ -64,7 +108,6 @@ exports.deleteHistoryApproval = async (req, res) => {
       success: true,
       message: "History approval berhasil dihapus"
     });
-
   } catch (err) {
     console.error("❌ Error delete history:", err);
     return res.status(500).json({
@@ -78,7 +121,6 @@ exports.getHistoryByBatch = async (req, res) => {
   try {
     const { batch_id } = req.params;
     const { search = "", page = 1, limit = 10 } = req.query;
-
     const offset = (parseInt(page) - 1) * parseInt(limit);
 
     let countQuery = `
@@ -86,16 +128,16 @@ exports.getHistoryByBatch = async (req, res) => {
       FROM approval_history
       WHERE batch_id = ?
     `;
-    
     const countParams = [batch_id];
 
     if (search) {
-      countQuery += ` AND (
-        nim LIKE ? OR 
-        nama_mahasiswa LIKE ? OR 
-        institusi LIKE ? OR 
-        program_studi LIKE ?
-      )`;
+      countQuery += `
+        AND (
+          nim LIKE ? OR
+          nama_mahasiswa LIKE ? OR
+          institusi LIKE ? OR
+          program_studi LIKE ?
+        )`;
       const searchPattern = `%${search}%`;
       countParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
@@ -104,30 +146,21 @@ exports.getHistoryByBatch = async (req, res) => {
     const total = countResult[0].total;
 
     let dataQuery = `
-      SELECT 
-        id,
-        batch_id,
-        nim,
-        nama_mahasiswa,
-        institusi,
-        program_studi,
-        STATUS_PINJAMAN,
-        STATUS_bebas_pustaka,
-        waktu_bebaspustaka,
-        petugas_approve
+      SELECT id, batch_id, nim, nama_mahasiswa, institusi, program_studi,
+             STATUS_PINJAMAN, STATUS_bebas_pustaka, waktu_bebaspustaka, petugas_approve
       FROM approval_history
       WHERE batch_id = ?
     `;
-
     const dataParams = [batch_id];
 
     if (search) {
-      dataQuery += ` AND (
-        nim LIKE ? OR 
-        nama_mahasiswa LIKE ? OR 
-        institusi LIKE ? OR 
-        program_studi LIKE ?
-      )`;
+      dataQuery += `
+        AND (
+          nim LIKE ? OR
+          nama_mahasiswa LIKE ? OR
+          institusi LIKE ? OR
+          program_studi LIKE ?
+        )`;
       const searchPattern = `%${search}%`;
       dataParams.push(searchPattern, searchPattern, searchPattern, searchPattern);
     }
@@ -145,13 +178,12 @@ exports.getHistoryByBatch = async (req, res) => {
       limit: parseInt(limit),
       data: rows
     });
-
   } catch (err) {
     console.error("❌ getHistoryByBatch:", err);
-    res.status(500).json({ 
-      success: false, 
+    res.status(500).json({
+      success: false,
       message: "Server error",
-      error: err.message 
+      error: err.message
     });
   }
 };
@@ -168,20 +200,11 @@ exports.exportHistoryBatchPDF = async (req, res) => {
     );
 
     const [data] = await bebaspustaka.query(
-      `
-      SELECT 
-        nim,
-        nama_mahasiswa,
-        institusi,
-        program_studi,
-        STATUS_PINJAMAN,
-        STATUS_bebas_pustaka,
-        waktu_bebaspustaka,
-        petugas_approve
-      FROM approval_history
-      WHERE batch_id = ?
-      ORDER BY nama_mahasiswa ASC
-      `,
+      `SELECT nim, nama_mahasiswa, institusi, program_studi,
+              STATUS_PINJAMAN, STATUS_bebas_pustaka, waktu_bebaspustaka, petugas_approve
+       FROM approval_history
+       WHERE batch_id = ?
+       ORDER BY nama_mahasiswa ASC`,
       [batch_id]
     );
 
@@ -192,12 +215,17 @@ exports.exportHistoryBatchPDF = async (req, res) => {
       });
     }
 
-    const doc = new PDFDocument({ size: "A4", margin: 30 });
+    const doc = new PDFDocument({
+      size: "A4",
+      margin: 30
+    });
+
     res.setHeader("Content-Type", "application/pdf");
     res.setHeader(
       "Content-Disposition",
       `inline; filename="HISTORY_BEBAS_PUSTAKA_BATCH_${batch_id}.pdf"`
     );
+
     doc.pipe(res);
 
     doc
@@ -224,7 +252,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
     const startX = doc.x;
     let y = doc.y;
     const rowHeight = 20;
-
     const col = {
       no: 30,
       nim: 90,
@@ -235,16 +262,14 @@ exports.exportHistoryBatchPDF = async (req, res) => {
 
     const drawRow = (y, row, isHeader = false) => {
       doc.font(isHeader ? "Helvetica-Bold" : "Helvetica").fontSize(9);
-
       let x = startX;
+
       Object.values(col).forEach((w, i) => {
         doc.rect(x, y, w, rowHeight).stroke();
-
         doc.text(row[i], x + 5, y + 5, {
           width: w - 10,
           align: "left"
         });
-
         x += w;
       });
     };
@@ -260,7 +285,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
       if (y + rowHeight > doc.page.height - 40) {
         doc.addPage();
         y = doc.y;
-
         drawRow(
           y,
           ["No", "NIM", "Nama Mahasiswa", "Program Studi", "Status"],
@@ -276,7 +300,6 @@ exports.exportHistoryBatchPDF = async (req, res) => {
         row.program_studi || "-",
         row.STATUS_bebas_pustaka || "-"
       ]);
-
       y += rowHeight;
     });
 

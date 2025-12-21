@@ -432,12 +432,18 @@ const HistoryApprovalSA = () => {
     setIsSortOpen(false);
   };
 
+<<<<<<< HEAD
   const handleDelete = async (id) => {
     if (!window.confirm("Yakin ingin menghapus history ini?")) return;
+=======
+const handleDelete = async (id, batch_id) => {
+  if (!window.confirm("Yakin ingin menghapus history ini?")) return;
+>>>>>>> be1e3a4a5b35706718407483cdeba7ed1a69fc89
 
     try {
       const token = localStorage.getItem("token");
 
+<<<<<<< HEAD
       await axios.delete(
         `http://localhost:8080/api/history/${id}`,
         {
@@ -446,6 +452,16 @@ const HistoryApprovalSA = () => {
           }
         }
       );
+=======
+    await axios.delete(
+      `http://localhost:8080/api/history/${id}?batch_id=${batch_id}`,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+>>>>>>> be1e3a4a5b35706718407483cdeba7ed1a69fc89
 
       setHistoryList(prev => prev.filter(item => item.id !== id));
 
@@ -454,6 +470,7 @@ const HistoryApprovalSA = () => {
       alert("Gagal menghapus data history");
     }
   };
+
 
 
   const toggleSort = () => {
@@ -675,13 +692,17 @@ const HistoryApprovalSA = () => {
                                           <IconTrash size={20}>
                                           </IconTrash>
                                         </button>
-                                        <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
+                                  <div className="relative group inline-block">
+                                    <button className="bg-[#FF1515] rounded text-white p-2 active:scale-90 transition-transform duration-100 hover:bg-[#FF1515]/90"
+                                      onClick={() => handleDelete(item.id, item.batch_id)}>
+                                      <IconTrash size={20}>
+                                      </IconTrash>
+                                    </button>
+                                    <span className="absolute z-10 bottom-full left-1/2 -translate-x-1/3 mb-3 px-1 bg-[#EDEDED] text-gray-600 text-xs border border-gray-300 rounded-sm whitespace-nowrap opacity-0 
                                   group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
-                                        >
-                                          Hapus
-                                        </span>
-                                      </div>
-                                    </div>
+                                    >
+                                      Hapus
+                                    </span>
                                   </div>
                                 </div>
 

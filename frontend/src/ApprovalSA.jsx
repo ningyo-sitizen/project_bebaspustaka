@@ -27,6 +27,12 @@ import axios from "axios";
 
 function ApprovalSA() {
     authCheckSA();
+    const [activeTab, setActiveTab] = useState('pending');
+    const [tabCounts, setTabCounts] = useState({
+        pending: 0,
+        approved: 0,
+        all: 0
+    });
     const [showLogout, setShowLogout] = useState(false);
     const [statusRange, setStatusRange] = useState();
     const [data, setData] = useState([]);
@@ -90,7 +96,8 @@ function ApprovalSA() {
                     page: currentPage,
                     limit: rowsPerPage,
                     sortBy,
-                    sortOrder
+                    sortOrder,
+                    statusFilter: activeTab // Tambahkan parameter ini
                 }
             });
 
@@ -109,13 +116,28 @@ function ApprovalSA() {
             setTotal(res.data.total || 0);
             setData(formatted);
 
+            // Update tab counts
+            setTabCounts({
+                pending: res.data.pendingCount || 0,
+                approved: res.data.approvedCount || 0,
+                all: res.data.totalCount || 0
+            });
+
         } catch (err) {
             console.error("Error fetchData:", err);
             alert("Gagal mengambil data: " + (err.response?.data?.message || err.message));
         } finally {
             setLoading(false);
         }
-    }, [search, currentPage, rowsPerPage, sortBy, sortOrder]);
+    }, [search, currentPage, rowsPerPage, sortBy, sortOrder, activeTab]);
+
+
+    const handleTabChange = (tab) => {
+        setActiveTab(tab);
+        setCurrentPage(1);
+        setCheckedItems({}); // Clear checkbox selection
+        setApprovedAll(false);
+    };
 
     const handleSearchChange = (e) => {
         const value = e.target.value;
@@ -894,34 +916,50 @@ function ApprovalSA() {
                                 </div>
                             </div>
 
-                            {/* TABLE APPROVAL */}
-                            <div className='grid grid-cols-1 mt-9 overflow-hidden'>
-                                <div className="flex items-center mb-0">
-
-                                    <div onClick={() => setChangeTabColor("#D8DFEC")}
-                                        className="w-40 h-12 bg-[#D8DFEC] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                            <div className='grid grid-cols-1 mt-9 overflow-x-auto'>
+                                <div className="flex">
+                                    {/* Tab Menunggu (Pending) */}
+                                    <div
+                                        onClick={() => handleTabChange('pending')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'pending' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Menunggu</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Menunggu</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.pending}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div onClick={() => setChangeTabColor("#E7ECF5")}
-                                        className="w-40 h-12 bg-[#E7ECF5] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                    {/* Tab Disetujui (Approved) */}
+                                    <div
+                                        onClick={() => handleTabChange('approved')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'approved' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Disetujui</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Disetujui</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.approved}
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div onClick={() => setChangeTabColor("#EEF3FB")}
-                                        className="w-40 h-12 bg-[#EEF3FB] 
-                                            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]">
+                                    {/* Tab Semua (All) */}
+                                    <div
+                                        onClick={() => handleTabChange('all')}
+                                        className={`w-40 h-12 cursor-pointer transition-all
+            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+            ${activeTab === 'all' ? 'bg-[#D8DFEC]' : 'bg-[#EEF3FB]'}`}
+                                    >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
-                                            <p>Semua</p>
-                                            <div className="rounded bg-white px-1">hai</div>
+                                            <p className="font-medium">Semua</p>
+                                            <div className="rounded bg-white px-2 py-0.5 text-xs font-semibold">
+                                                {tabCounts.all}
+                                            </div>
                                         </div>
                                     </div>
 
