@@ -176,8 +176,8 @@ export default function DashboardSA() {
 
     return (
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen overflow-hidden">
+            
             <div className="flex h-full">
-
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
@@ -280,6 +280,7 @@ export default function DashboardSA() {
                         <LogoutAlert onClose={() => setShowLogout(false)} />
                     )}
 
+                    {/* isiannya */}
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-8">
                             <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
@@ -432,8 +433,8 @@ export default function DashboardSA() {
                                 </div>
                             </div>
                         </div>
-                        {/* //tutor bepus */}
 
+                        {/* //tutor bepus */}
                         <div className='bg-white w-full max-h-screen flex justify-center p-9 pb-16 mx-none mt-9'>
                             <div className='text-center mx-auto w-full max-w-5xl'>
 

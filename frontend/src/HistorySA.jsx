@@ -541,7 +541,7 @@ const History = () => {
                         </div>
 
                         <nav className="flex-1 px-6 pt-3 space-y-4 pb-6">
-                            <a href="/dashboardSA" className={getSidebarItemClass(true)}>
+                            <a href="/dashboardSA" className={getSidebarItemClass()}>
                                 <IconHome size={20} />
                                 Dashboard
                             </a>

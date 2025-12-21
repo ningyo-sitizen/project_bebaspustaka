@@ -692,7 +692,6 @@ export default function AnalyticSA() {
         };
 
         return (
-
             //table kiri visitor
             <div>
                 <div className="flex justify-between items-center mb-4">
@@ -1348,7 +1347,7 @@ export default function AnalyticSA() {
     return (
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen">
 
-            <div className="flex">
+            <div className="flex h-full">
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
                 ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} 
@@ -1395,7 +1394,8 @@ export default function AnalyticSA() {
                         onClick={toggleSidebar}
                     ></div>
                 )}
-                <div className="flex-1 flex flex-col min-h-screen">
+
+                <div className="flex-1 flex flex-col h-screen">
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
@@ -1448,350 +1448,138 @@ export default function AnalyticSA() {
                     {showLogout && (
                         <LogoutAlert onClose={() => setShowLogout(false)} />
                     )}
-                    <div className="flex-1 overflow-y-auto p-8">
-                        <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-8">
+                            <div className="relative w-full mx-auto rounded-lg overflow-hidden shadow-sm mb-8 bg-[#033854]">
 
-                            <div className="flex flex-col md:flex-row w-full">
-                                <div className="md:w-1/1 p-10 text-white flex flex-col justify-start text-left">
-                                    <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
-                                    <p className="font-normal text-lg mb-2">Di Dashboard Analitik Bebas Pustaka</p>
-                                    <p className="font-light text-sm">
-                                        Dashboard ini menyajikan data kunjungan dan status bebas pustaka secara
-                                        terstruktur untuk membantu Admin dalam memantau dan mengelola informasi perpustakaan.
-                                    </p>
+                                <div className="flex flex-col md:flex-row w-full">
+                                    <div className="md:w-1/1 p-10 text-white flex flex-col justify-start text-left">
+                                        <p className="font-semibold text-3xl mb-4">Selamat Datang!</p>
+                                        <p className="font-normal text-lg mb-2">Di Dashboard Analitik Bebas Pustaka</p>
+                                        <p className="font-light text-sm">
+                                            Dashboard ini menyajikan data kunjungan dan status bebas pustaka secara
+                                            terstruktur untuk membantu Admin dalam memantau dan mengelola informasi perpustakaan.
+                                        </p>
 
-                                </div>
+                                    </div>
 
-                                <div className="md:w-1/2 w-1/3 flex items-center justify-end">
-                                    <img
-                                        src="https://cdn.designfast.io/image/2025-12-03/c0fb8085-f25e-4ce8-8687-24ace6ba9f2e.png"
-                                        alt="icon"
-                                        className="w-52 h-52  object-none"
-                                    />
+                                    <div className="md:w-1/2 w-1/3 flex items-center justify-end">
+                                        <img
+                                            src="https://cdn.designfast.io/image/2025-12-03/c0fb8085-f25e-4ce8-8687-24ace6ba9f2e.png"
+                                            alt="icon"
+                                            className="w-52 h-52  object-none"
+                                        />
+                                    </div>
+
                                 </div>
 
                             </div>
+                            <p className="font-semibold text-xl text-left text-black mb-8 overflow-x-hidden">
+                                Ringkasan Analitik
+                            </p>
+                            {/* kontennya */}
+                            <InfoCards />
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
 
-                        </div>
-                        <p className="font-semibold text-xl text-left text-black mb-8 overflow-x-hidden">
-                            Ringkasan Analitik
-                        </p>
-                        {/* kontennya */}
-                        <InfoCards />
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
+                                <div>
+                                    <div className="flex justify-between items-center mb-4 w-full">
+                                        <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
+                                        <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                            onClick={openModalLeft}>
+                                            <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                            Filter
+                                        </p>
+                                    </div>
 
-                            <div>
-                                <div className="flex justify-between items-center mb-4 w-full">
-                                    <h3 className="font-semibold text-lg">Data Kunjungan Mahasiswa</h3>
-                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
-                                        onClick={openModalLeft}>
-                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
-                                        Filter
-                                    </p>
-                                </div>
+                                    <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
+                                        <div className="relative">
 
-                                <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
-                                    <div className="relative">
+                                            {/* //render filter */}
+                                            {showFilterL && (
 
-                                        {/* //render filter */}
-                                        {showFilterL && (
-
-                                            <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
+                                                <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
                                                             transition-opacity duration-300 ${isClosing ? "opacity-0" : "opacity-100"}`}
-                                                onClick={handleApplyFiltersLeft}>
+                                                    onClick={handleApplyFiltersLeft}>
 
-                                                <div className={`bg-white w-full max-w-md sm:max-w-lg md:max-w-xl rounded-lg shadow-lg flex flex-col gap-1
+                                                    <div className={`bg-white w-full max-w-md sm:max-w-lg md:max-w-xl rounded-lg shadow-lg flex flex-col gap-1
                                                                 transform transition-transform duration-300 ${isClosing ? "scale-95" : "scale-100"}`}
-                                                    onClick={(e) => e.stopPropagation()}>
+                                                        onClick={(e) => e.stopPropagation()}>
 
-                                                    <div className="px-5 pt-5">
-                                                        <div className='flex justify-between'>
-                                                            <p className="font-bold text-lg text-left">Filter</p>
-                                                            <button className='text-3xl font-medium mr-3'
-                                                                onClick={handleCancelFilters}>x</button>
+                                                        <div className="px-5 pt-5">
+                                                            <div className='flex justify-between'>
+                                                                <p className="font-bold text-lg text-left">Filter</p>
+                                                                <button className='text-3xl font-medium mr-3'
+                                                                    onClick={handleCancelFilters}>x</button>
+                                                            </div>
+                                                            <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>
                                                         </div>
-                                                        <p className="font-thin text-sm text-left text-[#9A9A9A] mt-1"> Halaman ini berfungsi sebagai filter untuk mempermudah pencarian. </p>
-                                                    </div>
 
-                                                    <div className="w-full h-[2px] bg-gray-200 my-4"></div>
+                                                        <div className="w-full h-[2px] bg-gray-200 my-4"></div>
 
 
-                                                    {/* Tahun */}
-                                                    <div className="px-5">
-                                                        <p className="font-regular mb-4 text-sm text-left">Tahun Masuk</p>
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            {years.length > 0 ? (years.map((year) => {
-                                                                const isSelected = selectedYears.includes(year);
-                                                                return (<button key={year} onClick={() => isSelected ?
-                                                                    setSelectedYears(selectedYears.filter((y) => y !== year))
-                                                                    : !maxReached && setSelectedYears([...selectedYears, year])}
-                                                                    className={`px-3 py-1 rounded text-xs transition-colors 
+                                                        {/* Tahun */}
+                                                        <div className="px-5">
+                                                            <p className="font-regular mb-4 text-sm text-left">Tahun Masuk</p>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {years.length > 0 ? (years.map((year) => {
+                                                                    const isSelected = selectedYears.includes(year);
+                                                                    return (<button key={year} onClick={() => isSelected ?
+                                                                        setSelectedYears(selectedYears.filter((y) => y !== year))
+                                                                        : !maxReached && setSelectedYears([...selectedYears, year])}
+                                                                        className={`px-3 py-1 rounded text-xs transition-colors 
                                                                     ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161]"} 
                                                                     ${maxReached && !isSelected ? "opacity-40 cursor-not-allowed" : ""}`} >
-                                                                    {year}
-                                                                </button>);
-                                                            })) :
-                                                                (<p className="text-gray-500 text-sm">Memuat tahun...</p>)}
+                                                                        {year}
+                                                                    </button>);
+                                                                })) :
+                                                                    (<p className="text-gray-500 text-sm">Memuat tahun...</p>)}
+                                                            </div>
                                                         </div>
-                                                    </div>
 
 
-                                                    {/* Periode */}
-                                                    <div className="px-5 mt-5">
-                                                        <p className="font-regular mb-4 text-sm text-left">Periode</p>
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            {["daily", "weekly", "monthly", "yearly"].map((type) => {
-                                                                const isActive = selectedType === type;
-                                                                const isBlocked = selectedYears.length > 1 && (type === "daily" || type === "weekly");
-                                                                return (
-                                                                    <button
-                                                                        key={type}
-                                                                        type="button"
-                                                                        disabled={isBlocked}
-                                                                        onClick={() => !isBlocked && setSelectedType(type)}
-                                                                        className={`px-3 py-1 rounded text-xs transition-colors 
-                                                                ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
-                                                                ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
-                                                                    >
-                                                                        {type}
-                                                                    </button>
-                                                                );
-                                                            })}
-                                                        </div>
-                                                    </div>
-
-
-                                                    {/* Jenis Diagram */}
-                                                    <div className="px-5 mt-5">
-                                                        <p className="font-regular mb-4 text-sm text-left">Jenis Diagram</p>
-                                                        <div className="flex gap-2 flex-wrap">
-                                                            {[{ label: "Diagram Lingkaran", value: "circle" },
-                                                            { label: "Diagram Garis", value: "Line" },
-                                                            { label: "Diagram Batang", value: "Bar" },]
-                                                                .map((chart) => {
-                                                                    const isActive = draftChartTypeL === chart.value;
-                                                                    const isBlocked = selectedYears.length > 1 && chart.value === "circle";
+                                                        {/* Periode */}
+                                                        <div className="px-5 mt-5">
+                                                            <p className="font-regular mb-4 text-sm text-left">Periode</p>
+                                                            <div className="flex gap-2 flex-wrap">
+                                                                {["daily", "weekly", "monthly", "yearly"].map((type) => {
+                                                                    const isActive = selectedType === type;
+                                                                    const isBlocked = selectedYears.length > 1 && (type === "daily" || type === "weekly");
                                                                     return (
                                                                         <button
-                                                                            key={chart.value}
+                                                                            key={type}
+                                                                            type="button"
                                                                             disabled={isBlocked}
-                                                                            onClick={() => !isBlocked && handlePickChartType(chart.value)}
+                                                                            onClick={() => !isBlocked && setSelectedType(type)}
                                                                             className={`px-3 py-1 rounded text-xs transition-colors 
-                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
-                                                                    ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
+                                                                ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
+                                                                ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                         >
-                                                                            {chart.label}
+                                                                            {type}
                                                                         </button>
                                                                     );
                                                                 })}
-                                                        </div>
-                                                    </div>
-
-
-                                                    {/* Button */}
-                                                    <div className="w-full mt-6">
-                                                        <div className="h-[1.5px] bg-gray-200 mb-5 mx-5"></div>
-                                                        <div className="flex justify-end px-5 pb-5 gap-3">
-
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 "
-                                                                onClick={handleResetFilters}>
-                                                                Atur ulang
-                                                            </button>
-
-
-                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white "
-                                                                onClick={debouncedApplyFiltersLeft}>
-                                                                Filter Data
-                                                            </button>
-
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                        <div className="overflow-x-auto">
-                                            <div className="w-full h-80">
-                                                {renderChartL()}
-                                            </div>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div>
-                                <div className="flex justify-between items-center mb-4">
-                                    <h3 className="font-semibold text-lg">Data Bebas Pustaka</h3>
-                                    <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
-                                        onClick={() => setShowFilterR(!showFilterR)}>
-                                        <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
-                                        Filter
-                                    </p>
-
-                                </div>
-
-                                <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
-                                    <div className="relative">
-                                        {showFilterR && (
-                                            <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
-                                                            transition-opacity duration-300 ${isClosingR ? "opacity-0" : "opacity-100"}`}
-                                                onClick={handleApplyFiltersRight}>
-
-                                                <div className={`bg-white w-full max-w-6xl rounded-lg shadow-lg flex flex-col gap-1
-                                                                 transform transition-transform duration-300 ${isClosingR ? "scale-95" : "scale-100"}`}
-                                                    onClick={(e) => e.stopPropagation()}>
-
-                                                    {/* Header */}
-                                                    <div className="px-5 pt-5">
-                                                        <div className='flex justify-between'>
-                                                            <p className="font-bold text-lg text-left">Filter</p>
-                                                            <button className='text-3xl font-medium mr-3'
-                                                                onClick={handleCancelFiltersRight}>x</button>
-
-                                                        </div>
-                                                        <p className="font-thin text-sm text-left text-[#9A9A9A]">
-                                                            Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.
-                                                        </p>
-                                                    </div>
-
-                                                    <div className="w-full h-[2px] bg-gray-200 my-4"></div>
-                                                    <div className="max-h-[70vh] overflow-y-auto pb-5">
-                                                        {/* Tahun Masuk */}
-                                                        <div className="px-5">
-                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
-
-                                                            <div className="flex gap-2 flex-wrap">
-                                                                {angkatan.length > 0 ? (
-                                                                    angkatan.map((item) => {
-                                                                        const isSelected = selectedAngkatan.includes(item);
-
-                                                                        return (
-                                                                            <button
-                                                                                key={item}
-                                                                                className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
-                                                                                    }`}
-                                                                                onClick={() => {
-                                                                                    if (isSelected) {
-                                                                                        setSelectedAngkatan(selectedAngkatan.filter((y) => y !== item));
-                                                                                    } else {
-                                                                                        setSelectedAngkatan([...selectedAngkatan, item]);
-                                                                                    }
-                                                                                }}
-                                                                            >
-                                                                                {item}
-                                                                            </button>
-                                                                        );
-                                                                    })
-                                                                ) : (
-                                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
-                                                                )}
                                                             </div>
                                                         </div>
 
-                                                        {/* Lembaga */}
-                                                        <div className="px-5 mt-6">
-                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Lembaga</p>
-
-                                                            <div className="flex gap-2 flex-wrap">
-                                                                {lembaga.length > 0 ? (
-                                                                    lembaga.map((item) => {
-                                                                        const isSelected = selectedLembaga.includes(item);
-
-                                                                        return (
-                                                                            <button
-                                                                                key={item}
-                                                                                className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
-                                                                                    }`}
-                                                                                onClick={() => {
-                                                                                    setSelectedLembaga((prev) => {
-                                                                                        let updated;
-
-                                                                                        if (prev.includes(item)) {
-                                                                                            updated = prev.filter((l) => l !== item);
-                                                                                        } else {
-                                                                                            updated = [...prev, item];
-                                                                                        }
-                                                                                        setActiveProdiR(true);
-                                                                                        fetchProdi(updated);
-
-                                                                                        return updated;
-                                                                                    });
-                                                                                }}
-
-                                                                            >
-                                                                                {item}
-                                                                            </button>
-                                                                        );
-                                                                    })
-                                                                ) : (
-                                                                    <p className="text-gray-500 text-sm">Memuat tahun...</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Prodi */}
-                                                        <div className="px-5 mt-6">
-                                                            <p
-                                                                className="text-[#616161] font-semibold mb-4 text-left cursor-pointer"
-                                                                onClick={() => setActiveProdiR((prev) => !prev)}
-
-                                                            >
-                                                                Program Studi
-                                                            </p>
-
-                                                            {activeProdiR && (
-                                                                <div>
-                                                                    {Object.keys(prodi).map((lem) => (
-                                                                        <div key={lem} className="mt-3">
-                                                                            <p className="font-semibold text-[#023048] text-left ml-5 text-sm mb-4">{lem}</p>
-
-                                                                            <div className="flex gap-2 flex-wrap ml-4">
-                                                                                {prodi[lem].map((ps) => {
-                                                                                    const isSelected = selectedProdi.includes(ps);
-
-                                                                                    return (
-                                                                                        <button
-                                                                                            key={ps}
-                                                                                            className={`px-3 py-1 rounded text-sm ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
-                                                                                                }`}
-                                                                                            onClick={() => {
-                                                                                                if (isSelected) {
-                                                                                                    setSelectedProdi(selectedProdi.filter((p) => p !== ps));
-                                                                                                } else {
-                                                                                                    setSelectedProdi([...selectedProdi, ps]);
-                                                                                                }
-                                                                                            }}
-                                                                                        >
-                                                                                            {ps}
-                                                                                        </button>
-                                                                                    );
-                                                                                })}
-                                                                            </div>
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
 
                                                         {/* Jenis Diagram */}
                                                         <div className="px-5 mt-5">
-                                                            <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
+                                                            <p className="font-regular mb-4 text-sm text-left">Jenis Diagram</p>
                                                             <div className="flex gap-2 flex-wrap">
                                                                 {[{ label: "Diagram Lingkaran", value: "circle" },
                                                                 { label: "Diagram Garis", value: "Line" },
                                                                 { label: "Diagram Batang", value: "Bar" },]
                                                                     .map((chart) => {
-                                                                        const isActive = activeChartR === chart.value;
+                                                                        const isActive = draftChartTypeL === chart.value;
+                                                                        const isBlocked = selectedYears.length > 1 && chart.value === "circle";
                                                                         return (
                                                                             <button
                                                                                 key={chart.value}
-                                                                                onClick={() => {
-                                                                                    setActiveChartR(chart.value);
-                                                                                    localStorage.setItem("chart_type_right", chart.value);
-                                                                                }}
-                                                                                className={`px-3 py-1 rounded text-sm transition-colors 
-                                                                                            ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
-                                                                                          `}
+                                                                                disabled={isBlocked}
+                                                                                onClick={() => !isBlocked && handlePickChartType(chart.value)}
+                                                                                className={`px-3 py-1 rounded text-xs transition-colors 
+                                                                    ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790]" : "border border-[#BFC0C0] text-[#616161] bg-white"} 
+                                                                    ${isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"}`}
                                                                             >
                                                                                 {chart.label}
                                                                             </button>
@@ -1800,193 +1588,410 @@ export default function AnalyticSA() {
                                                             </div>
                                                         </div>
 
-                                                        <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 mt-4"
-                                                                onClick={handleResetFiltersRight}>
-                                                                Atur ulang
-                                                            </button>
+                                                        {/* Button */}
+                                                        <div className="w-full mt-6">
+                                                            <div className="h-[1.5px] bg-gray-200 mb-5 mx-5"></div>
+                                                            <div className="flex justify-end px-5 pb-5 gap-3">
 
-                                                            <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white mt-4"
-                                                                disabled={isLoadingR}
-                                                                onClick={debouncedApplyFiltersRight}>
-                                                                Filter Data
-                                                            </button>
+                                                                <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 "
+                                                                    onClick={handleResetFilters}>
+                                                                    Atur ulang
+                                                                </button>
 
+
+                                                                <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white "
+                                                                    onClick={debouncedApplyFiltersLeft}>
+                                                                    Filter Data
+                                                                </button>
+
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
+                                            )}
+                                            <div className="overflow-x-auto">
+                                                <div className="w-full h-80">
+                                                    {renderChartL()}
+                                                </div>
                                             </div>
-                                        )}
-                                        <div className="overflow-x-auto">
-                                            <div className="w-full h-80">
-                                                {renderChartR()}
+
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="flex justify-between items-center mb-4">
+                                        <h3 className="font-semibold text-lg">Data Bebas Pustaka</h3>
+                                        <p className="flex  font-light text-sm text-[#9A9A9A] cursor-pointer hover:underline"
+                                            onClick={() => setShowFilterR(!showFilterR)}>
+                                            <IconAdjustmentsHorizontal className='mr-1 w-5 h-5' stroke='#9A9A9A'></IconAdjustmentsHorizontal>
+                                            Filter
+                                        </p>
+
+                                    </div>
+
+                                    <div className="bg-white p-6 shadow-sm border border-[#EDEDED]">
+                                        <div className="relative">
+                                            {showFilterR && (
+                                                <div className={`fixed inset-0 bg-[#333333]/60 flex justify-center sm:items-center z-50 p-4 sm:p-0
+                                                            transition-opacity duration-300 ${isClosingR ? "opacity-0" : "opacity-100"}`}
+                                                    onClick={handleApplyFiltersRight}>
+
+                                                    <div className={`bg-white w-full max-w-6xl rounded-lg shadow-lg flex flex-col gap-1
+                                                                 transform transition-transform duration-300 ${isClosingR ? "scale-95" : "scale-100"}`}
+                                                        onClick={(e) => e.stopPropagation()}>
+
+                                                        {/* Header */}
+                                                        <div className="px-5 pt-5">
+                                                            <div className='flex justify-between'>
+                                                                <p className="font-bold text-lg text-left">Filter</p>
+                                                                <button className='text-3xl font-medium mr-3'
+                                                                    onClick={handleCancelFiltersRight}>x</button>
+
+                                                            </div>
+                                                            <p className="font-thin text-sm text-left text-[#9A9A9A]">
+                                                                Halaman ini berfungsi sebagai filter untuk mempermudah pencarian.
+                                                            </p>
+                                                        </div>
+
+                                                        <div className="w-full h-[2px] bg-gray-200 my-4"></div>
+                                                        <div className="max-h-[70vh] overflow-y-auto pb-5">
+                                                            {/* Tahun Masuk */}
+                                                            <div className="px-5">
+                                                                <p className="text-[#616161] font-semibold mb-4 text-left">Tahun Masuk</p>
+
+                                                                <div className="flex gap-2 flex-wrap">
+                                                                    {angkatan.length > 0 ? (
+                                                                        angkatan.map((item) => {
+                                                                            const isSelected = selectedAngkatan.includes(item);
+
+                                                                            return (
+                                                                                <button
+                                                                                    key={item}
+                                                                                    className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                        }`}
+                                                                                    onClick={() => {
+                                                                                        if (isSelected) {
+                                                                                            setSelectedAngkatan(selectedAngkatan.filter((y) => y !== item));
+                                                                                        } else {
+                                                                                            setSelectedAngkatan([...selectedAngkatan, item]);
+                                                                                        }
+                                                                                    }}
+                                                                                >
+                                                                                    {item}
+                                                                                </button>
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Lembaga */}
+                                                            <div className="px-5 mt-6">
+                                                                <p className="text-[#616161] font-semibold mb-4 text-left">Lembaga</p>
+
+                                                                <div className="flex gap-2 flex-wrap">
+                                                                    {lembaga.length > 0 ? (
+                                                                        lembaga.map((item) => {
+                                                                            const isSelected = selectedLembaga.includes(item);
+
+                                                                            return (
+                                                                                <button
+                                                                                    key={item}
+                                                                                    className={`px-3 py-1 rounded ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                        }`}
+                                                                                    onClick={() => {
+                                                                                        setSelectedLembaga((prev) => {
+                                                                                            let updated;
+
+                                                                                            if (prev.includes(item)) {
+                                                                                                updated = prev.filter((l) => l !== item);
+                                                                                            } else {
+                                                                                                updated = [...prev, item];
+                                                                                            }
+                                                                                            setActiveProdiR(true);
+                                                                                            fetchProdi(updated);
+
+                                                                                            return updated;
+                                                                                        });
+                                                                                    }}
+
+                                                                                >
+                                                                                    {item}
+                                                                                </button>
+                                                                            );
+                                                                        })
+                                                                    ) : (
+                                                                        <p className="text-gray-500 text-sm">Memuat tahun...</p>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            {/* Prodi */}
+                                                            <div className="px-5 mt-6">
+                                                                <p
+                                                                    className="text-[#616161] font-semibold mb-4 text-left cursor-pointer"
+                                                                    onClick={() => setActiveProdiR((prev) => !prev)}
+
+                                                                >
+                                                                    Program Studi
+                                                                </p>
+
+                                                                {activeProdiR && (
+                                                                    <div>
+                                                                        {Object.keys(prodi).map((lem) => (
+                                                                            <div key={lem} className="mt-3">
+                                                                                <p className="font-semibold text-[#023048] text-left ml-5 text-sm mb-4">{lem}</p>
+
+                                                                                <div className="flex gap-2 flex-wrap ml-4">
+                                                                                    {prodi[lem].map((ps) => {
+                                                                                        const isSelected = selectedProdi.includes(ps);
+
+                                                                                        return (
+                                                                                            <button
+                                                                                                key={ps}
+                                                                                                className={`px-3 py-1 rounded text-sm ${isSelected ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"
+                                                                                                    }`}
+                                                                                                onClick={() => {
+                                                                                                    if (isSelected) {
+                                                                                                        setSelectedProdi(selectedProdi.filter((p) => p !== ps));
+                                                                                                    } else {
+                                                                                                        setSelectedProdi([...selectedProdi, ps]);
+                                                                                                    }
+                                                                                                }}
+                                                                                            >
+                                                                                                {ps}
+                                                                                            </button>
+                                                                                        );
+                                                                                    })}
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+
+                                                            {/* Jenis Diagram */}
+                                                            <div className="px-5 mt-5">
+                                                                <p className="text-[#616161] font-semibold mb-4 text-left">Jenis Diagram</p>
+                                                                <div className="flex gap-2 flex-wrap">
+                                                                    {[{ label: "Diagram Lingkaran", value: "circle" },
+                                                                    { label: "Diagram Garis", value: "Line" },
+                                                                    { label: "Diagram Batang", value: "Bar" },]
+                                                                        .map((chart) => {
+                                                                            const isActive = activeChartR === chart.value;
+                                                                            return (
+                                                                                <button
+                                                                                    key={chart.value}
+                                                                                    onClick={() => {
+                                                                                        setActiveChartR(chart.value);
+                                                                                        localStorage.setItem("chart_type_right", chart.value);
+                                                                                    }}
+                                                                                    className={`px-3 py-1 rounded text-sm transition-colors 
+                                                                                            ${isActive ? "border border-[#667790] bg-[#EDF1F3] text-[#667790] text-xs" : "text-xs border border-[#BFC0C0] text-[#616161]"} 
+                                                                                          `}
+                                                                                >
+                                                                                    {chart.label}
+                                                                                </button>
+                                                                            );
+                                                                        })}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className="flex justify-end px-5 pb-5 gap-3">
+
+                                                                <button className="text-sm text-gray-600 border px-3 py-1 rounded hover:bg-gray-100 mt-4"
+                                                                    onClick={handleResetFiltersRight}>
+                                                                    Atur ulang
+                                                                </button>
+
+                                                                <button className="text-sm text-white bg-[#023048] px-3 py-1 rounded font-medium hover:bg-gray-700 hover:text-white mt-4"
+                                                                    disabled={isLoadingR}
+                                                                    onClick={debouncedApplyFiltersRight}>
+                                                                    Filter Data
+                                                                </button>
+
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                            <div className="overflow-x-auto">
+                                                <div className="w-full h-80">
+                                                    {renderChartR()}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+
+                            <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-7">
+                                <div>
+                                    <div className="relative mb-4">
+                                        <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
+                                    </div>
+
+                                    <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
+                                        <div className="relative">
+                                            {tableDataLeft ? (
+                                                <DataTable
+                                                    selectedType={selectedType}
+                                                    data={tableDataLeft}
+                                                    pagination={tablePaginationLeft}
+                                                    onPageChange={fetchTableDataLeft}
+                                                    isLoading={false}
+                                                />
+                                            ) : tableData ? (
+                                                <DataTable
+                                                    selectedType={selectedType}
+                                                    data={tableData}
+                                                    pagination={null}
+                                                    onPageChange={() => { }}
+                                                    isLoading={isLoadingLeft}
+                                                />
+                                            ) : null}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div className="mb-4 h-[32px] mt-[44px]">
+                                        <div className="bg-white rounded-xl">
+                                            <div className="relative">
+                                                <div className="overflow-x-auto">
+                                                    {tableDataRight && (
+                                                        <DataTableRight
+                                                            data={tableDataRight}
+                                                            pagination={tablePaginationRight}
+                                                            onPageChange={fetchTableDataRight}
+                                                        />
+                                                    )}
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
+
                             </div>
-
-
-                        </div>
-
-                        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 mt-7">
-                            <div>
-                                <div className="relative mb-4">
-                                    <h3 className="font-semibold text-lg text-left">Ringkasan</h3>
+                            <div className='grid grid-cols-1 gap-8 '>
+                                <div className="relative inline-flex justify-between items-center mt-20">
+                                    <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
                                 </div>
 
                                 <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
-                                    <div className="relative">
-                                        {tableDataLeft ? (
-                                            <DataTable
-                                                selectedType={selectedType}
-                                                data={tableDataLeft}
-                                                pagination={tablePaginationLeft}
-                                                onPageChange={fetchTableDataLeft}
-                                                isLoading={false}
-                                            />
-                                        ) : tableData ? (
-                                            <DataTable
-                                                selectedType={selectedType}
-                                                data={tableData}
-                                                pagination={null}
-                                                onPageChange={() => { }}
-                                                isLoading={isLoadingLeft}
-                                            />
-                                        ) : null}
-                                    </div>
-                                </div>
-                            </div>
+                                    <div className="relative bottom-0">
 
-                            <div>
-                                <div className="mb-4 h-[32px] mt-[44px]">
-                                    <div className="bg-white rounded-xl">
-                                        <div className="relative">
-                                            <div className="overflow-x-auto">
-                                                {tableDataRight && (
-                                                    <DataTableRight
-                                                        data={tableDataRight}
-                                                        pagination={tablePaginationRight}
-                                                        onPageChange={fetchTableDataRight}
-                                                    />
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                        <div className='grid grid-cols-1 gap-8 '>
-                            <div className="relative inline-flex justify-between items-center mt-20">
-                                <h3 className="font-semibold text-lg">Data Peminjaman Buku</h3>
-                            </div>
-
-                            <div className="bg-white p-6 rounded-sm border border-[#EDEDED]">
-                                <div className="relative bottom-0">
-
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full border-collapse">
-                                            <thead>
-                                                <tr className="bg-[#D8DFEC] whitespace-nowrap">
-                                                    <th className="p-3 font-normal text-sm">No</th>
-                                                    <th className="p-3 font-normal text-sm">ID Peminjaman</th>
-                                                    <th className="p-3 font-normal text-sm">ID Member</th>
-                                                    <th className="p-3 font-normal text-sm">Kode Item</th>
-                                                    <th className="p-3 font-normal text-sm">Tanggal Pinjam</th>
-                                                    <th className="p-3 font-normal text-sm">Tenggat</th>
-                                                    <th className="p-3 font-normal text-sm">Tanggal di kembalikan</th>
-                                                    <th className="p-3 font-normal text-sm">Status Buku</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {isLoadingHistory ? (
-                                                    Array.from({ length: limit }).map((_, i) => (
-                                                        <tr key={i} className="border-b animate-pulse">
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 text-left rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                            <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
-                                                        </tr>
-                                                    ))
-                                                ) : loanHistory.length === 0 ? (
-                                                    <tr>
-                                                        <td colSpan="8" className="text-center p-4">Tidak ada data</td>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full border-collapse">
+                                                <thead>
+                                                    <tr className="bg-[#D8DFEC] whitespace-nowrap">
+                                                        <th className="p-3 font-normal text-sm">No</th>
+                                                        <th className="p-3 font-normal text-sm">ID Peminjaman</th>
+                                                        <th className="p-3 font-normal text-sm">ID Member</th>
+                                                        <th className="p-3 font-normal text-sm">Kode Item</th>
+                                                        <th className="p-3 font-normal text-sm">Tanggal Pinjam</th>
+                                                        <th className="p-3 font-normal text-sm">Tenggat</th>
+                                                        <th className="p-3 font-normal text-sm">Tanggal di kembalikan</th>
+                                                        <th className="p-3 font-normal text-sm">Status Buku</th>
                                                     </tr>
-                                                ) : (
-                                                    loanHistory.map((item, index) => (
-                                                        <tr key={item.loan_id} className="border-b hover:bg-gray-50">
-                                                            <td className="p-3 text-xs">{index + 1}</td>
-                                                            <td className="p-3 text-xs">{item.loan_id}</td>
-                                                            <td className="p-3 text-xs">{item.member_id}</td>
-                                                            <td className="p-3 text-xs">{item.item_code}</td>
-                                                            <td className="p-3 text-xs">{item.loan_date || "-"}</td>
-                                                            <td className="p-3 text-xs">{item.due_date || "-"}</td>
-                                                            <td className="p-3 text-xs">{item.return_date || "-"}</td>
-                                                            <td className={`p-3 font-semibold text-xs ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
-                                                                {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
-                                                            </td>
+                                                </thead>
+                                                <tbody>
+                                                    {isLoadingHistory ? (
+                                                        Array.from({ length: limit }).map((_, i) => (
+                                                            <tr key={i} className="border-b animate-pulse">
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 text-left rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                                <td className="p-4"><div className="h-4 bg-gray-200 rounded"></div></td>
+                                                            </tr>
+                                                        ))
+                                                    ) : loanHistory.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan="8" className="text-center p-4">Tidak ada data</td>
                                                         </tr>
-                                                    ))
-                                                )}
-                                            </tbody>
+                                                    ) : (
+                                                        loanHistory.map((item, index) => (
+                                                            <tr key={item.loan_id} className="border-b hover:bg-gray-50">
+                                                                <td className="p-3 text-xs">{index + 1}</td>
+                                                                <td className="p-3 text-xs">{item.loan_id}</td>
+                                                                <td className="p-3 text-xs">{item.member_id}</td>
+                                                                <td className="p-3 text-xs">{item.item_code}</td>
+                                                                <td className="p-3 text-xs">{item.loan_date || "-"}</td>
+                                                                <td className="p-3 text-xs">{item.due_date || "-"}</td>
+                                                                <td className="p-3 text-xs">{item.return_date || "-"}</td>
+                                                                <td className={`p-3 font-semibold text-xs ${item.is_return === 0 ? "text-red-500" : "text-green-600"}`}>
+                                                                    {item.is_return === 0 ? "Belum Dikembalikan" : "Sudah Dikembalikan"}
+                                                                </td>
+                                                            </tr>
+                                                        ))
+                                                    )}
+                                                </tbody>
 
 
-                                        </table>
-                                        <div className="flex gap-1 mt-7 justify-center text-sm">
+                                            </table>
+                                            <div className="flex gap-1 mt-7 justify-center text-sm">
 
-                                            {/* Prev */}
-                                            <button
-                                                className="flex gap-2 mt-1 px-2 py-1 text-[#757575] text-xs rounded disabled:opacity-70"
-                                                disabled={currentPage <= 1}
-                                                onClick={() => fetchLoanHistory(currentPage - 1)}
-                                            >
-                                                <p>←</p>
-                                                <span>Sebelumnya</span>
-                                            </button>
-
-                                            {/* Number buttons */}
-                                            {pageNumbers.map(num => (
+                                                {/* Prev */}
                                                 <button
-                                                    key={num}
-                                                    onClick={() => fetchLoanHistory(num)}
-                                                    className={`px-3 py-1 rounded-md transition-all duration-150
-                                                            ${currentPage === num
-                                                            ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
-                                                            : 'text-[#023048] text-xs  hover:bg-[#F3F6F9]'
-                                                        }`}
+                                                    className="flex gap-2 mt-1 px-2 py-1 text-[#757575] text-xs rounded disabled:opacity-70"
+                                                    disabled={currentPage <= 1}
+                                                    onClick={() => fetchLoanHistory(currentPage - 1)}
                                                 >
-                                                    {num}
+                                                    <p>←</p>
+                                                    <span>Sebelumnya</span>
                                                 </button>
-                                            ))}
 
-                                            {/* Next */}
-                                            <button
-                                                className="px-4 py-2 text-[#757575] text-xs rounded disabled:opacity-70"
-                                                disabled={currentPage >= totalPages}
-                                                onClick={() => fetchLoanHistory(currentPage + 1)}
-                                            >
-                                                Selanjutnya →
-                                            </button>
+                                                {/* Number buttons */}
+                                                {pageNumbers.map(num => (
+                                                    <button
+                                                        key={num}
+                                                        onClick={() => fetchLoanHistory(num)}
+                                                        className={`px-3 py-1 rounded-md transition-all duration-150
+                                                            ${currentPage === num
+                                                                ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
+                                                                : 'text-[#023048] text-xs  hover:bg-[#F3F6F9]'
+                                                            }`}
+                                                    >
+                                                        {num}
+                                                    </button>
+                                                ))}
+
+                                                {/* Next */}
+                                                <button
+                                                    className="px-4 py-2 text-[#757575] text-xs rounded disabled:opacity-70"
+                                                    disabled={currentPage >= totalPages}
+                                                    onClick={() => fetchLoanHistory(currentPage + 1)}
+                                                >
+                                                    Selanjutnya →
+                                                </button>
+                                            </div>
+
                                         </div>
-
                                     </div>
                                 </div>
                             </div>
+                        </div>
+                        <div className="w-full z-50 mt-6">
+                            <AppLayout></AppLayout>
                         </div>
                     </div>
+
                 </div>
             </div>
 
-            <div className="sticky w-full z-50">
-                <AppLayout></AppLayout>
-            </div>
+
+            {/* batas ambang */}
         </main>
     );
 }
