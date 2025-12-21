@@ -47,7 +47,7 @@ app.use("/api/summary", require("./routes/syncRoutes"));
 
 app.use('/api/keterangan', keteranganRoute);
 
-app.use('/api/bebaspustaka', require('./routes/testing'));
+app.use('/api/bebaspustaka', require('./routes/bepus'));
 
 app.use('/api/sikompen',require("./routes/sikompen"));
 

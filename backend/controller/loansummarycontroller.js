@@ -215,10 +215,12 @@ exports.getLoanHistory = async (req, res) => {
     const sql = `
       SELECT loan_id, member_id, item_code, loan_date, due_date, is_return, return_date
       FROM loan
+      WHERE is_return = 0 AND return_date IS NULL
       ORDER BY 
         (is_return = 0 AND return_date IS NULL) DESC,
         is_return ASC
       LIMIT ? OFFSET ?
+      
     `;
 
     const [rows] = await opac.query(sql, [limit, offset]);

@@ -1,7 +1,7 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import AppLayout from './AppLayout';
 import axios from 'axios';
-import authCheckSA from './authCheckSA';
+import authCheck from './authCheck';
 import LogoutAlert from "./logoutConfirm";
 import { useNavigate } from "react-router-dom";
 import {
@@ -52,7 +52,7 @@ ChartJS.register(
 );
 
 export default function Dashboard() {
-    authCheckSA();
+    authCheck();
     const [showLogout, setShowLogout] = useState(false);
     //data dummy
     const [data, setData] = useState([

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "./AppLayout";
-import authCheckSA from "./authCheckSA";
+import authCheck from "./authCheck";
 import { DayPicker } from "react-day-picker";
 import 'react-day-picker/dist/style.css';
 import {
@@ -26,7 +26,7 @@ import "./App.css";
 import axios from "axios";
 
 function Approval() {
-    authCheckSA();
+    authCheck();
     const [activeTab, setActiveTab] = useState('pending');
     const [tabCounts, setTabCounts] = useState({
         pending: 0,
@@ -555,7 +555,7 @@ function Approval() {
                                 <IconFileDescription size={20} />
                                 Konfirmasi Data
                             </a>
-                           </nav>
+                        </nav>
                     </div>
                 </aside>
                 {isSidebarOpen && (
@@ -574,6 +574,8 @@ function Approval() {
                         >
                             <IconMenu2 size={24} />
                         </button>
+
+
 
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
@@ -601,7 +603,7 @@ function Approval() {
                                 </div>
                                 <div className="p-2 space-y-1">
                                     <button
-                                        onClick={() => goto("/profile")}
+                                        onClick={() => goto("/profileSA")}
                                         className="flex items-center gap-3 p-2 w-full text-left text-sm hover:bg-gray-100 rounded-md text-gray-700"
                                     >
                                         <IconUser size={18} />

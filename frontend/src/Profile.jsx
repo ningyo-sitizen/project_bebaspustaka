@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import authCheckSA from "./authCheckSA";
+import authCheck from "./authCheck";
 import {
   IconHome,
   IconChartBar,
@@ -14,7 +14,7 @@ import {
 import LogoutAlert from "./logoutConfirm";
 
 export default function Profile() {
-  authCheckSA();
+  authCheck();
   const [showLogout, setShowLogout] = useState(false);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);

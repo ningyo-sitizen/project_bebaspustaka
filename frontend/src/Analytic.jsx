@@ -1,6 +1,6 @@
 import { Line, Bar, Pie } from 'react-chartjs-2';
 import axios from 'axios';
-import authCheckSA from './authCheckSA';
+import authCheck from './authCheck';
 import LogoutAlert from "./logoutConfirm";
 
 import {
@@ -42,7 +42,7 @@ ChartJS.register(
 );
 
 export default function Analytic() {
-    authCheckSA();
+    authCheck();
     const [showLogout, setShowLogout] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const yearColors = {};

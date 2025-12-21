@@ -37,6 +37,37 @@ ORDER BY no ASC;
   }
 };
 
+exports.getBebasPustakaForLandingPage = async (req, res) => {
+  try {
+    const [data] = await bebaspustaka.query(`
+      SELECT 
+        nim,
+        nama_mahasiswa,
+        institusi,
+        program_studi,
+        STATUS_bebas_pustaka
+      FROM bebas_pustaka
+      WHERE STATUS_bebas_pustaka = "pending"
+      ORDER BY waktu_bebaspustaka DESC
+      LIMIT 5
+    `);
+
+    return res.status(200).json({
+      success: true,
+      message: "Data bebas pustaka untuk landing page",
+      data
+    });
+
+  } catch (error) {
+    console.error("[ERROR getBebasPustakaForLandingPage]", error);
+    return res.status(500).json({
+      success: false,
+      message: "Gagal mengambil data bebas pustaka"
+    });
+  }
+};
+
+
 exports.getDashboardDatVisitor = async (req, res) => {
   try {
     const period = req.query.period || "daily";

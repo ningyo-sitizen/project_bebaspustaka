@@ -19,7 +19,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from "react-router-dom";
 import AppLayout from './AppLayout';
 import InfoCards from '../src/infoCards';
-import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, Users, BookOpen, Calendar, PieChart } from 'lucide-react';
 import { data, Link } from 'react-router-dom';
 import { use } from 'react';
 import {
@@ -388,7 +388,7 @@ export default function AnalyticSA() {
                 lineChart: chart,
                 barChart: chart,
                 pieChart: chart,
-                doughnutChart: chart
+                PieChart: chart
             });
 
             setTableDataRight(transformed);
