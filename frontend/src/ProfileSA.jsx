@@ -8,11 +8,12 @@ import {
   IconHome,
   IconChartBar,
   IconBell,
+  IconFileDescription,
   IconLogout,
   IconUser,
   IconChevronDown,
   IconMenu2,
-  IconCheckupList
+  IconBellRinging
 } from "@tabler/icons-react";
 import LogoutAlert from "./logoutConfirm";
 
@@ -121,16 +122,16 @@ export default function ProfileSA() {
               Data Analitik
             </a>
             <a href="/approvalSA" className={getSidebarItemClass()}>
-              <IconBell size={20} />
+              <IconFileDescription size={20} />
               Konfirmasi Data
             </a>
             <a href="/usercontrolSA" className={getSidebarItemClass(true)}>
               <IconUsers size={20} />
-              User Control
+              Kontrol Pengguna
             </a>
             <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
               <IconHistory size={20} />
-              History
+              Riwayat
             </a>
           </nav>
         </div>
@@ -158,9 +159,12 @@ export default function ProfileSA() {
           >
             <IconMenu2 size={24} />
           </button>
-          <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
-            <IconBell size={24} />
+
+          <a href="/historySA" className="group mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+            <IconBell size={24} className="block group-hover:hidden" />
+            <IconBellRinging size={24} className="hidden group-hover:block animate-ring-bell" />
           </a>
+
           <div
             className="flex items-center gap-2 cursor-pointer pr-4 relative"
             onClick={toggleDropdown}

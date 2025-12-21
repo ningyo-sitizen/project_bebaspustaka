@@ -12,7 +12,7 @@ import {
     IconUser,
     IconChevronDown,
     IconMenu2,
-    IconCheckupList,
+    IconBellRinging,
     IconUsers,
     IconHistory,
     IconPlus,
@@ -227,7 +227,6 @@ export default function DashboardSA() {
 
                 <div className="flex-1 flex flex-col h-screen">
 
-                    {/* NAVBAR */}
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
@@ -236,9 +235,12 @@ export default function DashboardSA() {
                         >
                             <IconMenu2 size={24} />
                         </button>
-                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
-                            <IconBell size={24} />
+                        
+                        <a href="/historySA" className="group mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} className="block group-hover:hidden" />
+                            <IconBellRinging size={24} className="hidden group-hover:block animate-ring-bell" />
                         </a>
+                        
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleDropdown}

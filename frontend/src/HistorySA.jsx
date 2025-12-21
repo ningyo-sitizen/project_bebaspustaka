@@ -6,14 +6,12 @@ import authCheckSA from "./authCheckSA";
 import AppLayout from "./AppLayout";
 import LogoutAlert from "./logoutConfirm";
 import {
-    IconHome, IconChartBar, IconBell, IconLogout, IconUser, IconChevronDown,
+    IconHome, IconChartBar, IconBell, IconBellRinging, IconLogout, IconUser, IconChevronDown,
     IconMenu2, IconUsers, IconHistory, IconSearch, IconCheckupList, IconSortDescendingLetters,
     IconX, IconChevronRight, IconChevronLeft, IconCheck, IconCalendar,
     IconFileDescription
 } from "@tabler/icons-react";
 
-// URL Foto Dummy yang digunakan di Navbar dan Timeline
-const ZAHRAH_PHOTO_URL = "https://i.ibb.co/C07X0Q0/dummy-profile.jpg";
 
 // Array Nama Bulan
 const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
@@ -521,7 +519,7 @@ const History = () => {
         return acc;
     }, {});
 
-
+    const [isHovered, setIsHovered] = useState(false);
     return (
         <div>
             <div className="flex min-h-screen bg-[#F5F6FA] font-['Plus_Jakarta_Sans']">
@@ -573,7 +571,7 @@ const History = () => {
                 )}
 
                 {/* Main */}
-                <div className="flex-1 flex flex-col min-h-screen">
+                <div className="flex-1 flex flex-col h-screen">
                     <header className="w-full bg-white border-b p-4 flex justify-between lg:justify-end relative z-20">
                         <button
                             className="lg:hidden text-[#023048]"
@@ -582,10 +580,12 @@ const History = () => {
                         >
                             <IconMenu2 size={24} />
                         </button>
-                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
-                            <IconBell size={24} />
-                        </a>
 
+                        <a href="/historySA" className="group mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} className="block group-hover:hidden" />
+                            <IconBellRinging size={24} className="hidden group-hover:block animate-ring-bell" />
+                        </a>
+                        
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleProfileDropdown}
@@ -627,212 +627,208 @@ const History = () => {
                         <LogoutAlert onClose={() => setShowLogout(false)} />
                     )}
                     {/* Content */}
-                    <div className="p-1 sm:p-2">
+                    <div className="flex-1 overflow-y-auto">
+                        <div className="p-1 sm:p-2">
 
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-center my-3  ml-5">
-                            <div className="mb-4 md:mb-0">
-                                <h1 className="text-xl font-semibold text-left">Rekaman Aktivitas</h1>
-                                <p className="text-sm text-[#9A9A9A] mt-1 text-left">
-                                    Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
-                                </p>
+                            <div className="flex flex-col md:flex-row md:justify-between md:items-center my-3  ml-5">
+                                <div className="mb-4 md:mb-0">
+                                    <h1 className="text-xl font-semibold text-left">Rekaman Aktivitas</h1>
+                                    <p className="text-sm text-[#9A9A9A] mt-1 text-left">
+                                        Seluruh rekaman aktivitas pengguna dan administrator tersimpan dan tercatat secara berurutan di sini.
+                                    </p>
+                                </div>
+
+
                             </div>
 
+                            <div className="w-full border-b border-gray-200 mb-5"></div>
 
-                        </div>
+                            <div className="flex flex-col lg:flex-row px-5">
+                                <div>
+                                    {isLoading ? (
+                                        <div className="text-center py-20 text-gray-600">
+                                            <svg className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4" />
+                                            Memuat data histori...
+                                        </div>
+                                    ) : Object.values(groupedData).length > 0 ? (
+                                        Object.values(groupedData).map((group, idx) => (
+                                            <div key={idx} className="mb-10">
+                                                {/* Header hari & tanggal */}
+                                                <p className="text-sm font-semibold text-left">{group.hari}</p>
+                                                <p className="text-sm text-gray-500 mb-4 text-left">{group.tanggal}</p>
 
-                        <div className="w-full border-b border-gray-200 mb-5"></div>
+                                                {group.items
+                                                    .sort((a, b) => a.waktu.localeCompare(b.waktu))
+                                                    .map(item => (
+                                                        <div key={item.id} className="flex items-start mt-2 relative space-y-3">
 
-                        <div className="flex flex-col lg:flex-row px-5">
-                            <div>
-                                {isLoading ? (
-                                    <div className="text-center py-20 text-gray-600">
-                                        <svg className="animate-spin h-6 w-6 text-[#023048] mx-auto mb-4" />
-                                        Memuat data histori...
-                                    </div>
-                                ) : Object.values(groupedData).length > 0 ? (
-                                    Object.values(groupedData).map((group, idx) => (
-                                        <div key={idx} className="mb-10">
-                                            {/* Header hari & tanggal */}
-                                            <p className="text-sm font-semibold text-left">{group.hari}</p>
-                                            <p className="text-sm text-gray-500 mb-4 text-left">{group.tanggal}</p>
+                                                            {/* Waktu */}
+                                                            <p className="text-xs text-[#9A9A9A] w-16 shrink-0 mt-3">
+                                                                {item.waktu} WIB
+                                                            </p>
 
-                                            {group.items
-                                                .sort((a, b) => a.waktu.localeCompare(b.waktu))
-                                                .map(item => (
-                                                    <div key={item.id} className="flex items-start mt-2 relative space-y-3">
+                                                            {/* Card */}
+                                                            <div className="relative flex bg-white min-w-[600px] border border-gray-200 rounded-xs mx-5 w-full">
 
-                                                        {/* Waktu */}
-                                                        <p className="text-xs text-[#9A9A9A] w-16 shrink-0 mt-3">
-                                                            {item.waktu} WIB
-                                                        </p>
+                                                                {/* Garis kiri */}
+                                                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#4ABC4C] rounded-l-xs" />
 
-                                                        {/* Card */}
-                                                        <div className="relative flex bg-white min-w-[600px] border border-gray-200 rounded-xs mx-5 w-full">
+                                                                {/* Konten */}
+                                                                <div className="flex flex-col gap-1 pl-6 pr-4 py-3 w-full">
 
-                                                            {/* Garis kiri */}
-                                                            <div className="absolute left-0 top-0 bottom-0 w-2 bg-[#4ABC4C] rounded-l-xs" />
+                                                                    {/* Header */}
+                                                                    <div className="flex items-center gap-2">
+                                                                        <p className="text-sm font-semibold text-[#023048]">
+                                                                            Di edit oleh {item.name}
+                                                                        </p>
 
-                                                            {/* Konten */}
-                                                            <div className="flex flex-col gap-1 pl-6 pr-4 py-3 w-full">
+                                                                        <span
+                                                                            className={`text-xs px-2 py-0.5 rounded-md font-medium
+                                                                                 ${item.role === 'super admin'
+                                                                                    ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
+                                                                                    : item.role === 'Admin'
+                                                                                        ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
+                                                                                        : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
+                                                                                }`}
+                                                                        >
+                                                                            {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
+                                                                        </span>
+                                                                    </div>
 
-                                                                {/* Header */}
-                                                                <div className="flex items-center gap-2">
-                                                                    <p className="text-sm font-semibold text-[#023048]">
-                                                                        Di edit oleh {item.name}
+                                                                    {/* Activity */}
+                                                                    <p className="text-xs text-gray-700 text-left">
+                                                                        {item.activity}
                                                                     </p>
 
-                                                                    <span
-                                                                        className={`text-xs px-2 py-0.5 rounded-md font-medium
-                                                                                 ${item.role === 'super admin'
-                                                                                ? 'text-[#9B1C1C] bg-[#FDE8E8] border border-[#F5C6CB]'
-                                                                                : item.role === 'Admin'
-                                                                                    ? 'text-[#023048] bg-[#E7EBF1] border border-[#C6D0DF]'
-                                                                                    : 'text-[#1C3A9B] bg-[#E8EDFD] border border-[#C6D0F5]'
-                                                                            }`}
-                                                                    >
-                                                                        {item.role.charAt(0).toUpperCase() + item.role.slice(1)}
-                                                                    </span>
                                                                 </div>
-
-                                                                {/* Activity */}
-                                                                <p className="text-xs text-gray-700 text-left">
-                                                                    {item.activity}
-                                                                </p>
-
                                                             </div>
                                                         </div>
-                                                    </div>
-                                                ))}
+                                                    ))}
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div className="text-center py-10 text-gray-500 bg-white rounded-lg border">
+                                            Tidak ada aktivitas yang ditemukan
                                         </div>
-                                    ))
-                                ) : (
-                                    <div className="text-center py-10 text-gray-500 bg-white rounded-lg border">
-                                        Tidak ada aktivitas yang ditemukan
-                                    </div>
-                                )}
-                            </div>
+                                    )}
+                                </div>
 
-                            <div className="flex flex-col p-2 bg-white w-full lg:w-80 shrink-0 border border-[#EDEDED]">
-                                {/* filter */}
-                                <div className="flex flex-col mx-4 mt-2 gap-3 flex-wrap justify-center">
-                                    <p className="font-semibold text-lg mr-auto">Filter</p>
+                                <div className="flex flex-col p-2 bg-white w-full lg:w-80 shrink-0 border border-[#EDEDED]">
+                                    {/* filter */}
+                                    <div className="flex flex-col mx-4 mt-2 gap-3 flex-wrap justify-center">
+                                        <p className="font-semibold text-lg mr-auto">Filter</p>
 
-                                    <div className="relative w-full">
-                                        <input
-                                            type="text"
-                                            placeholder="Cari data...."
-                                            className="w-full p-2 pl-10 border border-[#B3B3B3] focus:ring-[#023048] focus:border-[#023048] text-xs text-black"
-                                            value={searchTerm}
-                                            onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-                                        />
-                                        <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                                    </div>
-
-                                    <div className="flex flex-col w-full">
-                                        <p className="font-regular text-sm mr-auto mt-3">Tindakan</p>
-
-                                        <div className="grid grid-cols-2 gap-2 mt-4">
-                                            {["Terbaru", "Terlama", "A -> Z", "Z -> A"].map((option) => (
-                                                <label
-                                                    key={option}
-                                                    className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded-sm border transition
-                                                  ${selectedSort === option
-                                                            ? "border-[#023048] bg-[#EDF1F3] text-[#023048] font-semibold"
-                                                            : "border-gray-300 text-gray-700 hover:bg-gray-50"
-                                                        }`}
-                                                >
-                                                    <input
-                                                        type="radio"
-                                                        name="sort"
-                                                        checked={selectedSort === option}
-                                                        onChange={() => setSelectedSort(option)}
-                                                        className="accent-[#023048]"
-                                                    />
-                                                    {option}
-                                                </label>
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <p className="font-regular text-sm mr-auto mt-3">Waktu</p>
-
-                                    <div className="relative">
-                                        <button
-                                            onClick={toggleFilter}
-                                            className={`w-full flex p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isFilterOpen
-                                                ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                                                : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
-                                                }`}                                    >
-                                            Urutkan Waktu
-                                            <IconCalendar size={20} className="text-gray-600 ml-auto" />
-                                            {(dateFilter.start || dateFilter.end) && (
-                                                <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
-                                            )}
-                                        </button>
-                                        {isFilterOpen && (
-                                            <FilterModal
-                                                isOpen={isFilterOpen}
-                                                onClose={() => setIsFilterOpen(false)}
-                                                onApplyFilter={handleApplyDateFilter}
-                                                initialStart={dateFilter.start}
-                                                initialEnd={dateFilter.end}
+                                        <div className="relative w-full">
+                                            <input
+                                                type="text"
+                                                placeholder="Cari data...."
+                                                className="w-full p-2 pl-10 border border-[#B3B3B3] focus:ring-[#023048] focus:border-[#023048] text-xs text-black"
+                                                value={searchTerm}
+                                                onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
                                             />
-                                        )}
+                                            <IconSearch size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                        </div>
+
+                                        <div className="flex flex-col w-full">
+                                            <p className="font-regular text-sm mr-auto mt-3">Tindakan</p>
+
+                                            <div className="grid grid-cols-2 gap-2 mt-4">
+                                                {["Terbaru", "Terlama", "A -> Z", "Z -> A"].map((option) => (
+                                                    <label
+                                                        key={option}
+                                                        className={`flex items-center gap-2 px-3 py-2 text-xs cursor-pointer rounded-sm border transition
+                                                  ${selectedSort === option
+                                                                ? "border-[#023048] bg-[#EDF1F3] text-[#023048] font-semibold"
+                                                                : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                                            }`}
+                                                    >
+                                                        <input
+                                                            type="radio"
+                                                            name="sort"
+                                                            checked={selectedSort === option}
+                                                            onChange={() => setSelectedSort(option)}
+                                                            className="accent-[#023048]"
+                                                        />
+                                                        {option}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <p className="font-regular text-sm mr-auto mt-3">Waktu</p>
+
+                                        <div className="relative">
+                                            <button
+                                                onClick={toggleFilter}
+                                                className={`w-full flex p-2 border border-[#B3B3B3] text-left focus:ring-[#023048] focus:border-[#023048] text-sm text-black ${isFilterOpen
+                                                    ? "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                    : "bg-white text-gray-700 border-gray-300 hover:bg-gray-50"
+                                                    }`}                                    >
+                                                Urutkan Waktu
+                                                <IconCalendar size={20} className="text-gray-600 ml-auto" />
+                                                {(dateFilter.start || dateFilter.end) && (
+                                                    <span className="w-2 h-2 bg-red-500 rounded-full absolute top-1 right-1"></span>
+                                                )}
+                                            </button>
+                                            {isFilterOpen && (
+                                                <FilterModal
+                                                    isOpen={isFilterOpen}
+                                                    onClose={() => setIsFilterOpen(false)}
+                                                    onApplyFilter={handleApplyDateFilter}
+                                                    initialStart={dateFilter.start}
+                                                    initialEnd={dateFilter.end}
+                                                />
+                                            )}
+                                        </div>
                                     </div>
-
-
-
 
                                 </div>
                             </div>
 
-                        </div>
-
-
-
-
-                        {/* Pagination */}
-                        <div className="flex flex-wrap gap-2 justify-center my-4 items-center">
-                            {/* Prev */}
-                            <button
-                                onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
-                                disabled={currentPage === 1}
-                                className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
-                            >
-                                ← Sebelumnya
-                            </button>
-
-                            {pageNumbers.map(num => (
+                            {/* Pagination */}
+                            <div className="flex flex-wrap gap-2 justify-center my-4 items-center">
+                                {/* Prev */}
                                 <button
-                                    key={num}
-                                    onClick={() => setCurrentPage(num)}
-                                    className={`px-3 py-1 rounded-md transition-all duration-150
-                                 ${currentPage === num
-                                            ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
-                                            : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
-                                        }`}
+                                    onClick={() => setCurrentPage(p => Math.max(p - 1, 1))}
+                                    disabled={currentPage === 1}
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
                                 >
-                                    {num}
+                                    ← Sebelumnya
                                 </button>
-                            ))}
 
-                            {/* Next */}
-                            <button
-                                onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
-                                disabled={currentPage === totalPages}
-                                className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
-                            >
-                                Selanjutnya →
-                            </button>
+                                {pageNumbers.map(num => (
+                                    <button
+                                        key={num}
+                                        onClick={() => setCurrentPage(num)}
+                                        className={`px-3 py-1 rounded-md transition-all duration-150
+                                 ${currentPage === num
+                                                ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
+                                                : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
+                                            }`}
+                                    >
+                                        {num}
+                                    </button>
+                                ))}
+
+                                {/* Next */}
+                                <button
+                                    onClick={() => setCurrentPage(p => Math.min(p + 1, totalPages))}
+                                    disabled={currentPage === totalPages}
+                                    className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+                                >
+                                    Selanjutnya →
+                                </button>
+                            </div>
+
                         </div>
-
+                        <div className="sticky w-full z-99">
+                            <AppLayout></AppLayout>
+                        </div>
                     </div>
                 </div>
 
             </div>
-            <div className="sticky w-full z-99">
-                <AppLayout></AppLayout>
-            </div>
-        </div >
+
+        </div>
     );
 };
 

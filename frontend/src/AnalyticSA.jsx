@@ -33,7 +33,7 @@ import {
     IconMenu2,
     IconChevronDown,
     IconAdjustmentsHorizontal,
-    IconCheckupList,
+    IconBellRinging,
     IconFileDescription,
 } from "@tabler/icons-react";
 ChartJS.register(
@@ -1404,8 +1404,10 @@ export default function AnalyticSA() {
                         >
                             <IconMenu2 size={24} />
                         </button>
-                        <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
-                            <IconBell size={24} />
+                       
+                        <a href="/historySA" className="group mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+                            <IconBell size={24} className="block group-hover:hidden" />
+                            <IconBellRinging size={24} className="hidden group-hover:block animate-ring-bell" />
                         </a>
 
                         <div
