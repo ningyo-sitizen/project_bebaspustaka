@@ -247,6 +247,8 @@ function ApprovalSA() {
         setCheckedItems(newChecked);
     };
 
+    const [showPopup, setShowPopup] = useState(false);
+    const [showOutDatePopup, setShowOutDatePopup] = useState(false);
 
 
 
@@ -442,11 +444,12 @@ function ApprovalSA() {
             const data = await res.json();
 
             if (data.success) {
-                alert("Tanggal berhasil disimpan dan data berhasil digenerate!");
                 setStatusRange("on_range");
             } else {
                 alert("Gagal: " + data.message);
+                setStatusRange("empty");
             }
+
 
         } catch (error) {
             console.error("Error saving date:", error);
@@ -474,6 +477,18 @@ function ApprovalSA() {
     useEffect(() => {
         fetchData();
     }, [fetchData]);
+
+    useEffect(() => {
+        if (statusRange === "empty") {
+            setShowPopup(true);
+        }
+    }, [statusRange]);
+
+    useEffect(() => {
+        if (statusRange === "out_of_range") {
+              setShowOutDatePopup(true);
+        }
+    }, [statusRange]);
 
     useEffect(() => {
         const fetchdate = async () => {
@@ -640,8 +655,8 @@ function ApprovalSA() {
                     {/* isi konten */}
                     <div className="flex-1 overflow-y-auto">
                         <div className="p-4 md:p-8">
-                            <p className="font-semibold text-2xl text-black mb-2 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
-                            <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
+                            <p className="font-semibold text-xl text-black mb-2 mt-0 md:mt-2 text-left">Konfirmasi Data Bebas Pustaka</p>
+                            <div className="flex items-start gap-1 text-[#9A9A9A] text-sm font-medium mb-3">
                                 <svg xmlns="http://www.w3.org/2000/svg"
                                     width="18"
                                     height="18"
@@ -659,8 +674,8 @@ function ApprovalSA() {
                                     <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
                                 </svg>
                                 <div className="flex">
-                                    <p className="text-base ml-1">{total} &nbsp;</p>
-                                    <p className="text-base mb-6">permohonan bebas pustaka</p>
+                                    <p className="text-sm ml-1">{total} &nbsp;</p>
+                                    <p className="text-sm mb-6">permohonan bebas pustaka</p>
                                 </div>
                             </div>
 
@@ -689,13 +704,17 @@ function ApprovalSA() {
                                     <div className="flex border-2 border-[#E3E3E3] items-center justify-center">
                                         <div className="relative">
                                             <div className="border-r-2 border-[#E3E3E3] text-sm h-full my-auto">
+
                                                 <button
-
-                                                    onClick={() =>
-                                                        (statusRange === "out_of_range" || statusRange === "empty") &&
-                                                        setShowFilter(!showFilter)
-                                                    }
-
+                                                    onClick={() => {
+                                                        if (statusRange === "empty") {
+                                                            setShowPopup(true);
+                                                        } else if (statusRange === "out_of_date") {
+                                                            setShowOutDatePopup(true);
+                                                        } else {
+                                                            setShowFilter(!showFilter);
+                                                        }
+                                                    }}
                                                     disabled={statusRange === "on_range"}
                                                     className={`flex relative gap-4 px-4 py-2 active:scale-90 transition-transform duration-100
                                                       ${statusRange === "on_range"
@@ -720,7 +739,7 @@ function ApprovalSA() {
                                                         <path stroke="none" d="M0 0h24v24H0z" fill="none" />
                                                         <path d="M4 4h16v2.172a2 2 0 0 1 -.586 1.414l-4.414 4.414v7l-6 2v-8.5l-4.48 -4.928a2 2 0 0 1 -.52 -1.345v-2.227z" />
                                                     </svg>
-                                                    Filter
+                                                    Tanggal
                                                 </button>
                                             </div>
 
@@ -937,8 +956,8 @@ function ApprovalSA() {
                                     <div
                                         onClick={() => handleTabChange('approved')}
                                         className={`w-40 h-12 cursor-pointer transition-all
-            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
-            ${activeTab === 'approved' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
+                                        [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+                                        ${activeTab === 'approved' ? 'bg-[#D8DFEC]' : 'bg-[#E7ECF5]'}`}
                                     >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
                                             <p className="font-medium">Disetujui</p>
@@ -952,8 +971,8 @@ function ApprovalSA() {
                                     <div
                                         onClick={() => handleTabChange('all')}
                                         className={`w-40 h-12 cursor-pointer transition-all
-            [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
-            ${activeTab === 'all' ? 'bg-[#D8DFEC]' : 'bg-[#EEF3FB]'}`}
+                                        [clip-path:polygon(0_0,91%_0,100%_100%,0_100%)]
+                                        ${activeTab === 'all' ? 'bg-[#D8DFEC]' : 'bg-[#EEF3FB]'}`}
                                     >
                                         <div className="flex gap-2 items-center justify-center mt-3 text-sm text-[#023048]">
                                             <p className="font-medium">Semua</p>
@@ -1290,59 +1309,69 @@ function ApprovalSA() {
                         )}
 
                         {/* out of date */}
-                        {/* <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
-                            <div className="relative w-80 h-80 overflow-hidden">
+                        {showOutDatePopup && (
+                            <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
+                                <div className="w-80">
+                                    <div className="bg-white rounded-md font-semibold flex flex-col items-center text-center py-6 px-6">
 
-                                <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
-                                    <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
-                                        <IconCalendarWeek stroke="#023048" size={30} />
-                                    </div>
+                                        <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                            <IconCalendarWeek stroke="#023048" size={30} />
+                                        </div>
 
-                                    <p className="text-xl mt-5">Masa Telah Usai</p>
-                                    <p className="text-xs font-extralight mt-4 px-2">
-                                        Silahkan perbaharui tanggal lagi agar data yang tersedia dapat ditampilkan dengan lengkap
-                                    </p>
+                                        <p className="text-xl mt-5">Masa Telah Usai</p>
+                                        <p className="text-xs font-extralight mt-4 px-2">
+                                            Silahkan perbaharui tanggal agar data bisa ditampilkan.
+                                        </p>
 
-                                    <div className="w-full mt-8">
                                         <button
-                                            type="button"
-                                            onClick={""}
-                                            className="w-full py-2.5 rounded-lg bg-[#023048] text-white font-medium text-sm
-                               hover:bg-[#034161] active:scale-95 transition-all duration-150 shadow-md"
+                                            onClick={() => {
+                                                setShowOutDatePopup(false);
+                                                setShowFilter(true); // auto buka filter tanggal
+                                            }}
+                                            className="w-full mt-8 py-2.5 rounded-lg bg-[#023048] text-white text-sm
+                                            hover:bg-[#034161] active:scale-95 transition"
                                         >
                                             Oke, Mengerti
                                         </button>
+
                                     </div>
                                 </div>
                             </div>
-                        </div> */}
+                        )}
+
 
                         {/* pick tanggal */}
-                        {/* <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
-                            <div className="relative w-80 h-80 overflow-hidden">
+                        {showPopup && (
+                            <div className="fixed inset-0 bg-[#333333]/60 flex items-center justify-center z-50">
+                                <div className="relative w-80">
+                                    <div className="bg-white rounded-md font-semibold flex flex-col items-center text-center py-6 px-6">
 
-                                <div className="bg-white rounded-md font-semibold flex flex-col items-center justify-center text-center py-4 px-6 mt-8 pt-3">
-                                    <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
-                                        <IconCalendarWeek stroke="#023048" size={30} />
-                                    </div>
+                                        <div className="w-[55px] h-[55px] bg-[#EDF1F3] rounded-full flex items-center justify-center">
+                                            <IconCalendarWeek stroke="#023048" size={30} />
+                                        </div>
 
-                                    <p className="text-xl mt-5">Pilih Tanggal Terlebih Dahulu!</p>
-                                    <p className="text-xs font-extralight mt-4 px-2">
-Silakan pilih tanggal terlebih dahulu agar data yang tersedia dapat ditampilkan dengan lengkap.                                    </p>
+                                        <p className="text-xl mt-5">Pilih Tanggal Terlebih Dahulu!</p>
+                                        <p className="text-xs font-extralight mt-4 px-2">
+                                            Silakan pilih tanggal agar data tampil lengkap.
+                                        </p>
 
-                                    <div className="w-full mt-8">
                                         <button
-                                            type="button"
-                                            onClick={""}
-                                            className="w-full py-2.5 rounded-lg bg-[#023048] text-white font-medium text-sm
-                               hover:bg-[#034161] active:scale-95 transition-all duration-150 shadow-md"
+                                            onClick={() => {
+                                                setShowPopup(false);
+                                                setShowFilter(true); // auto buka filter tanggal
+                                            }}
+                                            className="w-full mt-8 py-2.5 rounded-lg bg-[#023048] text-white text-sm
+                                            hover:bg-[#034161] active:scale-95 transition"
                                         >
                                             Oke, Mengerti
                                         </button>
+
                                     </div>
                                 </div>
                             </div>
-                        </div> */}
+                        )}
+
+
                     </div>
                 </div>
 

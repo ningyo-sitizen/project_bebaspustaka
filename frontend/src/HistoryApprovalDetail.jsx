@@ -279,7 +279,7 @@ const getStatusClass = (status) => {
           </header>
 
           <div className="ml-0 flex-1 p-4 md:p-8">
-            <p className="font-semibold text-2xl text-black mb-2 mt-0 md:mt-2 text-left">
+            <p className="font-semibold text-xl text-black mb-2 mt-0 md:mt-2 text-left">
               History Approval – Batch {batch_id}
             </p>
             <div className="flex items-start gap-1 text-[#9A9A9A] text-lg font-medium mb-3">
@@ -300,8 +300,8 @@ const getStatusClass = (status) => {
                 <path d="M21 21v-2a4 4 0 0 0 -3 -3.85" />
               </svg>
               <div className="flex">
-                <p className="text-base ml-1">{total} &nbsp;</p>
-                <p className="text-base mb-6">data yang sudah di-approve</p>
+                <p className="text-sm ml-1">{total} &nbsp;</p>
+                <p className="text-sm mb-6">data yang sudah di-approve</p>
               </div>
             </div>
 
