@@ -1,7 +1,7 @@
 import { Line, Bar, Pie, Doughnut } from 'react-chartjs-2';
 import AppLayout from './AppLayout';
 import axios from 'axios';
-import authCheck from './authCheck';
+import authCheckSA from './authCheckSA';
 import LogoutAlert from "./logoutConfirm";
 import { useNavigate } from "react-router-dom";
 import {
@@ -51,18 +51,42 @@ ChartJS.register(
     Legend
 );
 
+
 export default function Dashboard() {
-    authCheck();
+    authCheckSA();
+    const fetchLandingPageList = async () => {
+        try {
+            const token = localStorage.getItem("token");
+
+            const response = await axios.get(
+                "http://localhost:8080/api/landing/landingpagelist",
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+
+            if (response.data.success) {
+                setData(
+                    response.data.data.map((item, index) => ({
+                        id: index + 1,
+                        name: item.nama_mahasiswa,
+                        nim: item.nim,
+                        jurusan: item.program_studi,
+                        statusbebaspustakanya:
+                            item.STATUS_bebas_pustaka === "pending" ? 0 : 1,
+                    }))
+                );
+            }
+        } catch (error) {
+            console.error("❌ Gagal mengambil data landing page:", error);
+        }
+    };
+
     const [showLogout, setShowLogout] = useState(false);
     //data dummy
-    const [data, setData] = useState([
-        { id: 1, name: "Hoshimi Miyabi", nim: "1234", jurusan: "TIK", statusbebaspustakanya: 0 },
-        { id: 2, name: "Oscar Pramudyas Astra Ozora", nim: "5678", jurusan: "TIK", statusbebaspustakanya: 0 },
-        { id: 3, name: "Zahra Byanka Anggrita Widagdo", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
-        { id: 4, name: "Zuriel Joseph Jowy Mone", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
-        { id: 5, name: "Zahrah Purnama Alam", nim: "2307412035", jurusan: "TIK", statusbebaspustakanya: 1 },
-    ]);
-
+    const [data, setData] = useState([]);
     //goto
     const goto = useNavigate();
 
@@ -125,6 +149,7 @@ export default function Dashboard() {
         };
         fetchProfile();
         fetchChartData();
+        fetchLandingPageList();
     }, []);
 
     const fetchChartData = async () => {
@@ -176,7 +201,7 @@ export default function Dashboard() {
 
     return (
         <main className="font-jakarta bg-[#F9FAFB] min-h-screen overflow-hidden">
-            
+
             <div className="flex h-full">
                 <aside
                     className={`fixed inset-y-0 left-0 z-40 w-64 bg-white border-r transform transition-transform duration-300 ease-in-out 
@@ -227,7 +252,7 @@ export default function Dashboard() {
                         >
                             <IconMenu2 size={24} />
                         </button>
-                        
+
                         <div
                             className="flex items-center gap-2 cursor-pointer pr-4 relative"
                             onClick={toggleDropdown}
@@ -304,7 +329,7 @@ export default function Dashboard() {
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                         <h3 className="font-semibold text-base mb-2 sm:mb-0">Data Analitik Mahasiswa</h3>
                                         <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                            onClick={() => goto('/analytic')}>
+                                            onClick={() => goto('/analyticSA')}>
                                             Lihat data &gt;
                                         </p>
                                     </div>
@@ -355,7 +380,7 @@ export default function Dashboard() {
                                     <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
                                         <h3 className="font-semibold text-base mb-2 sm:mb-0">Setujui Data Bebas Pustaka</h3>
                                         <p className="font-light text-[#9A9A9A] text-sm cursor-pointer hover:underline"
-                                            onClick={() => goto('/approval')}
+                                            onClick={() => goto('/approvalSA')}
                                         >
                                             Lihat data &gt;
                                         </p>
@@ -369,54 +394,65 @@ export default function Dashboard() {
                                         </div>
 
                                         <div className="overflow-x-auto">
-                                            <table className="w-full border-collapse ">
+                                            <table className="w-full border-collapse">
                                                 <thead>
-                                                    <tr className="bg-[#667790] border-b-5 border-gray-300 ">
-                                                        <th className="rounded-tl-lg text-left px-2 py-2 font-thin text-center text-xs text-white">No</th>
-                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nama</th>
-                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Nim</th>
-                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Jurusan</th>
-                                                        <th className="text-left px-2 py-2 font-thin text-center text-xs text-white">Status</th>
-                                                        <th className="rounded-tr-lg text-left px-2 py-2 font-thin text-center text-xs text-white">Tindakan</th>
+                                                    <tr className="bg-[#667790]">
+                                                        <th className="rounded-tl-lg px-2 py-2 text-xs text-white text-center">No</th>
+                                                        <th className="px-2 py-2 text-xs text-white text-center">Nama</th>
+                                                        <th className="px-2 py-2 text-xs text-white text-center">NIM</th>
+                                                        <th className="px-2 py-2 text-xs text-white text-center">Jurusan</th>
+                                                        <th className="px-2 py-2 text-xs text-white text-center">Status</th>
                                                     </tr>
                                                 </thead>
+
                                                 <tbody>
-                                                    {data.map((item, index) => (
-                                                        <tr
-                                                            key={item.id}
-                                                            className="border-b text-xs text-[#616161] hover:text-black border-gray-100 hover:bg-gray-50"
-                                                        >
-                                                            <td className="p-1">{index + 1}</td>
-                                                            <td className="p-3 text-left whitespace-nowrap">{item.name}</td>
-                                                            <td className="p-1">{item.nim}</td>
-                                                            <td className="p-1">{item.jurusan}</td>
-                                                            <td className="p-1">
-                                                                <span
-                                                                    className={`px-2 py-1 rounded-full text-xs ${item.statusbebaspustakanya === 0
-                                                                        ? "bg-yellow-100 text-yellow-800"
-                                                                        : "bg-green-100 text-green-800"
-                                                                        }`}
-                                                                >
-                                                                    {item.statusbebaspustakanya === 0 ? "Pending" : "Disetujui"}
-                                                                </span>
-                                                            </td>
-                                                            <td className="p-1">
-                                                                <button
-                                                                    className={`px-4 py-2 rounded-lg text-sm transition-colors ${item.statusbebaspustakanya === 0
-                                                                        ? "bg-blue-600 text-white hover:bg-blue-700"
-                                                                        : "bg-gray-300 text-gray-600 cursor-not-allowed"
-                                                                        }`}
-                                                                    disabled={item.statusbebaspustakanya !== 0}
-                                                                >
-                                                                    {item.statusbebaspustakanya === 0 ? "Setuju" : "Selesai"}
-                                                                </button>
+                                                    {data.length === 0 ? (
+                                                        <tr>
+                                                            <td colSpan="6" className="text-center py-4 text-xs text-gray-500">
+                                                                Tidak ada data
                                                             </td>
                                                         </tr>
-                                                    ))}
+                                                    ) : (
+                                                        data.map((item, index) => (
+                                                            <tr
+                                                                key={item.nim}
+                                                                className="border-b text-xs text-[#616161] hover:bg-gray-50"
+                                                            >
+                                                                <td className="p-2 text-center">{index + 1}</td>
+
+                                                                <td className="p-2 whitespace-nowrap">
+                                                                    {item.name}
+                                                                </td>
+
+                                                                <td className="p-2 text-center">
+                                                                    {item.nim}
+                                                                </td>
+
+                                                                <td className="p-2 text-center">
+                                                                    {item.jurusan}
+                                                                </td>
+
+                                                                <td className="p-2 text-center">
+                                                                    <span
+                                                                        className={`px-2 py-1 rounded-full text-xs ${item.statusbebaspustakanya === 0
+                                                                                ? "bg-yellow-100 text-yellow-800"
+                                                                                : "bg-green-100 text-green-800"
+                                                                            }`}
+                                                                    >
+                                                                        {item.statusbebaspustakanya === 0
+                                                                            ? "Pending"
+                                                                            : "Disetujui"}
+                                                                    </span>
+                                                                </td>
+
+                                                            </tr>
+                                                        ))
+                                                    )}
                                                 </tbody>
 
                                             </table>
                                         </div>
+
 
                                     </div>
                                 </div>

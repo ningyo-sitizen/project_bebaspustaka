@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
+import LogoutAlert from "./logoutConfirm";
 import {
   IconHome,
   IconChartBar,
   IconBell,
+  IconBellRinging,
   IconMenu2,
   IconLogout,
   IconUsers,
   IconHistory,
+  IconFileDescription,
   IconUser,
   IconChevronDown,
 } from "@tabler/icons-react";
@@ -149,17 +152,17 @@ export default function HistoryApprovalDetail() {
     return `${tanggal} ${jam}`;
   };
 
-const getStatusClass = (status) => {
+  const getStatusClass = (status) => {
     switch (status?.toLowerCase()) {
-        case "pending":
-            return "bg-[#FFE2E2] text-[#E53935]";
-        case "rejected":
-            return "bg-[#FFF3E0] text-[#FB8C00]";
-        case "approved":
-        default:
-            return "bg-[#D9FBD9] text-[#4ABC4C]";
+      case "pending":
+        return "bg-[#FFE2E2] text-[#E53935]";
+      case "rejected":
+        return "bg-[#FFF3E0] text-[#FB8C00]";
+      case "approved":
+      default:
+        return "bg-[#D9FBD9] text-[#4ABC4C]";
     }
-};
+  };
 
   const totalPages = Math.ceil(total / rowsPerPage);
   const pageNumbers = [];
@@ -183,7 +186,7 @@ const getStatusClass = (status) => {
           <div className="flex flex-col h-full">
             <div className="flex flex-col items-center p-6">
               <div className="flex items-center gap-4 mb-6">
-              <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
+                <div className="bg-[url('https://cdn.designfast.io/image/2025-10-28/d0d941b0-cc17-46b2-bf61-d133f237b449.png')] w-[29px] h-[29px] bg-cover bg-center"></div>
                 <h1 className="text-lg font-medium text-[#023048]">Bebas Pustaka</h1>
               </div>
               <div className="w-full border-b border-gray-200"></div>
@@ -194,21 +197,21 @@ const getStatusClass = (status) => {
                 <IconHome size={20} />
                 Dashboard
               </a>
-              <a href="/analyticSA" className={getSidebarItemClass()}>
+              <a href="/analyticSA" className={getSidebarItemClass(true)}>
                 <IconChartBar size={20} />
                 Data Analitik
               </a>
               <a href="/ApprovalSA" className={getSidebarItemClass()}>
-                <IconBell size={20} />
+                <IconFileDescription size={20} />
                 Konfirmasi Data
               </a>
               <a href="/usercontrolSA" className={getSidebarItemClass()}>
                 <IconUsers size={20} />
-                User Control
+                Kontrol Pengguna
               </a>
-              <a href="/HistoryApprovalSA" className={getSidebarItemClass(true)}>
+              <a href="/HistoryApprovalSA" className={getSidebarItemClass()}>
                 <IconHistory size={20} />
-                History
+                Riwayat
               </a>
             </nav>
           </div>
@@ -231,8 +234,9 @@ const getStatusClass = (status) => {
             >
               <IconMenu2 size={24} />
             </button>
-            <a href="/historySA" className="mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
-              <IconBell size={24} />
+            <a href="/historySA" className="group mt-2.5 mr-4 text-[#023048] hover:text-[#A8B5CB]">
+              <IconBell size={24} className="block group-hover:hidden" />
+              <IconBellRinging size={24} className="hidden group-hover:block animate-ring-bell" />
             </a>
             <div
               className="flex items-center gap-2 cursor-pointer pr-4 relative"
@@ -277,7 +281,9 @@ const getStatusClass = (status) => {
               </div>
             )}
           </header>
-
+          {showLogout && (
+            <LogoutAlert onClose={() => setShowLogout(false)} />
+          )}
           <div className="ml-0 flex-1 p-4 md:p-8">
             <p className="font-semibold text-xl text-black mb-2 mt-0 md:mt-2 text-left">
               History Approval – Batch {batch_id}

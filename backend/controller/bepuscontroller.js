@@ -434,8 +434,6 @@ exports.setDateRangeAndGenerate = async (req, res) => {
       `, [m.nim, m.nama_mahasiswa, m.institusi, m.program_studi, mysqlDate]);
   }
 
-  console.log("[END REFRESH] Total mahasiswa:", members.length);
-
   res.json({ success: true, message: "Status diperbarui tanpa generate" });
 };
 

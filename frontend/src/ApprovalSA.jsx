@@ -444,10 +444,17 @@ function ApprovalSA() {
             const data = await res.json();
 
             if (data.success) {
-                setStatusRange("on_range");
+                alert("berhasil diperbaharui");
+                setCurrentPage(1);
+                fetchData();
             } else {
                 alert("Gagal: " + data.message);
-                setStatusRange("empty");
+
+                if (data.status === "out_of_range") {
+                    setStatusRange("out_of_range");
+                } else {
+                    setStatusRange("empty");
+                }
             }
 
 
@@ -459,21 +466,6 @@ function ApprovalSA() {
         setShowFilter(false);
     };
 
-
-    //acc n
-    const SetujuiBepus = async () => {
-        setAlertBebasPustaka(false);
-
-        const selectedIDs = Object.keys(checkedItems).filter(id => checkedItems[id]);
-
-        if (selectedIDs.length === 0) {
-            alert("Ga ada yang dicentang cuy 😭");
-            return;
-        }
-
-        console.log("Update BEPUS ID:", selectedIDs);
-    };
-
     useEffect(() => {
         fetchData();
     }, [fetchData]);
@@ -482,11 +474,8 @@ function ApprovalSA() {
         if (statusRange === "empty") {
             setShowPopup(true);
         }
-    }, [statusRange]);
-
-    useEffect(() => {
         if (statusRange === "out_of_range") {
-              setShowOutDatePopup(true);
+            setShowOutDatePopup(true);
         }
     }, [statusRange]);
 
@@ -1168,7 +1157,7 @@ function ApprovalSA() {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                                         disabled={currentPage === 1}
-                                        className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+                                        className="px-3 py-1 text-[#757575] text-xs rounded disabled:opacity-40"
                                     >
                                         ← Sebelumnya
                                     </button>
@@ -1179,8 +1168,8 @@ function ApprovalSA() {
                                             onClick={() => setCurrentPage(num)}
                                             className={`px-3 py-1 rounded-md transition-all duration-150
                                                 ${currentPage === num
-                                                    ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] scale-105 shadow-md'
-                                                    : 'text-[#023048] hover:scale-105 hover:bg-[#F3F6F9]'
+                                                    ? 'border-2 bg-[#EDF1F3] border-[#667790] text-[#023048] shadow-md'
+                                                    : 'text-[#023048] text-xs hover:bg-[#F3F6F9]'
                                                 }`}
                                         >
                                             {num}
@@ -1191,14 +1180,14 @@ function ApprovalSA() {
                                     <button
                                         onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                                         disabled={currentPage === totalPages}
-                                        className="px-3 py-1 text-[#757575] rounded disabled:opacity-40"
+                                        className="px-3 py-1 text-[#757575] text-xs rounded disabled:opacity-40"
                                     >
                                         Selanjutnya →
                                     </button>
                                 </div>
 
                                 <button
-                                    className="cursor-pointer flex relative items-center p-2 top-4 my-5 rounded-lg border border-[#757575] bg-[#023048] text-white active:scale-90 transition-transform duration-200"
+                                    className="cursor-pointer flex relative items-center p-2 top-4 my-5 rounded border border-[#757575] bg-[#023048] hover:bg text-sm text-white active:scale-90 transition-transform duration-200"
                                     onClick={handleExportPDF}
                                 >
                                     Cetak ke PDF
