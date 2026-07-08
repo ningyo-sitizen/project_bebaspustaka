@@ -1,6 +1,6 @@
 # Bebas Pustaka System
 
-Read this in: [🇮🇩 Bahasa Indonesia](README-id.md) | **🇬🇧 English**
+Read this in: [🇮🇩 Bahasa Indonesia](README.md) | **🇬🇧 English**
 
 ---
 
