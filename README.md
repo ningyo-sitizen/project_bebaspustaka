@@ -1,4 +1,4 @@
-## Read this in: [🇬🇧 English Version](README_ENG.md)
+## This is Written in Bahasa Indonesia. Read this in: [🇬🇧 English Version](README_ENG.md)
 
 <p align="center">
   <img src="https://github.com/ningyo-sitizen/BebasPustaka/blob/master/public/logso.png" alt="alt text" />
