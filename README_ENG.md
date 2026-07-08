@@ -1,6 +1,5 @@
 
-Read this in: [🇮🇩 Bahasa Indonesia](README.md)
-
+## This is Written in English. Read this in:  [🇮🇩 Bahasa Indonesia](README.md)
 ---
 
 <p align="center">
