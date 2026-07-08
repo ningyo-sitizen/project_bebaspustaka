@@ -1,3 +1,5 @@
+Read this in: [🇬🇧 English](README_ENG.md)
+
 <p align="center">
   <img src="https://github.com/ningyo-sitizen/BebasPustaka/blob/master/public/logso.png" alt="alt text" />
 </p>
