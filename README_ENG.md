@@ -51,43 +51,58 @@ Files must be saved with extensions and content that match their code type so th
 - JavaScript files are saved with `.js`
 - CSS files are saved with `.css`
 
-```css
-✅ style.css → contains CSS code
-✅ app.js → contains JavaScript code
-Wrong ❌
+```
+✅ style.css → berisi kode CSS
+✅ app.js → berisi kode JavaScript
 
-❌ style.js → contains CSS code
-❌ app.txt → contains JavaScript code
+```
+
+**Wrong ❌**
+
+```
+❌ style.js → berisi kode CSS
+❌ app.txt → berisi kode JavaScript
+
+```
 Every piece of code must be free of typos and missing/extra symbols
 Definition:
 Ensure there are no typographical errors or missing punctuation, as these can cause runtime or compilation errors.
 
 Right ✅
-
-JavaScript
+```
 let totalPrice = price * quantity;
-Wrong ❌
+```
 
-JavaScript
+Wrong ❌
+```
+
 let totalPrice = price * quantity  // missing semicolon
 let totalPrice = pirce * quantity; // typo in 'price'
 Using templates is allowed, but the source must always be cited
+```
+
 Definition:
 If you use code from the internet or a template, write down the source as a form of ethics and transparency.
 
 Right ✅
 
-JavaScript
 // Source: [https://www.w3schools.com/js/js_examples.asp](https://www.w3schools.com/js/js_examples.asp)
+```
+
 function calculateArea(radius) {
   return Math.PI * radius * radius;
 }
+```
+
 Wrong ❌
 
-JavaScript
+```
+
 function calculateArea(radius) {
   return Math.PI * radius * radius;
 }
+```
+
 // Source not cited despite using code from another website
 Use consistent indentation
 Definition:
@@ -95,48 +110,64 @@ Indentation helps in reading the program structure neatly. Use spaces or tabs co
 
 Right ✅
 
-JavaScript
+```
+
 if (userLoggedIn) {
   showDashboard();
 } else {
   showLoginPage();
 }
+```
+
 Wrong ❌
 
-JavaScript
+```
+
 if (userLoggedIn){
 showDashboard();
     }else{
  showLoginPage();
 }
+```
+
 Variable naming should use camelCase
 Definition:
 Use the camelCase style (lowercase first letter, uppercase first letter of subsequent words) for variable naming to ensure readability and uniformity.
 
 Right ✅
 
-JavaScript
+```
+
 let totalAmount;
 let studentName;
+```
+
 Wrong ❌
 
-JavaScript
+```
 let Total_Amount;   // uses uppercase and underscore
 let student_name;   // snake_case, not camelCase
 let totalamount;    // word separation is unclear
+```
+
 Use comments to explain complex parts of the code
 Definition:
 Add comments (// or /* ... */) to explain complex logic or functions so that others (or your future self) can understand it easily.
 
 Right ✅
 
-JavaScript
+```
+
 // Calculate the average score of students
 let average = totalScore / totalStudents;
+```
+
 Wrong ❌
 
-JavaScript
+```
 let average = totalScore / totalStudents; // no comment provided despite being important
+```
+
 Store files in a clear folder structure
 Definition:
 Use a folder structure based on functions (e.g., models/, controllers/, views/, assets/) to make it easier to locate files and avoid project clutter.
@@ -166,16 +197,21 @@ Do not write the same code repeatedly. Use functions or modules to keep the code
 
 Right ✅
 
-JavaScript
+```
+
 function calculateDiscount(price, discountRate) {
   return price - (price * discountRate);
 }
 
 // Call function
 let finalPrice = calculateDiscount(100000, 0.1);
+```
+
 Wrong ❌
 
-JavaScript
+```
+
 let discount1 = 100000 - (100000 * 0.1);
 let discount2 = 200000 - (200000 * 0.1);
 let discount3 = 300000 - (300000 * 0.1);
+```
